@@ -20,7 +20,9 @@ else:
     # 處理 PostgreSQL (Neon 等線上資料庫)
     # 某些 PaaS 提供 postgres:// 開頭的 URL，SQLAlchemy 需替換為 postgresql://
     if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
-        SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
+        SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif SQLALCHEMY_DATABASE_URL.startswith("postgresql://"):
+        SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
         
     engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
