@@ -145,7 +145,12 @@ export default function App() {
       setTimeout(() => {
         setEnemyHp(pendingResult.enemy_hp);
         setPlayerHp(pendingResult.player_hp);
-        setHistory(prev => [...prev, { round: prev.length + 1, battles: pendingResult.battles }]);
+        setHistory(prev => [...prev, { 
+          round: prev.length + 1, 
+          battles: pendingResult.battles,
+          total_score: pendingResult.total_score,
+          damage_to: pendingResult.damage_to
+        }]);
 
         setTimeout(() => {
           if (pendingResult.game_over) {
@@ -328,18 +333,40 @@ export default function App() {
           {showHistory ? (
             <div style={{ background: '#222', padding: '20px', border: '4px solid #fff', width: '90%', maxWidth: '500px', maxHeight: '80vh', overflowY: 'auto' }}>
               <h2 style={{ textAlign: 'center', color: '#ffcc00', marginTop: 0 }}>戰況歷史</h2>
-              {history.map((h, i) => (
-                <div key={i} style={{ borderBottom: '1px solid #444', padding: '10px 0' }}>
-                  <div style={{ color: '#aaa', marginBottom: '5px' }}>Round {h.round}</div>
-                  {h.battles.map((b: any, j: number) => (
-                    <div key={j} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '3px' }}>
-                      <span style={{ color: b.winner === 'player' ? '#4CAF50' : '#fff' }}>戰場 {b.battlefield}: {CHESS_PIECES[b.player_card]?.name}</span>
-                      <span style={{ color: '#ffcc00' }}>vs</span>
-                      <span style={{ color: b.winner === 'enemy' ? '#ff4747' : '#fff' }}>{CHESS_PIECES[b.enemy_card]?.name}</span>
+              {history.map((h, i) => {
+                const isPlayerOdd = h.round % 2 !== 0;
+                return (
+                  <div key={i} style={{ borderBottom: '1px solid #444', padding: '15px 0' }}>
+                    <div style={{ color: '#aaa', marginBottom: '10px', fontSize: '16px', borderBottom: '1px dashed #444', paddingBottom: '5px' }}>
+                      Round {h.round} - 玩家({isPlayerOdd ? 'ODD' : 'EVEN'}) vs 對手({isPlayerOdd ? 'EVEN' : 'ODD'})
                     </div>
-                  ))}
-                </div>
-              ))}
+                    {h.battles.map((b: any, j: number) => (
+                      <div key={j} style={{ display: 'flex', flexDirection: 'column', fontSize: '13px', marginBottom: '8px', background: 'rgba(0,0,0,0.3)', padding: '8px', borderRadius: '4px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{color: b.winner === 'player' ? '#4CAF50' : '#fff', flex: 1}}>
+                            {TERRAIN_NAMES[j]}: {CHESS_PIECES[b.player_card]?.name} (Lv.{b.player_eff})
+                          </span>
+                          <span style={{color: '#ffcc00', fontSize: '11px', margin: '0 10px'}}>VS</span>
+                          <span style={{color: b.winner === 'enemy' ? '#ff4747' : '#fff', flex: 1, textAlign: 'right'}}>
+                            (Lv.{b.enemy_eff}) {CHESS_PIECES[b.enemy_card]?.name}
+                          </span>
+                        </div>
+                        <div style={{ textAlign: 'center', color: '#00ffcc', fontSize: '12px', marginTop: '6px' }}>
+                          差值 {b.diff} × {b.weight} (場地加成) = <span style={{color: '#ff4747', fontWeight: 'bold'}}>{b.score}</span> 分
+                        </div>
+                      </div>
+                    ))}
+                    <div style={{ textAlign: 'right', marginTop: '10px', fontSize: '15px' }}>
+                      總積分: <span style={{ color: '#ffcc00', fontWeight: 'bold', fontSize: '18px' }}>{h.total_score}</span> 
+                      <span style={{ color: '#888', marginLeft: '5px' }}>({h.total_score % 2 !== 0 ? '奇數' : '偶數'})</span>
+                      <br/>
+                      <span style={{ color: h.damage_to === 'enemy' ? '#4CAF50' : '#ff4747', fontSize: '14px', display: 'inline-block', marginTop: '5px' }}>
+                        {h.damage_to === 'enemy' ? '💥 對手受到 1 點傷害' : '💥 玩家受到 1 點傷害'}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
               <button className="btn" style={{ width: '100%', marginTop: '20px' }} onClick={() => setShowHistory(false)}>返回</button>
             </div>
           ) : (
