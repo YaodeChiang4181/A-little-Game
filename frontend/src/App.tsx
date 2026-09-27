@@ -22,15 +22,27 @@ export default function App() {
   // 戰報紀錄
   const [battleLogs, setBattleLogs] = useState<any[]>([]);
 
-  // 此處為模擬功能，後續可換成 fetch() 呼叫我們剛剛寫的 FastAPI
-  const startGame = () => {
-    // 預設抽卡
-    setPlayerHp(3);
-    setEnemyHp(3);
-    setHand([1, 4, 6]); 
-    setDeployment([null, null, null]);
-    setGameState('playing');
-    setBattleLogs([]);
+  const [gameId, setGameId] = useState<number | null>(null);
+  
+  // 透過環境變數取得 API 網址，本地端預設為 localhost:8000
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+
+  const startGame = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/game/start`, { method: 'POST' });
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
+      
+      setGameId(data.game_id);
+      setPlayerHp(data.player_hp);
+      setEnemyHp(data.enemy_hp);
+      setHand(data.player_hand); 
+      setDeployment([null, null, null]);
+      setGameState('playing');
+      setBattleLogs([]);
+    } catch (e) {
+      alert("無法連接伺服器，請確認後端已部署完成！");
+    }
   };
 
   // 點擊手牌，自動放到第一個空位
@@ -57,29 +69,40 @@ export default function App() {
     }
   };
 
-  // 送出出牌陣型進行結算
-  const submitDeployment = () => {
-    if (deployment.includes(null)) return;
+  const submitDeployment = async () => {
+    if (deployment.includes(null) || gameId === null) return;
     
-    // TODO: 串接後端 API `POST /api/game/resolve`
-    // 這裡先模擬假資料回傳
-    const enemyDeployment = [6, 2, 5];
-    const newLogs = [
-      { battlefield: 1, player_card: deployment[0], enemy_card: enemyDeployment[0], winner: 'player' },
-      { battlefield: 2, player_card: deployment[1], enemy_card: enemyDeployment[1], winner: 'enemy' },
-      { battlefield: 3, player_card: deployment[2], enemy_card: enemyDeployment[2], winner: 'tie' }
-    ];
-    setBattleLogs(newLogs);
-    
-    // 模擬傷害
-    setEnemyHp(prev => Math.max(0, prev - 1));
-    
-    // 準備下一局
-    setTimeout(() => {
-      setDeployment([null, null, null]);
-      setHand([2, 3, 5]); // 模擬新抽的手牌
-      setBattleLogs([]);
-    }, 3000); // 讓玩家看 3 秒的結果
+    try {
+      const res = await fetch(`${API_BASE}/game/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          game_id: gameId,
+          player_deployment: deployment,
+          player_hand: hand
+        })
+      });
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
+      
+      setBattleLogs(data.battles);
+      setEnemyHp(data.enemy_hp);
+      setPlayerHp(data.player_hp);
+      
+      // 讓玩家看 3 秒的戰報結果
+      setTimeout(() => {
+        if (data.game_over) {
+          alert(data.winner === 'player' ? "🎉 恭喜你，你贏了！" : "💀 你輸了！");
+          setGameState('idle'); // 結束後回到首頁
+        } else {
+          setDeployment([null, null, null]);
+          setHand(data.next_player_hand);
+          setBattleLogs([]);
+        }
+      }, 3000);
+    } catch (e) {
+      alert("結算時發生錯誤！");
+    }
   };
 
   const renderCard = (val: number | null, color: 'white' | 'black') => {
