@@ -19,10 +19,11 @@ export default function App() {
   
   const [hand, setHand] = useState<number[]>([]);
   const [deployment, setDeployment] = useState<(number | null)[]>([null, null, null]);
-  const [battleLogs, setBattleLogs] = useState<any[]>([]); // 漸進式寫入
+  const [battleLogs, setBattleLogs] = useState<any[]>([]); 
   
   const [isResolving, setIsResolving] = useState(false);
-  const [resolveStep, setResolveStep] = useState(-1);
+  const [dealStep, setDealStep] = useState(-1); // 處理敵方飛牌動畫
+  const [resolveStep, setResolveStep] = useState(-1); // 處理翻牌與結算動畫
   const [pendingResult, setPendingResult] = useState<any>(null);
   
   const [history, setHistory] = useState<any[]>([]);
@@ -46,6 +47,8 @@ export default function App() {
       setHistory([]);
       setWinner(null);
       setShowHistory(false);
+      setDealStep(-1);
+      setResolveStep(-1);
     } catch (e) {
       alert("無法連接伺服器！");
     }
@@ -93,7 +96,7 @@ export default function App() {
       
       setPendingResult(data);
       setBattleLogs([]);
-      setResolveStep(0); // 觸發動畫引擎
+      setDealStep(0); // 觸發第一階段：敵方飛牌動畫
       
     } catch (e) {
       alert("結算錯誤！");
@@ -101,10 +104,24 @@ export default function App() {
     }
   };
 
-  // 動畫狀態機 Engine
+  // 第一階段動畫：神秘卡片飛入戰場
+  useEffect(() => {
+    if (dealStep >= 0 && dealStep < 3) {
+      const timer = setTimeout(() => {
+        setDealStep(prev => prev + 1);
+      }, 300); // 每0.3秒飛入一張
+      return () => clearTimeout(timer);
+    } else if (dealStep === 3) {
+      const timer = setTimeout(() => {
+        setResolveStep(0); // 飛完後等待一下，進入翻牌結算階段
+      }, 500); 
+      return () => clearTimeout(timer);
+    }
+  }, [dealStep]);
+
+  // 第二階段動畫：翻牌與算式結算
   useEffect(() => {
     if (resolveStep >= 0 && resolveStep < 3 && pendingResult) {
-      // 開牌
       const b = pendingResult.battles[resolveStep];
       setBattleLogs(prev => {
         const newLogs = [...prev];
@@ -112,7 +129,6 @@ export default function App() {
         return newLogs;
       });
       
-      // 等待打字機動畫與撞擊特效 (總共 3.5秒 / 戰場)
       const timer = setTimeout(() => {
         setResolveStep(prev => prev + 1);
       }, 3500); 
@@ -134,6 +150,7 @@ export default function App() {
             setDeployment([null, null, null]);
             setHand(pendingResult.next_player_hand);
           }
+          setDealStep(-1);
           setResolveStep(-1);
           setIsResolving(false);
           setPendingResult(null);
@@ -149,8 +166,9 @@ export default function App() {
     
     let animClass = '';
     if (isResolvingSlot) {
-      if (isWinner) animClass = 'clash-winner';
-      if (isLoser) animClass = 'clash-loser';
+      animClass = color === 'black' ? 'flip-reveal ' : ''; // 敵方卡片翻開動畫
+      if (isWinner) animClass += 'clash-winner';
+      if (isLoser) animClass += 'clash-loser';
     } else {
       if (isWinner) animClass = 'resolved-winner';
       if (isLoser) animClass = 'resolved-loser';
@@ -176,51 +194,77 @@ export default function App() {
   const TERRAIN_NAMES = ['沼澤地帶', '城鎮街道', '皇宮大殿'];
 
   return (
-    <div className="game-container">
-      {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
-        <div className="hud">
-          <div className="hud-player">
-            <div style={{fontWeight: 'bold'}}>ODD (玩家)</div>
+    <div className="game-wrapper">
+      
+      {/* ============ 左側/下方 玩家控制面板 ============ */}
+      <div className="side-panel player-panel">
+        {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
+          <div className="hud-box player-hud">
+            <div style={{fontWeight: 'bold', color: '#fff'}}>ODD (玩家)</div>
             <div className="hp-bar">{renderHearts(playerHp)}</div>
           </div>
-          <div className="hud-enemy">
-            <div style={{fontWeight: 'bold'}}>EVEN (對手)</div>
-            <div className="hp-bar" style={{ justifyContent: 'flex-end' }}>{renderHearts(enemyHp)}</div>
+        )}
+        
+        {gameState === 'playing' && (
+          <div className="hand-section">
+            <div className="hand-container" style={{ opacity: isResolving ? 0.5 : 1, pointerEvents: isResolving ? 'none' : 'auto' }}>
+              {hand.map((card, i) => (
+                <div key={i} onClick={() => handleCardClick(card, i)}>
+                  {renderCard(card, 'white')}
+                </div>
+              ))}
+              {hand.length === 0 && <div style={{color: '#aaa', fontSize: '12px'}}>空手牌</div>}
+            </div>
+            
+            <button 
+              className={`btn ${isDeployReady && !isResolving ? 'engage' : ''}`} 
+              onClick={submitDeployment} 
+              disabled={!isDeployReady || isResolving}
+              style={{ width: '100%' }}
+            >
+              {isResolving ? '決鬥進行中...' : (isDeployReady ? '🔥 決鬥！ 🔥' : `準備兵力 (${deployedCount}/3)...`)}
+            </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {gameState === 'idle' && (
-        <div className="main-stage">
-          <h1 style={{ fontSize: '2.5rem', textAlign: 'center', textShadow: '2px 2px 0 #000' }}>
-            氣勢連鎖奇偶戰<br/><span style={{fontSize: '1.2rem', color:'#aaa'}}>像素西洋棋</span>
-          </h1>
-          <button className="btn engage" onClick={startGame}>START BATTLE</button>
-        </div>
-      )}
+      {/* ============ 中央 戰鬥舞台 ============ */}
+      <div className="main-stage">
+        {gameState === 'idle' && (
+          <div style={{textAlign: 'center'}}>
+            <h1 style={{ fontSize: '3.5rem', textShadow: '4px 4px 0 #000', margin: '0 0 20px 0' }}>
+              氣勢連鎖奇偶戰<br/><span style={{fontSize: '1.5rem', color:'#aaa'}}>像素西洋棋</span>
+            </h1>
+            <button className="btn engage" onClick={startGame}>START BATTLE</button>
+          </div>
+        )}
 
-      {gameState === 'playing' && (
-        <div className="main-stage">
+        {gameState === 'playing' && (
           <div className="battlefield">
             {deployment.map((val, i) => {
               const b = battleLogs[i]; // 有值代表該格已經翻開
               const isClashing = resolveStep === i;
+              const hasDealt = dealStep > i || resolveStep >= 0; // 卡片是否已經飛入戰場
               
               return (
                 <div key={i} className="field-slot">
-                  <div style={{ color: '#ccc', fontSize: '12px', textShadow: '1px 1px #000', letterSpacing: '2px' }}>
+                  <div style={{ color: '#ccc', fontSize: '14px', textShadow: '1px 1px #000', letterSpacing: '2px' }}>
                     {TERRAIN_NAMES[i]}
                   </div>
                   
                   {/* 敵方陣地 */}
-                  {b 
-                    ? renderCard(b.enemy_card, 'black', b.winner === 'enemy', b.winner === 'player', isClashing) 
-                    : <div className="card empty" style={{ borderColor: 'rgba(255,255,255,0.2)' }}>?</div>
-                  }
+                  <div style={{ height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {b 
+                      ? renderCard(b.enemy_card, 'black', b.winner === 'enemy', b.winner === 'player', isClashing) 
+                      : hasDealt 
+                        ? <div className="card black-piece fly-in" style={{ borderColor: '#000', color: '#fff', fontSize: '40px' }}>?</div>
+                        : <div className="card empty" style={{ borderColor: 'rgba(255,255,255,0.15)' }}></div>
+                    }
+                  </div>
                   
                   {/* 中央資訊與算式 */}
-                  <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center', height: '24px' }}>
-                    {!isClashing && <div style={{ fontSize: '20px', color: '#ffcc00', textShadow: '1px 1px 0 #000' }}>VS</div>}
+                  <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center', height: '30px', alignItems: 'center' }}>
+                    {!isClashing && <div style={{ fontSize: '24px', color: '#ffcc00', textShadow: '2px 2px 0 #000' }}>VS</div>}
                     
                     {b && isClashing && (
                       <div className="equation-tooltip">
@@ -237,32 +281,39 @@ export default function App() {
                   </div>
                   
                   {/* 我方陣地 */}
-                  <div onClick={() => handleSlotClick(val, i)}>
+                  <div style={{ height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => handleSlotClick(val, i)}>
                     {renderCard(val, 'white', b?.winner === 'player', b?.winner === 'enemy', isClashing)}
                   </div>
                 </div>
               );
             })}
           </div>
+        )}
+      </div>
 
-          <div className="hand-container" style={{ opacity: isResolving ? 0.5 : 1, pointerEvents: isResolving ? 'none' : 'auto' }}>
-            {hand.map((card, i) => (
-              <div key={i} onClick={() => handleCardClick(card, i)}>
-                {renderCard(card, 'white')}
-              </div>
-            ))}
-            {hand.length === 0 && <div style={{color: '#aaa', fontSize: '12px', marginTop: '40px'}}>空手牌</div>}
+      {/* ============ 右側/右上方 對手控制面板 ============ */}
+      <div className="side-panel enemy-panel">
+        {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
+          <div className="hud-box enemy-hud" style={{ textAlign: 'right' }}>
+            <div style={{fontWeight: 'bold', color: '#fff'}}>EVEN (對手)</div>
+            <div className="hp-bar" style={{ justifyContent: 'flex-end' }}>{renderHearts(enemyHp)}</div>
           </div>
-
-          <button 
-            className={`btn ${isDeployReady && !isResolving ? 'engage' : ''}`} 
-            onClick={submitDeployment} 
-            disabled={!isDeployReady || isResolving}
-          >
-            {isResolving ? '結算中...' : (isDeployReady ? '🔥 ENGAGE BATTLE 🔥' : `Deploying (${deployedCount}/3)...`)}
-          </button>
-        </div>
-      )}
+        )}
+        
+        {/* 電腦版才顯示的神祕手牌 */}
+        {gameState === 'playing' && (
+          <div className="enemy-hand-container">
+            {Array.from({length: 3}).map((_, i) => {
+              const hasFlashed = dealStep > i || resolveStep >= 0;
+              return (
+                <div key={i} className="card black-piece" style={{ opacity: hasFlashed ? 0 : 1, transition: 'opacity 0.2s', borderColor: '#000', color: '#666', fontSize: '32px' }}>
+                  ?
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
 
       {/* 遊戲結束與歷史覆盤 */}
       {gameState === 'game_over' && (
