@@ -8,13 +8,12 @@ BATTLEFIELD_WEIGHTS = [1, 2, 3]  # [先鋒戰, 中軍戰, 決戰]
 MOMENTUM_BUFF = 1               # 勝者獲得之等級加成
 
 class InvalidDeploymentError(Exception):
-    """Custom exception for invalid deployments."""
     pass
 
 class GameState:
     def __init__(self):
-        self.player_hp = MAX_HP  # ODD
-        self.enemy_hp = MAX_HP   # EVEN
+        self.player_hp = MAX_HP  
+        self.enemy_hp = MAX_HP   
 
 def validate_deployment(deployment: List[int]) -> None:
     if len(deployment) != HAND_SIZE:
@@ -25,10 +24,12 @@ def validate_deployment(deployment: List[int]) -> None:
         if card not in CARD_POOL:
             raise InvalidDeploymentError(f"Card {card} is not in the valid CARD_POOL {CARD_POOL}.")
 
-def resolve_round(player_deployment: List[int], enemy_deployment: List[int]) -> Dict[str, Any]:
+def resolve_round(player_deployment: List[int], enemy_deployment: List[int], round_number: int = 1) -> Dict[str, Any]:
     """
-    Resolves the round based on player (ODD) and enemy (EVEN) deployments.
-    Returns a dictionary containing the battle logs, total score, and damage info.
+    Resolves the round based on player and enemy deployments and the current round number.
+    ODD / EVEN roles are swapped every round.
+    Round 1: Player=ODD, Enemy=EVEN
+    Round 2: Player=EVEN, Enemy=ODD
     """
     validate_deployment(player_deployment)
     validate_deployment(enemy_deployment)
@@ -40,16 +41,13 @@ def resolve_round(player_deployment: List[int], enemy_deployment: List[int]) -> 
     battles = []
 
     for i in range(HAND_SIZE):
-        # Calculate effective levels
         p_prime = player_deployment[i] + buff_P
         e_prime = enemy_deployment[i] + buff_E
         
-        # Calculate diff and add to total score S
         diff = abs(p_prime - e_prime)
         score = BATTLEFIELD_WEIGHTS[i] * diff
         S += score
         
-        # Determine winner for this battlefield
         if p_prime > e_prime:
             winner = "player"
             buff_P = MOMENTUM_BUFF
@@ -75,16 +73,19 @@ def resolve_round(player_deployment: List[int], enemy_deployment: List[int]) -> 
             "score": score
         })
         
-    # Damage calculation based on parity of S
+    player_is_odd = (round_number % 2 != 0)
+    
     if S % 2 != 0:
-        damage_to = "enemy" # Odd score, Player (ODD) attacks
+        damage_to = "enemy" if player_is_odd else "player"
     else:
-        damage_to = "player" # Even score, Enemy (EVEN) attacks
+        damage_to = "player" if player_is_odd else "enemy"
         
     return {
         "battles": battles,
         "total_score": S,
-        "damage_to": damage_to
+        "damage_to": damage_to,
+        "player_role": "ODD" if player_is_odd else "EVEN",
+        "enemy_role": "EVEN" if player_is_odd else "ODD"
     }
 
 def apply_damage(state: GameState, damage_to: str) -> None:

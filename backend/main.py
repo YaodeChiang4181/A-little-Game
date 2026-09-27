@@ -47,7 +47,9 @@ def start_game(db: Session = Depends(get_db)):
         "game_id": game.id,
         "player_hp": game.player_hp,
         "enemy_hp": game.enemy_hp,
-        "player_hand": player_hand
+        "player_hand": player_hand,
+        "player_role": "ODD",
+        "enemy_role": "EVEN"
     }
 
 @app.post("/api/game/resolve", response_model=schemas.ResolveRoundResponse)
@@ -59,13 +61,16 @@ def resolve_game_round(req: schemas.ResolveRoundRequest, db: Session = Depends(g
     if game.status != "ongoing":
         raise HTTPException(status_code=400, detail=f"Game is already over. Status: {game.status}")
         
+    round_count = db.query(models.Round).filter(models.Round.game_id == game.id).count()
+    round_number = round_count + 1
+    
     # AI 抽取敵方手牌並運算出最佳部署
     enemy_hand = draw_hand()
-    enemy_deployment = choose_best_deployment(enemy_hand, role="EVEN")
+    enemy_deployment = choose_best_deployment(enemy_hand, round_number=round_number)
     
     # 核心引擎結算此局戰鬥
     try:
-        result = resolve_round(req.player_deployment, enemy_deployment)
+        result = resolve_round(req.player_deployment, enemy_deployment, round_number=round_number)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
         
@@ -107,12 +112,17 @@ def resolve_game_round(req: schemas.ResolveRoundRequest, db: Session = Depends(g
     # 若遊戲尚未結束，為玩家抽出下一回合手牌
     next_player_hand = draw_hand() if not game_over else []
     
+    next_round_number = round_number + 1
+    next_player_is_odd = (next_round_number % 2 != 0)
+    
     return {
         "game_id": game.id,
         "enemy_deployment": enemy_deployment,
         "battles": result["battles"],
         "total_score": result["total_score"],
         "damage_to": result["damage_to"],
+        "player_role": "ODD" if next_player_is_odd else "EVEN",
+        "enemy_role": "EVEN" if next_player_is_odd else "ODD",
         "player_hp": game.player_hp,
         "enemy_hp": game.enemy_hp,
         "game_over": game_over,

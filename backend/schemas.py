@@ -6,6 +6,8 @@ class StartGameResponse(BaseModel):
     player_hp: int
     enemy_hp: int
     player_hand: List[int]
+    player_role: str = "ODD"
+    enemy_role: str = "EVEN"
 
 class ResolveRoundRequest(BaseModel):
     game_id: int
@@ -18,6 +20,8 @@ class ResolveRoundResponse(BaseModel):
     battles: List[Dict[str, Any]]
     total_score: int
     damage_to: str
+    player_role: str
+    enemy_role: str
     player_hp: int
     enemy_hp: int
     game_over: bool

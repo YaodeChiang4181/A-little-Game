@@ -77,10 +77,10 @@ body {
   flex: 1;
 }
 
-/* 三大場地顏色 */
-.field-slot:nth-child(1) { background-color: #1a3320; border: 4px solid #2d5c38; box-shadow: inset 0 0 15px #0a140c; }
-.field-slot:nth-child(2) { background-color: #3d2b1f; border: 4px solid #704f38; box-shadow: inset 0 0 15px #1c130d; }
-.field-slot:nth-child(3) { background-color: #4a1515; border: 4px solid #8c2a2a; box-shadow: inset 0 0 15px #240a0a; }
+/* 三大場地顏色僅套用於空卡槽 */
+.field-slot:nth-child(1) .card.empty { background-color: rgba(26,51,32,0.8); border: 3px dashed #2d5c38; box-shadow: inset 0 0 15px #0a140c; }
+.field-slot:nth-child(2) .card.empty { background-color: rgba(61,43,31,0.8); border: 3px dashed #704f38; box-shadow: inset 0 0 15px #1c130d; }
+.field-slot:nth-child(3) .card.empty { background-color: rgba(74,21,21,0.8); border: 3px dashed #8c2a2a; box-shadow: inset 0 0 15px #240a0a; }
 
 /* 卡牌樣式 */
 .card {
@@ -97,7 +97,7 @@ body {
 }
 .card.white-piece { background-color: #f9f9f9; color: #333; }
 .card.black-piece { background-color: #333; color: #f9f9f9; border-color: #000; }
-.card.empty { background-color: transparent; border: 3px dashed rgba(255,255,255,0.4); box-shadow: none; cursor: default; }
+.card.empty { background-color: rgba(0,0,0,0.3); border: 3px dashed rgba(255,255,255,0.4); box-shadow: none; cursor: default; }
 .card:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
 
 /* 算式浮動對話框 (Tooltip) */
