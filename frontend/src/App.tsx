@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './index.css'
 
 const CHESS_PIECES: Record<number, { name: string, icon: string }> = {
@@ -19,8 +19,12 @@ export default function App() {
   
   const [hand, setHand] = useState<number[]>([]);
   const [deployment, setDeployment] = useState<(number | null)[]>([null, null, null]);
-  const [battleLogs, setBattleLogs] = useState<any[]>([]);
+  const [battleLogs, setBattleLogs] = useState<any[]>([]); // 漸進式寫入
+  
   const [isResolving, setIsResolving] = useState(false);
+  const [resolveStep, setResolveStep] = useState(-1);
+  const [pendingResult, setPendingResult] = useState<any>(null);
+  
   const [history, setHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   
@@ -43,7 +47,7 @@ export default function App() {
       setWinner(null);
       setShowHistory(false);
     } catch (e) {
-      alert("無法連接伺服器，請確認 VITE_API_URL 環境變數與後端服務！");
+      alert("無法連接伺服器！");
     }
   };
 
@@ -87,40 +91,73 @@ export default function App() {
       if (!res.ok) throw new Error('API Error');
       const data = await res.json();
       
-      // 第一段：顯示敵方覆蓋牌翻牌與戰果
-      setBattleLogs(data.battles);
-      setHistory(prev => [...prev, { round: prev.length + 1, battles: data.battles }]);
-      
-      // 第二段：延遲顯示生命值變化與抖動 (Phase 2)
-      setTimeout(() => {
-        setEnemyHp(data.enemy_hp);
-        setPlayerHp(data.player_hp);
-        
-        // 第三段：準備下一回合或進入結算畫面
-        setTimeout(() => {
-          if (data.game_over) {
-            setWinner(data.winner);
-            setGameState('game_over');
-          } else {
-            setDeployment([null, null, null]);
-            setHand(data.next_player_hand);
-            setBattleLogs([]);
-          }
-          setIsResolving(false);
-        }, 2000); 
-      }, 1500); 
+      setPendingResult(data);
+      setBattleLogs([]);
+      setResolveStep(0); // 觸發動畫引擎
       
     } catch (e) {
-      alert("結算時發生錯誤！");
+      alert("結算錯誤！");
       setIsResolving(false);
     }
   };
 
-  const renderCard = (val: number | null, color: 'white' | 'black') => {
+  // 動畫狀態機 Engine
+  useEffect(() => {
+    if (resolveStep >= 0 && resolveStep < 3 && pendingResult) {
+      // 開牌
+      const b = pendingResult.battles[resolveStep];
+      setBattleLogs(prev => {
+        const newLogs = [...prev];
+        newLogs[resolveStep] = b;
+        return newLogs;
+      });
+      
+      // 等待打字機動畫與撞擊特效 (總共 3.5秒 / 戰場)
+      const timer = setTimeout(() => {
+        setResolveStep(prev => prev + 1);
+      }, 3500); 
+      
+      return () => clearTimeout(timer);
+    } 
+    else if (resolveStep === 3 && pendingResult) {
+      // 全部翻完，結算總結果
+      setTimeout(() => {
+        setEnemyHp(pendingResult.enemy_hp);
+        setPlayerHp(pendingResult.player_hp);
+        setHistory(prev => [...prev, { round: prev.length + 1, battles: pendingResult.battles }]);
+        
+        setTimeout(() => {
+          if (pendingResult.game_over) {
+            setWinner(pendingResult.winner);
+            setGameState('game_over');
+          } else {
+            setDeployment([null, null, null]);
+            setHand(pendingResult.next_player_hand);
+          }
+          setResolveStep(-1);
+          setIsResolving(false);
+          setPendingResult(null);
+          setBattleLogs([]);
+        }, 1500);
+      }, 500);
+    }
+  }, [resolveStep, pendingResult]);
+
+  const renderCard = (val: number | null, color: 'white' | 'black', isWinner?: boolean, isLoser?: boolean, isResolvingSlot?: boolean) => {
     if (val === null) return <div className="card empty"></div>;
     const piece = CHESS_PIECES[val];
+    
+    let animClass = '';
+    if (isResolvingSlot) {
+      if (isWinner) animClass = 'clash-winner';
+      if (isLoser) animClass = 'clash-loser';
+    } else {
+      if (isWinner) animClass = 'resolved-winner';
+      if (isLoser) animClass = 'resolved-loser';
+    }
+    
     return (
-      <div className={`card ${color}-piece`}>
+      <div className={`card ${color}-piece ${animClass}`}>
         <div style={{ fontSize: '32px', marginBottom: '5px' }}>{piece.icon}</div>
         <div style={{ fontSize: '14px', fontWeight: 'bold' }}>{piece.name}</div>
         <div style={{ fontSize: '10px', marginTop: '2px', color: color === 'white' ? '#888' : '#aaa' }}>Lv.{val}</div>
@@ -136,10 +173,10 @@ export default function App() {
 
   const deployedCount = deployment.filter(c => c !== null).length;
   const isDeployReady = deployedCount === 3;
+  const TERRAIN_NAMES = ['沼澤地帶', '城鎮街道', '皇宮大殿'];
 
   return (
     <div className="game-container">
-      {/* HUD 資訊區 (左上與右上) */}
       {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
         <div className="hud">
           <div className="hud-player">
@@ -153,37 +190,59 @@ export default function App() {
         </div>
       )}
 
-      {/* 待機頁面 */}
       {gameState === 'idle' && (
         <div className="main-stage">
-          <h1 style={{ fontSize: '2.5rem', textAlign: 'center', textShadow: '2px 2px 0 #000', margin: '0 0 20px 0' }}>
-            氣勢連鎖奇偶戰<br/>
-            <span style={{fontSize: '1.2rem', color:'#aaa'}}>像素西洋棋</span>
+          <h1 style={{ fontSize: '2.5rem', textAlign: 'center', textShadow: '2px 2px 0 #000' }}>
+            氣勢連鎖奇偶戰<br/><span style={{fontSize: '1.2rem', color:'#aaa'}}>像素西洋棋</span>
           </h1>
           <button className="btn engage" onClick={startGame}>START BATTLE</button>
         </div>
       )}
 
-      {/* 遊玩主戰場 */}
       {gameState === 'playing' && (
         <div className="main-stage">
           <div className="battlefield">
-            {deployment.map((val, i) => (
-              <div key={i} className="field-slot">
-                {/* 敵方陣地 */}
-                {battleLogs.length > 0 
-                  ? renderCard(battleLogs[i].enemy_card, 'black') 
-                  : <div className="card empty" style={{ backgroundColor: '#111', borderColor: '#000', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#666' }}>?</div>
-                }
-                
-                <div style={{ fontSize: '20px', color: '#ffcc00', textShadow: '1px 1px 0 #000' }}>VS</div>
-                
-                {/* 我方陣地 */}
-                <div onClick={() => handleSlotClick(val, i)}>
-                  {renderCard(val, 'white')}
+            {deployment.map((val, i) => {
+              const b = battleLogs[i]; // 有值代表該格已經翻開
+              const isClashing = resolveStep === i;
+              
+              return (
+                <div key={i} className="field-slot">
+                  <div style={{ color: '#ccc', fontSize: '12px', textShadow: '1px 1px #000', letterSpacing: '2px' }}>
+                    {TERRAIN_NAMES[i]}
+                  </div>
+                  
+                  {/* 敵方陣地 */}
+                  {b 
+                    ? renderCard(b.enemy_card, 'black', b.winner === 'enemy', b.winner === 'player', isClashing) 
+                    : <div className="card empty" style={{ borderColor: 'rgba(255,255,255,0.2)' }}>?</div>
+                  }
+                  
+                  {/* 中央資訊與算式 */}
+                  <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center', height: '24px' }}>
+                    {!isClashing && <div style={{ fontSize: '20px', color: '#ffcc00', textShadow: '1px 1px 0 #000' }}>VS</div>}
+                    
+                    {b && isClashing && (
+                      <div className="equation-tooltip">
+                        <div className="typewriter type-1">
+                          <span style={{color: '#4CAF50'}}>玩家 {b.player_card}</span> {b.player_eff > b.player_card && <span style={{color:'#ffcc00'}}>(+1 經驗加成)</span>} 
+                          <span style={{margin: '0 5px'}}>vs</span> 
+                          <span style={{color: '#ff4747'}}>對手 {b.enemy_card}</span> {b.enemy_eff > b.enemy_card && <span style={{color:'#ffcc00'}}>(+1 經驗加成)</span>}
+                        </div>
+                        <div className="typewriter type-2">
+                          差值 {b.diff} × <span style={{color:'#00ffcc'}}>{b.weight} (場地加成)</span> = <span style={{color: '#ff4747', fontSize: '18px', fontWeight: 'bold'}}>{b.score}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* 我方陣地 */}
+                  <div onClick={() => handleSlotClick(val, i)}>
+                    {renderCard(val, 'white', b?.winner === 'player', b?.winner === 'enemy', isClashing)}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="hand-container" style={{ opacity: isResolving ? 0.5 : 1, pointerEvents: isResolving ? 'none' : 'auto' }}>
@@ -192,7 +251,7 @@ export default function App() {
                 {renderCard(card, 'white')}
               </div>
             ))}
-            {hand.length === 0 && <div style={{width: '70px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: '12px'}}>空手牌</div>}
+            {hand.length === 0 && <div style={{color: '#aaa', fontSize: '12px', marginTop: '40px'}}>空手牌</div>}
           </div>
 
           <button 
@@ -200,12 +259,12 @@ export default function App() {
             onClick={submitDeployment} 
             disabled={!isDeployReady || isResolving}
           >
-            {isResolving ? '結算動畫中...' : (isDeployReady ? '🔥 ENGAGE BATTLE 🔥' : `Deploying (${deployedCount}/3)...`)}
+            {isResolving ? '結算中...' : (isDeployReady ? '🔥 ENGAGE BATTLE 🔥' : `Deploying (${deployedCount}/3)...`)}
           </button>
         </div>
       )}
 
-      {/* 結算與歷史頁面遮罩 */}
+      {/* 遊戲結束與歷史覆盤 */}
       {gameState === 'game_over' && (
         <div className="overlay">
           {showHistory ? (
@@ -223,11 +282,11 @@ export default function App() {
                   ))}
                 </div>
               ))}
-              <button className="btn" style={{ width: '100%', marginTop: '20px' }} onClick={() => setShowHistory(false)}>返回結算</button>
+              <button className="btn" style={{ width: '100%', marginTop: '20px' }} onClick={() => setShowHistory(false)}>返回</button>
             </div>
           ) : (
             <>
-              <h1 className={winner === 'player' ? 'shake' : ''} style={{ fontSize: '4rem', color: winner === 'player' ? '#4CAF50' : '#ff4747', textShadow: '4px 4px 0 #000', textAlign: 'center' }}>
+              <h1 style={{ fontSize: '4rem', color: winner === 'player' ? '#4CAF50' : '#ff4747', textShadow: '4px 4px 0 #000' }}>
                 {winner === 'player' ? 'VICTORY' : 'DEFEAT'}
               </h1>
               <div style={{ display: 'flex', gap: '20px', marginTop: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
