@@ -25,6 +25,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/health")
+def health_check():
+    return {"status": "awake"}
+
 def draw_hand() -> List[int]:
     return random.sample(CARD_POOL, HAND_SIZE)
 
