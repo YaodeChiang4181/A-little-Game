@@ -46,7 +46,7 @@ export default function App() {
   const startGame = async (isGuest: boolean = false) => {
     setIsConnecting(true);
     setConnectProgress(0);
-    
+
     // 假進度條：為了友善體驗，我們模擬一個逐漸達到 90% 的動畫，等伺服器真正回應後再填滿
     const progressInterval = setInterval(() => {
       setConnectProgress(p => p < 90 ? p + (90 - p) * 0.1 : 90);
@@ -302,7 +302,7 @@ export default function App() {
           <div style={{ width: '300px', height: '20px', border: '4px solid #fff', background: '#000', position: 'relative' }}>
             <div style={{ width: `${connectProgress}%`, height: '100%', background: '#ffcc00', transition: 'width 0.5s ease-out' }} />
             {/* 像素小人 */}
-            <div className="walking-sprite" style={{ 
+            <div className="walking-sprite" style={{
               position: 'absolute', top: '-35px', left: `calc(${connectProgress}% - 15px)`,
               transition: 'left 0.5s ease-out', fontSize: '28px'
             }}>
@@ -382,7 +382,7 @@ export default function App() {
       {/* ============ 左側/下方 玩家控制面板 ============ */}
       <div className="side-panel player-panel">
         {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
-          <div className="hud-box player-hud" style={{ justifyContent: 'space-between', marginTop: '40px' }}>
+          <div className="hud-box player-hud">
             <div style={{ fontWeight: 'bold', color: '#fff' }}>{playerRole} (玩家)</div>
             <div className="hp-bar">{renderHearts(playerHp)}</div>
           </div>
@@ -427,21 +427,13 @@ export default function App() {
 
         {gameState === 'playing' && (
           <>
-            <div style={{
-              position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)',
-              background: 'rgba(0,0,0,0.7)', border: '2px solid rgba(255,255,255,0.2)',
-              padding: '8px 20px', borderRadius: '30px',
-              display: 'flex', alignItems: 'center', gap: '15px',
-              fontSize: '13px', color: '#ccc',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
-              zIndex: 10, whiteSpace: 'nowrap'
-            }}>
-              <span style={{color: '#ffcc00', fontWeight: 'bold', marginRight: '5px'}}>本局出戰名單 (雙方共 6 抽)</span>
+            <div className="deck-info-box">
+              <span className="deck-info-title">本局出戰名單</span>
               {roundPool && roundPool.map((lv, idx) => {
                 const piece = CHESS_PIECES[lv];
                 return (
                   <span key={idx} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ fontSize: '16px', color: '#fff' }}>{piece?.icon}</span> 
+                    <span style={{ fontSize: '16px', color: '#fff' }}>{piece?.icon}</span>
                     <span>Lv.{lv}</span>
                   </span>
                 )
@@ -450,51 +442,51 @@ export default function App() {
 
             <div className="battlefield">
               {deployment.map((val, i) => {
-              const b = battleLogs[i]; // 有值代表該格已經翻開
-              const isClashing = resolveStep === i;
-              const hasDealt = dealStep > i || resolveStep >= 0; // 卡片是否已經飛入戰場
+                const b = battleLogs[i]; // 有值代表該格已經翻開
+                const isClashing = resolveStep === i;
+                const hasDealt = dealStep > i || resolveStep >= 0; // 卡片是否已經飛入戰場
 
-              return (
-                <div key={i} className="field-slot">
-                  <div style={{ color: '#ccc', fontSize: '14px', textShadow: '1px 1px #000', letterSpacing: '2px' }}>
-                    {TERRAIN_NAMES[i]}
-                  </div>
+                return (
+                  <div key={i} className="field-slot">
+                    <div style={{ color: '#ccc', fontSize: '14px', textShadow: '1px 1px #000', letterSpacing: '2px' }}>
+                      {TERRAIN_NAMES[i]}
+                    </div>
 
-                  {/* 敵方陣地 */}
-                  <div style={{ height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {b
-                      ? renderCard(b.enemy_card, 'black', b.winner === 'enemy', b.winner === 'player', isClashing)
-                      : hasDealt
-                        ? <div className="card black-piece fly-in" style={{ borderColor: '#000', color: '#fff', fontSize: '40px' }}>?</div>
-                        : <div className="card empty" style={{ borderColor: 'rgba(255,255,255,0.15)' }}></div>
-                    }
-                  </div>
+                    {/* 敵方陣地 */}
+                    <div style={{ height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {b
+                        ? renderCard(b.enemy_card, 'black', b.winner === 'enemy', b.winner === 'player', isClashing)
+                        : hasDealt
+                          ? <div className="card black-piece fly-in" style={{ borderColor: '#000', color: '#fff', fontSize: '40px' }}>?</div>
+                          : <div className="card empty" style={{ borderColor: 'rgba(255,255,255,0.15)' }}></div>
+                      }
+                    </div>
 
-                  {/* 中央資訊與算式 */}
-                  <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center', height: '30px', alignItems: 'center' }}>
-                    {!isClashing && <div style={{ fontSize: '24px', color: '#ffcc00', textShadow: '2px 2px 0 #000' }}>VS</div>}
+                    {/* 中央資訊與算式 */}
+                    <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center', height: '30px', alignItems: 'center' }}>
+                      {!isClashing && <div style={{ fontSize: '24px', color: '#ffcc00', textShadow: '2px 2px 0 #000' }}>VS</div>}
 
-                    {b && isClashing && (
-                      <div className="equation-tooltip">
-                        <div className="typewriter type-1">
-                          <span style={{ color: '#4CAF50' }}>玩家 {b.player_card}</span> {b.player_eff > b.player_card && <span style={{ color: '#ffcc00' }}>(+1 經驗加成)</span>}
-                          <span style={{ margin: '0 5px' }}>vs</span>
-                          <span style={{ color: '#ff4747' }}>對手 {b.enemy_card}</span> {b.enemy_eff > b.enemy_card && <span style={{ color: '#ffcc00' }}>(+1 經驗加成)</span>}
+                      {b && isClashing && (
+                        <div className="equation-tooltip">
+                          <div className="typewriter type-1">
+                            <span style={{ color: '#4CAF50' }}>玩家 {b.player_card}</span> {b.player_eff > b.player_card && <span style={{ color: '#ffcc00' }}>(+1 經驗加成)</span>}
+                            <span style={{ margin: '0 5px' }}>vs</span>
+                            <span style={{ color: '#ff4747' }}>對手 {b.enemy_card}</span> {b.enemy_eff > b.enemy_card && <span style={{ color: '#ffcc00' }}>(+1 經驗加成)</span>}
+                          </div>
+                          <div className="typewriter type-2">
+                            差值 {b.diff} × <span style={{ color: '#00ffcc' }}>{b.weight} (場地加成)</span> = <span style={{ color: '#ff4747', fontSize: '18px', fontWeight: 'bold' }}>{b.score}</span>
+                          </div>
                         </div>
-                        <div className="typewriter type-2">
-                          差值 {b.diff} × <span style={{ color: '#00ffcc' }}>{b.weight} (場地加成)</span> = <span style={{ color: '#ff4747', fontSize: '18px', fontWeight: 'bold' }}>{b.score}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </div>
 
-                  {/* 我方陣地 */}
-                  <div style={{ height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => handleSlotClick(val, i)}>
-                    {renderCard(val, 'white', b?.winner === 'player', b?.winner === 'enemy', isClashing)}
+                    {/* 我方陣地 */}
+                    <div style={{ height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => handleSlotClick(val, i)}>
+                      {renderCard(val, 'white', b?.winner === 'player', b?.winner === 'enemy', isClashing)}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
             </div>
           </>
         )}
@@ -503,7 +495,7 @@ export default function App() {
       {/* ============ 右側/右上方 對手控制面板 ============ */}
       <div className="side-panel enemy-panel">
         {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
-          <div className="hud-box enemy-hud" style={{ justifyContent: 'space-between', marginTop: '40px' }}>
+          <div className="hud-box enemy-hud">
             <div style={{ fontWeight: 'bold', color: '#fff' }}>{enemyRole} (對手)</div>
             <div className="hp-bar" style={{ justifyContent: 'flex-end' }}>{renderHearts(enemyHp)}</div>
           </div>
@@ -558,7 +550,7 @@ export default function App() {
                       <span style={{ color: '#888', marginLeft: '5px' }}>({h.total_score % 2 !== 0 ? '奇數' : '偶數'})</span>
                       <br />
                       <span style={{ color: h.damage_to === 'enemy' ? '#4CAF50' : '#ff4747', fontSize: '14px', display: 'inline-block', marginTop: '5px' }}>
-                        {h.damage_to === 'enemy' ? '💥 對手受到 1 點傷害' : '💥 玩家受到 1 點傷害'}
+                        {h.damage_to === 'enemy' ? '對手受到 1 點傷害' : '玩家受到 1 點傷害'}
                       </span>
                     </div>
                   </div>

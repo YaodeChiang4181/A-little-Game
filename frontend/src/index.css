@@ -21,6 +21,24 @@ body {
   overflow-x: hidden;
 }
 
+/* ====== 毛玻璃捲軸美化 ====== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
 /* 復古磚牆背景與佈局 */
 .game-wrapper {
   width: 100vw;
@@ -40,7 +58,34 @@ body {
   pointer-events: none;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 15px;
+}
+.player-hud { margin-top: 40px; }
+.enemy-hud { margin-top: 40px; }
+
+.deck-info-box {
+  position: absolute; 
+  top: 20px; 
+  left: 50%; 
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.7); 
+  border: 2px solid rgba(255,255,255,0.2);
+  padding: 8px 20px;
+  display: flex; 
+  align-items: center; 
+  gap: 15px;
+  font-size: 13px; 
+  color: #ccc;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  border-radius: 30px; 
+  white-space: nowrap; 
+  z-index: 10;
+}
+.deck-info-title {
+  color: #ffcc00; 
+  font-weight: bold; 
+  margin-right: 5px;
 }
 .hp-bar { display: flex; gap: 5px; }
 .heart { color: var(--color-accent); font-size: 18px; }
@@ -181,9 +226,21 @@ body {
 
 /* 手機版佈局 */
 @media (max-width: 899px) {
-  .hud-box { position: absolute; top: 10px; z-index: 10; }
-  .player-hud { left: 10px; }
-  .enemy-hud { right: 10px; }
+  .hud-box { 
+    position: absolute; top: 10px; z-index: 10; 
+    padding: 5px 8px; /* 縮小 padding */
+    gap: 8px;
+    font-size: 10px;
+  }
+  .hud-box .heart { font-size: 12px; }
+  .player-hud { left: 10px; margin-top: 45px; }
+  .enemy-hud { right: 10px; margin-top: 45px; } /* 統一降低高度以避開頂部按鈕與名單 */
+
+  .deck-info-box {
+    transform: translateX(-50%) scale(0.65); /* 縮小出戰名單 */
+    top: 0px; 
+  }
+
   .enemy-hand-container { display: none; }
   
   .side-panel { pointer-events: none; }
