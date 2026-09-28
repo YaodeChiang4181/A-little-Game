@@ -49,8 +49,8 @@ export default function App() {
       setGameId(data.game_id);
       setPlayerHp(data.player_hp);
       setEnemyHp(data.enemy_hp);
-      setHand(data.player_hand);
-      setRoundPool(data.round_pool);
+      setHand(data.player_hand || []);
+      setRoundPool(data.round_pool || []);
       setPlayerRole(data.player_role);
       setEnemyRole(data.enemy_role);
       setDeployment([null, null, null]);
@@ -170,8 +170,8 @@ export default function App() {
             setGameState('game_over');
           } else {
             setDeployment([null, null, null]);
-            setHand(pendingResult.next_player_hand);
-            setRoundPool(pendingResult.next_round_pool);
+            setHand(pendingResult.next_player_hand || []);
+            setRoundPool(pendingResult.next_round_pool || []);
             setPlayerRole(pendingResult.player_role);
             setEnemyRole(pendingResult.enemy_role);
           }
@@ -395,7 +395,7 @@ export default function App() {
               zIndex: 10, whiteSpace: 'nowrap'
             }}>
               <span style={{color: '#ffcc00', fontWeight: 'bold', marginRight: '5px'}}>本局出戰名單 (雙方共 6 抽)</span>
-              {roundPool.map((lv, idx) => {
+              {roundPool && roundPool.map((lv, idx) => {
                 const piece = CHESS_PIECES[lv];
                 return (
                   <span key={idx} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
