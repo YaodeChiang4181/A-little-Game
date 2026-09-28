@@ -381,8 +381,27 @@ export default function App() {
         )}
 
         {gameState === 'playing' && (
-          <div className="battlefield">
-            {deployment.map((val, i) => {
+          <>
+            <div style={{
+              position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)',
+              background: 'rgba(0,0,0,0.7)', border: '2px solid rgba(255,255,255,0.2)',
+              padding: '8px 20px', borderRadius: '30px',
+              display: 'flex', alignItems: 'center', gap: '15px',
+              fontSize: '13px', color: '#ccc',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+              zIndex: 10, whiteSpace: 'nowrap'
+            }}>
+              <span style={{color: '#ffcc00', fontWeight: 'bold', marginRight: '5px'}}>卡牌圖鑑</span>
+              {Object.entries(CHESS_PIECES).map(([lv, piece]) => (
+                <span key={lv} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '16px', color: '#fff' }}>{piece.icon}</span> 
+                  <span>Lv.{lv}</span>
+                </span>
+              ))}
+            </div>
+
+            <div className="battlefield">
+              {deployment.map((val, i) => {
               const b = battleLogs[i]; // 有值代表該格已經翻開
               const isClashing = resolveStep === i;
               const hasDealt = dealStep > i || resolveStep >= 0; // 卡片是否已經飛入戰場
@@ -428,7 +447,8 @@ export default function App() {
                 </div>
               );
             })}
-          </div>
+            </div>
+          </>
         )}
       </div>
 
