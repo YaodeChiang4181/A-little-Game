@@ -25,6 +25,9 @@ export default function App() {
   const [deployment, setDeployment] = useState<(number | null)[]>([null, null, null]);
   const [battleLogs, setBattleLogs] = useState<any[]>([]);
 
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectProgress, setConnectProgress] = useState(0);
+
   const [isResolving, setIsResolving] = useState(false);
   const [dealStep, setDealStep] = useState(-1); // 處理敵方飛牌動畫
   const [resolveStep, setResolveStep] = useState(-1); // 處理翻牌與結算動畫
@@ -41,33 +44,50 @@ export default function App() {
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
   const startGame = async (isGuest: boolean = false) => {
+    setIsConnecting(true);
+    setConnectProgress(0);
+    
+    // 假進度條：為了友善體驗，我們模擬一個逐漸達到 90% 的動畫，等伺服器真正回應後再填滿
+    const progressInterval = setInterval(() => {
+      setConnectProgress(p => p < 90 ? p + (90 - p) * 0.1 : 90);
+    }, 500);
+
     try {
       const res = await fetch(`${API_BASE}/game/start`, { method: 'POST' });
       if (!res.ok) throw new Error('API Error');
       const data = await res.json();
 
-      setGameId(data.game_id);
-      setPlayerHp(data.player_hp);
-      setEnemyHp(data.enemy_hp);
-      setHand(data.player_hand || []);
-      setRoundPool(data.round_pool || []);
-      setPlayerRole(data.player_role);
-      setEnemyRole(data.enemy_role);
-      setDeployment([null, null, null]);
-      setGameState('playing');
-      setBattleLogs([]);
-      setHistory([]);
-      setWinner(null);
-      setShowHistory(false);
-      setDealStep(-1);
-      setResolveStep(-1);
+      clearInterval(progressInterval);
+      setConnectProgress(100);
 
-      if (isGuest) {
-        setShowTutorial(true);
-        setTutorialStep(0);
-      }
+      // 給 100% 一點展示時間再切換畫面
+      setTimeout(() => {
+        setIsConnecting(false);
+        setGameId(data.game_id);
+        setPlayerHp(data.player_hp);
+        setEnemyHp(data.enemy_hp);
+        setHand(data.player_hand || []);
+        setRoundPool(data.round_pool || []);
+        setPlayerRole(data.player_role);
+        setEnemyRole(data.enemy_role);
+        setDeployment([null, null, null]);
+        setGameState('playing');
+        setBattleLogs([]);
+        setHistory([]);
+        setWinner(null);
+        setShowHistory(false);
+        setDealStep(-1);
+        setResolveStep(-1);
+
+        if (isGuest) {
+          setShowTutorial(true);
+          setTutorialStep(0);
+        }
+      }, 600);
     } catch (e) {
-      alert("無法連接伺服器！");
+      clearInterval(progressInterval);
+      setIsConnecting(false);
+      alert("無法連接伺服器，請稍後再試！");
     }
   };
 
@@ -272,6 +292,28 @@ export default function App() {
 
   return (
     <div className="game-wrapper">
+
+      {/* 載入畫面 Loading Screen */}
+      {isConnecting && (
+        <div className="loading-screen">
+          <h2 style={{ color: '#fff', textShadow: '2px 2px #000', marginBottom: '30px', fontSize: '24px' }}>
+            連接伺服器中...
+          </h2>
+          <div style={{ width: '300px', height: '20px', border: '4px solid #fff', background: '#000', position: 'relative' }}>
+            <div style={{ width: `${connectProgress}%`, height: '100%', background: '#ffcc00', transition: 'width 0.5s ease-out' }} />
+            {/* 像素小人 */}
+            <div className="walking-sprite" style={{ 
+              position: 'absolute', top: '-35px', left: `calc(${connectProgress}% - 15px)`,
+              transition: 'left 0.5s ease-out', fontSize: '28px'
+            }}>
+              🚶
+            </div>
+          </div>
+          <div style={{ color: '#aaa', marginTop: '15px', fontSize: '14px' }}>
+            {connectProgress < 100 ? "首次喚醒需時較長，請耐心等候" : "連線成功！"}
+          </div>
+        </div>
+      )}
 
       {/* Menu 按鈕 */}
       {(gameState === 'playing' || gameState === 'idle') && !showTutorial && !showMenu && (
