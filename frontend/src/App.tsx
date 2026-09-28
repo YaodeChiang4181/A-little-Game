@@ -216,10 +216,55 @@ export default function App() {
   const TERRAIN_NAMES = ['沼澤地帶', '城鎮街道', '皇宮大殿'];
 
   const TUTORIAL_PAGES = [
-    { title: "～陣營輪替～", text: "這是一個比拚奇偶數的策略遊戲。\n雙方陣營分為【ODD 奇數】與【EVEN 偶數】，每局會自動換邊！" },
-    { title: "～戰場權重～", text: "每回合雙方抽出 3 張牌，請暗置於三大戰場：\n【沼澤】(x1) 【城鎮】(x2) 【皇宮】(x3)。" },
-    { title: "～氣勢連鎖～", text: "戰場會計算雙方卡牌差值並乘上地形倍率。\n贏下戰鬥的卡牌，下一局還會獲得【+1 經驗加成】！" },
-    { title: "～勝負結算～", text: "三個戰場的總積分若為【奇數】，則 ODD 發動攻擊；若為【偶數】，則 EVEN 發動攻擊。\n率先扣完 3 滴血者敗！" }
+    { 
+      title: "～陣營輪替～", 
+      text: "這是一個比拚奇偶數的策略遊戲。\n雙方陣營分為【ODD 奇數】與【EVEN 偶數】，每局會自動換邊！",
+      graphic: (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', background: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '8px', width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{color: '#aaa'}}>Round 1:</span> <span style={{ color: '#4CAF50' }}>玩家 (ODD)</span> <span>⚔️</span> <span style={{ color: '#ff4747' }}>對手 (EVEN)</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{color: '#aaa'}}>Round 2:</span> <span style={{ color: '#4CAF50' }}>玩家 (EVEN)</span> <span>⚔️</span> <span style={{ color: '#ff4747' }}>對手 (ODD)</span>
+          </div>
+        </div>
+      )
+    },
+    { 
+      title: "～戰場權重～", 
+      text: "每回合雙方抽出 3 張牌，請暗置於三大戰場：\n【沼澤】(x1) 【城鎮】(x2) 【皇宮】(x3)。",
+      graphic: (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', fontSize: '12px', width: '100%' }}>
+          <div style={{ flex: 1, padding: '10px 0', border: '2px dashed #2d5c38', backgroundColor: 'rgba(26,51,32,0.8)', borderRadius: '4px' }}>沼澤<br/><span style={{color: '#ffcc00'}}>x1</span></div>
+          <div style={{ flex: 1, padding: '10px 0', border: '2px dashed #704f38', backgroundColor: 'rgba(61,43,31,0.8)', borderRadius: '4px' }}>城鎮<br/><span style={{color: '#ffcc00'}}>x2</span></div>
+          <div style={{ flex: 1, padding: '10px 0', border: '2px dashed #8c2a2a', backgroundColor: 'rgba(74,21,21,0.8)', borderRadius: '4px' }}>皇宮<br/><span style={{color: '#ffcc00'}}>x3</span></div>
+        </div>
+      )
+    },
+    { 
+      title: "～氣勢連鎖～", 
+      text: "戰場會計算雙方卡牌差值並乘上地形倍率。\n贏下戰鬥的卡牌，下一局還會獲得【+1 經驗加成】！",
+      graphic: (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '14px', background: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '8px', width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px' }}>
+            <span style={{ color: '#4CAF50' }}>Lv.4 <span style={{ color: '#ffcc00' }}>(+1)</span></span> <span style={{fontSize: '10px', color: '#888'}}>VS</span> <span style={{ color: '#ff4747' }}>Lv.3</span>
+          </div>
+          <div style={{ color: '#00ffcc', fontSize: '12px', marginTop: '8px' }}>
+            玩家以 5 > 3 勝出，下局再獲加成！
+          </div>
+        </div>
+      )
+    },
+    { 
+      title: "～勝負結算～", 
+      text: "三個戰場的總積分若為【奇數】，則 ODD 發動攻擊；若為【偶數】，則 EVEN 發動攻擊。\n率先扣完 3 滴血者敗！",
+      graphic: (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', background: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '8px', width: '100%' }}>
+          <div>全場總積分: <span style={{ color: '#ffcc00', fontSize: '18px', fontWeight: 'bold' }}>15</span> <span style={{color: '#aaa', fontSize: '12px'}}>(奇數)</span></div>
+          <div style={{ marginTop: '5px' }}>👉 <span style={{ color: '#ffcc00', fontWeight: 'bold', textShadow: '1px 1px #000' }}>ODD 陣營</span> 成功造成 1 點傷害！</div>
+        </div>
+      )
+    }
   ];
 
   return (
@@ -262,9 +307,10 @@ export default function App() {
       {showTutorial && (
         <div className="tutorial-overlay">
           <div className="tutorial-box">
-            <div className="tutorial-content">
-              <h2 style={{ color: '#00ffcc', margin: '0 0 10px 0' }}>{TUTORIAL_PAGES[tutorialStep].title}</h2>
-              <div style={{ whiteSpace: 'pre-line' }}>{TUTORIAL_PAGES[tutorialStep].text}</div>
+            <div className="tutorial-content" style={{ width: '100%' }}>
+              <h2 style={{ color: '#00ffcc', margin: '0 0 15px 0', fontSize: '22px' }}>{TUTORIAL_PAGES[tutorialStep].title}</h2>
+              <div style={{ whiteSpace: 'pre-line', fontSize: '15px', marginBottom: '20px', color: '#ddd' }}>{TUTORIAL_PAGES[tutorialStep].text}</div>
+              {TUTORIAL_PAGES[tutorialStep].graphic}
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
