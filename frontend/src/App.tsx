@@ -32,9 +32,12 @@ export default function App() {
   const [history, setHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
 
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
-  const startGame = async () => {
+  const startGame = async (isGuest: boolean = false) => {
     try {
       const res = await fetch(`${API_BASE}/game/start`, { method: 'POST' });
       if (!res.ok) throw new Error('API Error');
@@ -54,6 +57,11 @@ export default function App() {
       setShowHistory(false);
       setDealStep(-1);
       setResolveStep(-1);
+      
+      if (isGuest) {
+        setShowTutorial(true);
+        setTutorialStep(0);
+      }
     } catch (e) {
       alert("無法連接伺服器！");
     }
@@ -205,8 +213,50 @@ export default function App() {
   const isDeployReady = deployedCount === 3;
   const TERRAIN_NAMES = ['沼澤地帶', '城鎮街道', '皇宮大殿'];
 
+  const TUTORIAL_PAGES = [
+    { title: "⚔️ 陣營輪替", text: "這是一個比拚奇偶數的策略遊戲。\n雙方陣營分為【ODD 奇數】與【EVEN 偶數】，每局會自動換邊！" },
+    { title: "🗺️ 戰場權重", text: "每回合雙方抽出 3 張牌，請暗置於三大戰場：\n【沼澤】(x1) 【城鎮】(x2) 【皇宮】(x3)。" },
+    { title: "🔥 氣勢連鎖", text: "戰場會計算雙方卡牌差值並乘上地形倍率。\n贏下戰鬥的卡牌，下一局還會獲得【+1 經驗加成】！" },
+    { title: "🏆 勝負結算", text: "三個戰場的總積分若為【奇數】，則 ODD 發動攻擊；若為【偶數】，則 EVEN 發動攻擊。\n率先扣完 3 滴血者敗！" }
+  ];
+
   return (
     <div className="game-wrapper">
+
+      {/* 玩法說明按鈕 */}
+      {(gameState === 'playing' || gameState === 'idle') && !showTutorial && (
+        <button className="help-btn" onClick={() => setShowTutorial(true)}>玩法說明 📖</button>
+      )}
+
+      {/* 新手教學遮罩 */}
+      {showTutorial && (
+        <div className="tutorial-overlay">
+          <div className="tutorial-box">
+            <div className="tutorial-content">
+              <h2 style={{ color: '#00ffcc', margin: '0 0 10px 0' }}>{TUTORIAL_PAGES[tutorialStep].title}</h2>
+              <div style={{ whiteSpace: 'pre-line' }}>{TUTORIAL_PAGES[tutorialStep].text}</div>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+              <button className="btn" style={{ padding: '10px', fontSize: '14px', background: '#555' }} 
+                      onClick={() => tutorialStep > 0 ? setTutorialStep(prev => prev - 1) : setShowTutorial(false)}>
+                {tutorialStep > 0 ? '← 上一頁' : '關閉'}
+              </button>
+              
+              <button className="btn" style={{ padding: '10px', fontSize: '14px' }} 
+                      onClick={() => tutorialStep < 3 ? setTutorialStep(prev => prev + 1) : setShowTutorial(false)}>
+                {tutorialStep < 3 ? '下一頁 →' : '開始遊戲 !'}
+              </button>
+            </div>
+            
+            <div className="tutorial-dots">
+              {[0, 1, 2, 3].map(i => (
+                <div key={i} className={`dot ${tutorialStep === i ? 'active' : ''}`} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ============ 左側/下方 玩家控制面板 ============ */}
       <div className="side-panel player-panel">
@@ -247,7 +297,10 @@ export default function App() {
             <h1 style={{ fontSize: '3.5rem', textShadow: '4px 4px 0 #000', margin: '0 0 20px 0' }}>
               氣勢連鎖奇偶戰<br /><span style={{ fontSize: '1.5rem', color: '#aaa' }}>像素西洋棋</span>
             </h1>
-            <button className="btn engage" onClick={startGame}>START BATTLE</button>
+            <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginTop: '30px' }}>
+              <button className="btn" style={{ background: '#4CAF50' }} onClick={() => startGame(true)}>訪客登入 (看教學)</button>
+              <button className="btn" style={{ background: '#ff4747' }} onClick={() => startGame(false)}>老手登入 (直接戰)</button>
+            </div>
           </div>
         )}
 
@@ -375,8 +428,9 @@ export default function App() {
                 {winner === 'player' ? 'VICTORY' : 'DEFEAT'}
               </h1>
               <div style={{ display: 'flex', gap: '20px', marginTop: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                <button className="btn engage" onClick={startGame}>再來一局</button>
+                <button className="btn engage" onClick={() => startGame(false)}>再來一局</button>
                 <button className="btn" style={{ background: '#555' }} onClick={() => setShowHistory(true)}>戰況歷史</button>
+                <button className="btn" style={{ background: '#333' }} onClick={() => setGameState('idle')}>主選單</button>
               </div>
             </>
           )}
