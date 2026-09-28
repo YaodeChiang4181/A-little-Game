@@ -250,7 +250,7 @@ export default function App() {
             <span style={{ color: '#4CAF50' }}>Lv.4 <span style={{ color: '#ffcc00' }}>(+1)</span></span> <span style={{fontSize: '10px', color: '#888'}}>VS</span> <span style={{ color: '#ff4747' }}>Lv.3</span>
           </div>
           <div style={{ color: '#00ffcc', fontSize: '12px', marginTop: '8px' }}>
-            玩家以 5 > 3 勝出，下局再獲加成！
+            玩家以 5 &gt; 3 勝出，下局再獲加成！
           </div>
         </div>
       )
