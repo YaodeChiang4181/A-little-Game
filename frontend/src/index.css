@@ -29,7 +29,7 @@ body {
   flex-direction: column;
   position: relative;
   background-color: #1e293b;
-  background-image: url("data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='64' height='64' fill='%231e293b'/%3E%3Cpath d='M0 31h64v2H0z M0 63h64v2H0z M31 0v31h2V0z M63 32v31h2V32z' fill='%230f172a'/%3E%3Cpath d='M0 0h31v2H0z M32 32h31v2H32z M0 0v31h2V0z M32 32v31h2V32z' fill='%23334155'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='128' height='128' viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='128' height='128' fill='%231e293b'/%3E%3Cpath d='M0 31h128v2H0z M0 63h128v2H0z M0 95h128v2H0z M0 127h128v2H0z M42 0v31h2V0z M92 0v31h2V0z M30 32v31h2V32z M78 32v31h2V32z M50 64v31h2V64z M90 64v31h2V64z M36 96v31h2V96z M88 96v31h2V96z' fill='%230f172a'/%3E%3Cpath d='M0 0h42v2H0z M44 0h48v2H44z M94 0h34v2H94z M0 32h30v2H0z M32 32h46v2H32z M80 32h48v2H80z M0 64h50v2H0z M52 64h38v2H52z M92 64h36v2H92z M0 96h36v2H0z M38 96h50v2H38z M90 96h38v2H90z M0 0v31h2V0z M44 0v31h2V0z M94 0v31h2V0z M0 32v31h2V32z M32 32v31h2V32z M80 32v31h2V32z M0 64v31h2V64z M52 64v31h2V64z M92 64v31h2V64z M0 96v31h2V96z M38 96v31h2V96z M90 96v31h2V96z' fill='%23334155'/%3E%3C/svg%3E");
 }
 
 .hud-box {

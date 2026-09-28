@@ -222,10 +222,10 @@ export default function App() {
       graphic: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', background: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '8px', width: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#aaa' }}>Round 1:</span> <span style={{ color: '#4CAF50' }}>玩家 (ODD)</span> <span>"vs"</span> <span style={{ color: '#ff4747' }}>對手 (EVEN)</span>
+            <span style={{ color: '#aaa' }}>Round 1:</span> <span style={{ color: '#4CAF50' }}>玩家 (ODD)</span> <span>vs</span> <span style={{ color: '#ff4747' }}>對手 (EVEN)</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#aaa' }}>Round 2:</span> <span style={{ color: '#4CAF50' }}>玩家 (EVEN)</span> <span>"vs"</span> <span style={{ color: '#ff4747' }}>對手 (ODD)</span>
+            <span style={{ color: '#aaa' }}>Round 2:</span> <span style={{ color: '#4CAF50' }}>玩家 (EVEN)</span> <span>vs</span> <span style={{ color: '#ff4747' }}>對手 (ODD)</span>
           </div>
         </div>
       )
@@ -261,7 +261,7 @@ export default function App() {
       graphic: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', background: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '8px', width: '100%' }}>
           <div>全場總積分: <span style={{ color: '#ffcc00', fontSize: '18px', fontWeight: 'bold' }}>15</span> <span style={{ color: '#aaa', fontSize: '12px' }}>(奇數)</span></div>
-          <div style={{ marginTop: '5px' }}>👉 <span style={{ color: '#ffcc00', fontWeight: 'bold', textShadow: '1px 1px #000' }}>ODD 陣營</span> 成功造成 1 點傷害！</div>
+          <div style={{ marginTop: '5px' }}><span style={{ color: '#ffcc00', fontWeight: 'bold', textShadow: '1px 1px #000' }}>ODD 陣營</span> 成功造成 1 點傷害！</div>
         </div>
       )
     }
@@ -337,7 +337,7 @@ export default function App() {
       {/* ============ 左側/下方 玩家控制面板 ============ */}
       <div className="side-panel player-panel">
         {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
-          <div className="hud-box player-hud" style={{ justifyContent: 'space-between' }}>
+          <div className="hud-box player-hud" style={{ justifyContent: 'space-between', marginTop: '40px' }}>
             <div style={{ fontWeight: 'bold', color: '#fff' }}>{playerRole} (玩家)</div>
             <div className="hp-bar">{renderHearts(playerHp)}</div>
           </div>
