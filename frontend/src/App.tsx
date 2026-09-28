@@ -34,7 +34,7 @@ export default function App() {
 
   const [showTutorial, setShowTutorial] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
-  
+
   const [showMenu, setShowMenu] = useState(false);
 
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
@@ -216,38 +216,38 @@ export default function App() {
   const TERRAIN_NAMES = ['沼澤地帶', '城鎮街道', '皇宮大殿'];
 
   const TUTORIAL_PAGES = [
-    { 
-      title: "～陣營輪替～", 
+    {
+      title: "～陣營輪替～",
       text: "這是一個比拚奇偶數的策略遊戲。\n雙方陣營分為【ODD 奇數】與【EVEN 偶數】，每局會自動換邊！",
       graphic: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', background: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '8px', width: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{color: '#aaa'}}>Round 1:</span> <span style={{ color: '#4CAF50' }}>玩家 (ODD)</span> <span>⚔️</span> <span style={{ color: '#ff4747' }}>對手 (EVEN)</span>
+            <span style={{ color: '#aaa' }}>Round 1:</span> <span style={{ color: '#4CAF50' }}>玩家 (ODD)</span> <span>"vs"</span> <span style={{ color: '#ff4747' }}>對手 (EVEN)</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{color: '#aaa'}}>Round 2:</span> <span style={{ color: '#4CAF50' }}>玩家 (EVEN)</span> <span>⚔️</span> <span style={{ color: '#ff4747' }}>對手 (ODD)</span>
+            <span style={{ color: '#aaa' }}>Round 2:</span> <span style={{ color: '#4CAF50' }}>玩家 (EVEN)</span> <span>"vs"</span> <span style={{ color: '#ff4747' }}>對手 (ODD)</span>
           </div>
         </div>
       )
     },
-    { 
-      title: "～戰場權重～", 
-      text: "每回合雙方抽出 3 張牌，請暗置於三大戰場：\n【沼澤】(x1) 【城鎮】(x2) 【皇宮】(x3)。",
+    {
+      title: "～戰場權重～",
+      text: "每回合雙方從牌庫中抽出 3 位角色，並放置於三大戰場：\n【沼澤】(x1) 【城鎮】(x2) 【皇宮】(x3)。",
       graphic: (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', fontSize: '12px', width: '100%' }}>
-          <div style={{ flex: 1, padding: '10px 0', border: '2px dashed #2d5c38', backgroundColor: 'rgba(26,51,32,0.8)', borderRadius: '4px' }}>沼澤<br/><span style={{color: '#ffcc00'}}>x1</span></div>
-          <div style={{ flex: 1, padding: '10px 0', border: '2px dashed #704f38', backgroundColor: 'rgba(61,43,31,0.8)', borderRadius: '4px' }}>城鎮<br/><span style={{color: '#ffcc00'}}>x2</span></div>
-          <div style={{ flex: 1, padding: '10px 0', border: '2px dashed #8c2a2a', backgroundColor: 'rgba(74,21,21,0.8)', borderRadius: '4px' }}>皇宮<br/><span style={{color: '#ffcc00'}}>x3</span></div>
+          <div style={{ flex: 1, padding: '10px 0', border: '2px dashed #2d5c38', backgroundColor: 'rgba(26,51,32,0.8)', borderRadius: '4px' }}>沼澤<br /><span style={{ color: '#ffcc00' }}>x1</span></div>
+          <div style={{ flex: 1, padding: '10px 0', border: '2px dashed #704f38', backgroundColor: 'rgba(61,43,31,0.8)', borderRadius: '4px' }}>城鎮<br /><span style={{ color: '#ffcc00' }}>x2</span></div>
+          <div style={{ flex: 1, padding: '10px 0', border: '2px dashed #8c2a2a', backgroundColor: 'rgba(74,21,21,0.8)', borderRadius: '4px' }}>皇宮<br /><span style={{ color: '#ffcc00' }}>x3</span></div>
         </div>
       )
     },
-    { 
-      title: "～氣勢連鎖～", 
-      text: "戰場會計算雙方卡牌差值並乘上地形倍率。\n贏下戰鬥的卡牌，下一局還會獲得【+1 經驗加成】！",
+    {
+      title: "～氣勢連鎖～",
+      text: "戰場會計算雙方角色等級差值並乘上地形倍率。\n贏下前場戰鬥的角色，下一局還會為我方獲得【+1 經驗加成】！",
       graphic: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '14px', background: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '8px', width: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px' }}>
-            <span style={{ color: '#4CAF50' }}>Lv.4 <span style={{ color: '#ffcc00' }}>(+1)</span></span> <span style={{fontSize: '10px', color: '#888'}}>VS</span> <span style={{ color: '#ff4747' }}>Lv.3</span>
+            <span style={{ color: '#4CAF50' }}>Lv.4 <span style={{ color: '#ffcc00' }}>(+1)</span></span> <span style={{ fontSize: '10px', color: '#888' }}>VS</span> <span style={{ color: '#ff4747' }}>Lv.3</span>
           </div>
           <div style={{ color: '#00ffcc', fontSize: '12px', marginTop: '8px' }}>
             玩家以 5 &gt; 3 勝出，下局再獲加成！
@@ -255,12 +255,12 @@ export default function App() {
         </div>
       )
     },
-    { 
-      title: "～勝負結算～", 
+    {
+      title: "～勝負結算～",
       text: "三個戰場的總積分若為【奇數】，則 ODD 發動攻擊；若為【偶數】，則 EVEN 發動攻擊。\n率先扣完 3 滴血者敗！",
       graphic: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', background: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '8px', width: '100%' }}>
-          <div>全場總積分: <span style={{ color: '#ffcc00', fontSize: '18px', fontWeight: 'bold' }}>15</span> <span style={{color: '#aaa', fontSize: '12px'}}>(奇數)</span></div>
+          <div>全場總積分: <span style={{ color: '#ffcc00', fontSize: '18px', fontWeight: 'bold' }}>15</span> <span style={{ color: '#aaa', fontSize: '12px' }}>(奇數)</span></div>
           <div style={{ marginTop: '5px' }}>👉 <span style={{ color: '#ffcc00', fontWeight: 'bold', textShadow: '1px 1px #000' }}>ODD 陣營</span> 成功造成 1 點傷害！</div>
         </div>
       )
@@ -284,19 +284,19 @@ export default function App() {
         <div className="tutorial-overlay" style={{ zIndex: 1000 }} onClick={() => setShowMenu(false)}>
           <div className="tutorial-box" style={{ minHeight: 'auto', width: '300px', padding: '30px' }} onClick={e => e.stopPropagation()}>
             <h2 style={{ textAlign: 'center', color: '#fff', marginTop: 0, marginBottom: '30px', textShadow: '2px 2px 0 #000' }}>MENU</h2>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <button className="btn" onClick={() => {
                 setShowMenu(false);
                 setShowTutorial(true);
                 setTutorialStep(0);
               }}>玩法說明</button>
-              
+
               <button className="btn" style={{ background: '#ff4747' }} onClick={() => {
                 setShowMenu(false);
                 setGameState('idle');
               }}>返回主畫面</button>
-              
+
               <button className="btn" style={{ background: '#555' }} onClick={() => setShowMenu(false)}>取消</button>
             </div>
           </div>
@@ -337,7 +337,7 @@ export default function App() {
       {/* ============ 左側/下方 玩家控制面板 ============ */}
       <div className="side-panel player-panel">
         {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
-          <div className="hud-box player-hud">
+          <div className="hud-box player-hud" style={{ justifyContent: 'space-between' }}>
             <div style={{ fontWeight: 'bold', color: '#fff' }}>{playerRole} (玩家)</div>
             <div className="hp-bar">{renderHearts(playerHp)}</div>
           </div>
@@ -435,7 +435,7 @@ export default function App() {
       {/* ============ 右側/右上方 對手控制面板 ============ */}
       <div className="side-panel enemy-panel">
         {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
-          <div className="hud-box enemy-hud" style={{ textAlign: 'right' }}>
+          <div className="hud-box enemy-hud" style={{ justifyContent: 'space-between', marginTop: '40px' }}>
             <div style={{ fontWeight: 'bold', color: '#fff' }}>{enemyRole} (對手)</div>
             <div className="hp-bar" style={{ justifyContent: 'flex-end' }}>{renderHearts(enemyHp)}</div>
           </div>
