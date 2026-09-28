@@ -11,6 +11,9 @@ from database import engine, get_db
 from engine import resolve_round, apply_damage, GameState, CARD_POOL, HAND_SIZE
 from ai_agent import choose_best_deployment
 
+# 儲存每局當下的敵方手牌 (Memory Cache)
+active_enemy_hands: Dict[int, List[int]] = {}
+
 # 建立資料庫資料表
 models.Base.metadata.create_all(bind=engine)
 
@@ -40,14 +43,20 @@ def start_game(db: Session = Depends(get_db)):
     db.commit()
     db.refresh(game)
     
-    # 抽取玩家初始手牌
+    # 抽取玩家與敵方初始手牌
     player_hand = draw_hand()
+    enemy_hand = draw_hand()
+    
+    # 紀錄敵方手牌並計算回合可用牌池 (唯一值)
+    active_enemy_hands[game.id] = enemy_hand
+    round_pool = sorted(list(set(player_hand + enemy_hand)))
     
     return {
         "game_id": game.id,
         "player_hp": game.player_hp,
         "enemy_hp": game.enemy_hp,
         "player_hand": player_hand,
+        "round_pool": round_pool,
         "player_role": "ODD",
         "enemy_role": "EVEN"
     }
@@ -64,8 +73,12 @@ def resolve_game_round(req: schemas.ResolveRoundRequest, db: Session = Depends(g
     round_count = db.query(models.Round).filter(models.Round.game_id == game.id).count()
     round_number = round_count + 1
     
-    # AI 抽取敵方手牌並運算出最佳部署
-    enemy_hand = draw_hand()
+    # 取得本回合已抽好的敵方手牌
+    enemy_hand = active_enemy_hands.get(game.id)
+    if not enemy_hand:
+        # Fallback (防錯)
+        enemy_hand = draw_hand()
+        
     enemy_deployment = choose_best_deployment(enemy_hand, round_number=round_number)
     
     # 核心引擎結算此局戰鬥
@@ -109,8 +122,16 @@ def resolve_game_round(req: schemas.ResolveRoundRequest, db: Session = Depends(g
     db.add(round_record)
     db.commit()
     
-    # 若遊戲尚未結束，為玩家抽出下一回合手牌
-    next_player_hand = draw_hand() if not game_over else []
+    # 若遊戲尚未結束，為玩家與對手抽出下一回合手牌
+    if not game_over:
+        next_player_hand = draw_hand()
+        next_enemy_hand = draw_hand()
+        active_enemy_hands[game.id] = next_enemy_hand
+        next_round_pool = sorted(list(set(next_player_hand + next_enemy_hand)))
+    else:
+        next_player_hand = []
+        next_round_pool = []
+        active_enemy_hands.pop(game.id, None)
     
     next_round_number = round_number + 1
     next_player_is_odd = (next_round_number % 2 != 0)
@@ -127,5 +148,6 @@ def resolve_game_round(req: schemas.ResolveRoundRequest, db: Session = Depends(g
         "enemy_hp": game.enemy_hp,
         "game_over": game_over,
         "winner": winner,
-        "next_player_hand": next_player_hand
+        "next_player_hand": next_player_hand,
+        "next_round_pool": next_round_pool
     }

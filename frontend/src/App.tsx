@@ -21,6 +21,7 @@ export default function App() {
   const [enemyRole, setEnemyRole] = useState("EVEN");
 
   const [hand, setHand] = useState<number[]>([]);
+  const [roundPool, setRoundPool] = useState<number[]>([]);
   const [deployment, setDeployment] = useState<(number | null)[]>([null, null, null]);
   const [battleLogs, setBattleLogs] = useState<any[]>([]);
 
@@ -49,6 +50,7 @@ export default function App() {
       setPlayerHp(data.player_hp);
       setEnemyHp(data.enemy_hp);
       setHand(data.player_hand);
+      setRoundPool(data.round_pool);
       setPlayerRole(data.player_role);
       setEnemyRole(data.enemy_role);
       setDeployment([null, null, null]);
@@ -169,6 +171,7 @@ export default function App() {
           } else {
             setDeployment([null, null, null]);
             setHand(pendingResult.next_player_hand);
+            setRoundPool(pendingResult.next_round_pool);
             setPlayerRole(pendingResult.player_role);
             setEnemyRole(pendingResult.enemy_role);
           }
@@ -391,13 +394,16 @@ export default function App() {
               boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
               zIndex: 10, whiteSpace: 'nowrap'
             }}>
-              <span style={{color: '#ffcc00', fontWeight: 'bold', marginRight: '5px'}}>卡牌圖鑑</span>
-              {Object.entries(CHESS_PIECES).map(([lv, piece]) => (
-                <span key={lv} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '16px', color: '#fff' }}>{piece.icon}</span> 
-                  <span>Lv.{lv}</span>
-                </span>
-              ))}
+              <span style={{color: '#ffcc00', fontWeight: 'bold', marginRight: '5px'}}>本局出戰名單 (雙方共 6 抽)</span>
+              {roundPool.map((lv, idx) => {
+                const piece = CHESS_PIECES[lv];
+                return (
+                  <span key={idx} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '16px', color: '#fff' }}>{piece?.icon}</span> 
+                    <span>Lv.{lv}</span>
+                  </span>
+                )
+              })}
             </div>
 
             <div className="battlefield">

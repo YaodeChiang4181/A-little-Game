@@ -6,6 +6,7 @@ class StartGameResponse(BaseModel):
     player_hp: int
     enemy_hp: int
     player_hand: List[int]
+    round_pool: List[int]
     player_role: str = "ODD"
     enemy_role: str = "EVEN"
 
@@ -27,3 +28,4 @@ class ResolveRoundResponse(BaseModel):
     game_over: bool
     winner: Optional[str] = None
     next_player_hand: List[int] = []
+    next_round_pool: List[int] = []
