@@ -3,7 +3,7 @@ import { Terrain } from '../game/types';
 
 interface TerrainBannerProps {
   terrain: Terrain;
-  index: number;
+  index?: number;
 }
 
 export const TerrainBanner: React.FC<TerrainBannerProps> = ({ terrain }) => {

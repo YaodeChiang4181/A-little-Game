@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './index.css';
-import { Character, Terrain, SingleBattleRecord, RoundResolutionResult } from './game/types';
+import { Character, SingleBattleRecord, RoundResolutionResult } from './game/types';
 import { initGameSession, resolveTurn, GameSession } from './game/gameService';
 import { CardView } from './components/CardView';
 import { TerrainBanner } from './components/TerrainBanner';
@@ -20,7 +20,6 @@ export default function App() {
   const [dealStep, setDealStep] = useState(-1);       // 敵方飛牌動畫 (0, 1, 2, 3)
   const [resolveStep, setResolveStep] = useState(-1); // 逐格翻牌與結算動畫 (0, 1, 2, 3)
   const [pendingResult, setPendingResult] = useState<RoundResolutionResult | null>(null);
-  const [pendingEnemyDeployment, setPendingEnemyDeployment] = useState<Character[]>([]);
   const [battleLogs, setBattleLogs] = useState<SingleBattleRecord[]>([]);
 
   // 歷史戰況紀錄
@@ -102,13 +101,12 @@ export default function App() {
     setIsResolving(true);
 
     // 本地純前端引擎即時結算（0ms 延遲，包含特性鉤子與 AI 24 種模擬）
-    const { result, enemyDeployment, nextSession } = resolveTurn(
+    const { result, nextSession } = resolveTurn(
       session,
       deployment as Character[]
     );
 
     setPendingResult(result);
-    setPendingEnemyDeployment(enemyDeployment);
     setBattleLogs([]);
 
     // 更新下一回合 session 暫存
@@ -469,7 +467,6 @@ export default function App() {
                 const b = battleLogs[i];
                 const isClashing = resolveStep === i;
                 const hasDealt = dealStep > i || resolveStep >= 0;
-                const enemyChar = pendingEnemyDeployment[i] || null;
                 const terrain = currentTerrains[i] || {
                   id: 'unknown',
                   name: `戰場 ${i + 1}`,
@@ -629,7 +626,6 @@ export default function App() {
             >
               <h2 style={{ textAlign: 'center', color: '#ffcc00', marginTop: 0 }}>戰況歷史覆盤</h2>
               {history.map((h, i) => {
-                const isPlayerOdd = h.player_role === 'ODD';
                 return (
                   <div key={i} style={{ borderBottom: '1px solid #444', padding: '15px 0' }}>
                     <div

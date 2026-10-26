@@ -196,7 +196,7 @@ export const INITIAL_CHARACTERS: Character[] = [
       badge: '王威',
       trigger: 'BEFORE_CLASH',
       description: '若佈署在權重最高（weight >= 3）的戰場，額外獲得 +1 戰力加成！',
-      execute: (ctx, isPlayer) => {
+      execute: (ctx) => {
         if (ctx.terrain.weight >= 3) {
           return {
             bonusEff: 1,
