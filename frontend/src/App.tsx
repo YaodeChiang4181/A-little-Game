@@ -195,10 +195,10 @@ export default function App() {
   }, [resolveStep, pendingResult]);
 
   // 16x16 點陣像素心之容器
-  const renderHearts = (hp: number) => {
+  const renderHearts = (hp: number, size: number = 18) => {
     return Array.from({ length: 3 }).map((_, i) => (
-      <span key={i} style={{ display: 'inline-flex', marginRight: '4px' }}>
-        <PixelHeart filled={i < hp} size={18} />
+      <span key={i} style={{ display: 'inline-flex', marginRight: '3px' }}>
+        <PixelHeart filled={i < hp} size={size} />
       </span>
     ));
   };
@@ -261,15 +261,15 @@ export default function App() {
 
   return (
     <div className="game-wrapper">
-      {/* 頂部圖鑑百科按鈕 */}
-      <button className="compendium-btn" onClick={() => setShowCompendium(true)}>
+      {/* ============ 電腦版專屬頂部導覽按鈕 ============ */}
+      <button className="compendium-btn desktop-only" onClick={() => setShowCompendium(true)}>
         [ 圖鑑 ]
       </button>
 
-      {/* Menu 選單按鈕 */}
+      {/* 電腦版 Menu 選單按鈕 */}
       {(gameState === 'playing' || gameState === 'idle') && !showTutorial && !showMenu && (
         <button
-          className="help-btn"
+          className="help-btn desktop-only"
           onClick={() => setShowMenu(true)}
           style={{ display: 'flex', flexDirection: 'column', padding: '8px' }}
         >
@@ -278,6 +278,45 @@ export default function App() {
           <div style={{ width: '24px', height: '4px', background: '#fff', margin: '2px 0' }} />
         </button>
       )}
+
+      {/* ============ 手機版專屬頂部導覽與 HUD 狀態列 (Docked Top Header) ============ */}
+      <header className="mobile-header-bar mobile-only">
+        {/* 第一列：快捷操作與本局登場名冊 */}
+        <div className="mobile-nav-row">
+          <button className="mobile-btn" onClick={() => setShowCompendium(true)}>
+            [ 圖鑑 ]
+          </button>
+
+          {/* 手機版精簡名冊晶片 */}
+          <div className="mobile-deck-roster">
+            {session?.roundPool.map(char => (
+              <span key={char.id} className="mobile-roster-item" title={`${char.name} (LV.${char.level})`}>
+                <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={13} />
+                <span>{char.name}</span>
+              </span>
+            ))}
+          </div>
+
+          <button className="mobile-btn menu-btn" onClick={() => setShowMenu(true)}>
+            [ 選單 ]
+          </button>
+        </div>
+
+        {/* 第二列：雙方血量與陣營狀態 (進行中或結算時) */}
+        {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
+          <div className="mobile-huds-row">
+            <div className="mobile-hud player">
+              <span>[ {session?.playerRole} ] 玩家</span>
+              <div className="hp-bar">{renderHearts(displayPlayerHp, 14)}</div>
+            </div>
+            <div className="mobile-hud-vs">VS</div>
+            <div className="mobile-hud enemy">
+              <span>[ {session?.enemyRole} ] 對手</span>
+              <div className="hp-bar">{renderHearts(displayEnemyHp, 14)}</div>
+            </div>
+          </div>
+        )}
+      </header>
 
       {/* Menu 選單彈窗 */}
       {showMenu && (
@@ -368,8 +407,8 @@ export default function App() {
         </div>
       )}
 
-      {/* ============ 玩家控制面板 (左側 / 手機下方) ============ */}
-      <div className="side-panel player-panel">
+      {/* ============ 玩家控制面板 (左側 / 電腦版) ============ */}
+      <div className="side-panel player-panel desktop-only">
         {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
           <div className="hud-box player-hud">
             <div style={{ fontWeight: 'bold', color: '#00ffcc', letterSpacing: '1px' }}>
@@ -431,19 +470,19 @@ export default function App() {
       {/* ============ 中央 戰鬥舞台 ============ */}
       <div className="main-stage">
         {gameState === 'idle' && (
-          <div style={{ textAlign: 'center' }}>
-            <h1 style={{ fontSize: '3.2rem', textShadow: '4px 4px 0 #000', margin: '0 0 10px 0', letterSpacing: '2px' }}>
+          <div style={{ textAlign: 'center', padding: '0 15px' }}>
+            <h1 style={{ fontSize: 'clamp(1.8rem, 5vw, 3.2rem)', textShadow: '4px 4px 0 #000', margin: '0 0 10px 0', letterSpacing: '2px', lineHeight: '1.2' }}>
               氣勢連鎖<br />
-              <span style={{ fontSize: '1.5rem', color: '#00ffcc' }}>奇偶戰 · 點陣西洋棋</span>
+              <span style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.5rem)', color: '#00ffcc' }}>奇偶戰 · 點陣西洋棋</span>
             </h1>
-            <div style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '30px', letterSpacing: '1px' }}>
+            <div style={{ color: '#94a3b8', fontSize: 'clamp(11px, 2.5vw, 13px)', marginBottom: '25px', letterSpacing: '1px' }}>
               [ 4選3手牌管理 · 角色專屬特性 · 動態環境戰場 ]
             </div>
-            <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-              <button className="btn" style={{ background: '#0f766e' }} onClick={() => startGame(true)}>
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+              <button className="btn" style={{ background: '#0f766e', fontSize: 'clamp(14px, 3.5vw, 18px)', padding: '10px 20px' }} onClick={() => startGame(true)}>
                 新手指南
               </button>
-              <button className="btn" style={{ background: '#dc2626' }} onClick={() => startGame(false)}>
+              <button className="btn" style={{ background: '#dc2626', fontSize: 'clamp(14px, 3.5vw, 18px)', padding: '10px 20px' }} onClick={() => startGame(false)}>
                 立即開戰
               </button>
             </div>
@@ -452,8 +491,8 @@ export default function App() {
 
         {gameState === 'playing' && (
           <>
-            {/* 本局登場角色列表 (零 Emoji，純像素圖示) */}
-            <div className="deck-info-box">
+            {/* 本局登場角色列表 (電腦版專屬) */}
+            <div className="deck-info-box desktop-only">
               <span className="deck-info-title">[ 對陣名冊 ]</span>
               {session?.roundPool.map(char => (
                 <span key={char.id} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -484,7 +523,7 @@ export default function App() {
                     <TerrainBanner terrain={terrain} index={i} />
 
                     {/* 敵方陣地 */}
-                    <div style={{ height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="slot-card-box">
                       {b ? (
                         <CardView
                           character={b.enemy_char}
@@ -496,7 +535,7 @@ export default function App() {
                       ) : hasDealt ? (
                         <div
                           className="card black-piece fly-in"
-                          style={{ borderColor: '#000', color: '#fff', fontSize: '32px', fontFamily: 'monospace' }}
+                          style={{ borderColor: '#000', color: '#fff', fontSize: '22px', fontFamily: 'monospace' }}
                         >
                           ?
                         </div>
@@ -506,19 +545,9 @@ export default function App() {
                     </div>
 
                     {/* 中央算式推演與特性浮動標籤 */}
-                    <div
-                      style={{
-                        position: 'relative',
-                        width: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        minHeight: '36px'
-                      }}
-                    >
+                    <div className="clash-center-box">
                       {!isClashing && (
-                        <div style={{ fontSize: '20px', color: '#ffcc00', textShadow: '2px 2px 0 #000', letterSpacing: '2px' }}>
+                        <div style={{ fontSize: '18px', color: '#ffcc00', textShadow: '2px 2px 0 #000', letterSpacing: '1px' }}>
                           VS
                         </div>
                       )}
@@ -533,14 +562,14 @@ export default function App() {
                           </div>
                           <div className="typewriter type-2">
                             差值 {b.diff} × <span style={{ color: '#f59e0b' }}>x{b.weight} ({b.terrain.name})</span> ={' '}
-                            <span style={{ color: '#ff4747', fontSize: '18px', fontWeight: 'bold' }}>
+                            <span style={{ color: '#ff4747', fontSize: '16px', fontWeight: 'bold' }}>
                               {b.score}
                             </span>
                           </div>
 
                           {/* 特性觸發街機標籤 */}
                           {b.traits_triggered.length > 0 && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginTop: '4px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginTop: '3px' }}>
                               {b.traits_triggered.map((t, idx) => (
                                 <div key={idx} className="trait-popup-badge">
                                   {t.text}
@@ -554,7 +583,7 @@ export default function App() {
 
                     {/* 我方陣地 */}
                     <div
-                      style={{ height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      className="slot-card-box"
                       onClick={() => handleSlotClick(playerChar, i)}
                     >
                       <CardView
@@ -573,8 +602,8 @@ export default function App() {
         )}
       </div>
 
-      {/* ============ 對手控制面板 (右側 / 手機上方) ============ */}
-      <div className="side-panel enemy-panel">
+      {/* ============ 對手控制面板 (右側 / 電腦版) ============ */}
+      <div className="side-panel enemy-panel desktop-only">
         {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
           <div className="hud-box enemy-hud">
             <div style={{ fontWeight: 'bold', color: '#ff4747', letterSpacing: '1px' }}>
@@ -611,6 +640,54 @@ export default function App() {
           </div>
         )}
       </div>
+
+      {/* ============ 手機版專用底部手牌托盤與出兵按鈕 (Docked Bottom Tray) ============ */}
+      {gameState === 'playing' && (
+        <div className="mobile-bottom-tray mobile-only">
+          <div className="mobile-hand-hint">
+            {isDeployReady ? '[ 戰備完畢 ] 點擊槽位可撤回更換' : '[ 佈署階段 ] 選擇 3 位棋子進戰場'}
+          </div>
+
+          {/* 4 張手牌展示區 */}
+          <div
+            className="mobile-hand-container"
+            style={{
+              opacity: isResolving ? 0.5 : 1,
+              pointerEvents: isResolving ? 'none' : 'auto'
+            }}
+          >
+            {hand.map((card, i) => {
+              const isStandbyCard = isDeployReady;
+              return (
+                <div key={card.id + i} onClick={() => handleCardClick(card, i)}>
+                  <CardView
+                    character={card}
+                    color="white"
+                    isUnselectedHand={isStandbyCard}
+                  />
+                </div>
+              );
+            })}
+            {hand.length === 0 && (
+              <div style={{ color: '#64748b', fontSize: '11px', display: 'flex', alignItems: 'center' }}>
+                手牌已全數佈署
+              </div>
+            )}
+          </div>
+
+          <button
+            className={`mobile-deploy-btn btn ${isDeployReady && !isResolving ? 'engage' : ''}`}
+            onClick={submitDeployment}
+            disabled={!isDeployReady || isResolving}
+          >
+            {isResolving
+              ? '決鬥交鋒中...'
+              : isDeployReady
+              ? '出征決鬥！'
+              : `佈署兵力 (${deployedCount}/3)`}
+          </button>
+        </div>
+      )}
 
       {/* ============ 遊戲結束與戰況歷史覆盤 ============ */}
       {gameState === 'game_over' && (

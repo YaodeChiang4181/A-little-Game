@@ -53,20 +53,20 @@ export const CardView: React.FC<CardViewProps> = ({
       }}
     >
       {/* 像素角色圖示 */}
-      <div style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="card-icon-container" style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {isImg ? (
           <img
             src={character.avatar.src}
             alt={character.name}
-            style={{ width: '36px', height: '36px', imageRendering: 'pixelated' }}
+            style={{ imageRendering: 'pixelated' }}
           />
         ) : (
-          <PixelPieceIcon type={character.avatar.src || character.id} color={color} size={36} />
+          <PixelPieceIcon type={character.avatar.src || character.id} color={color} />
         )}
       </div>
 
       {/* 角色名稱 */}
-      <div style={{ fontSize: '13px', fontWeight: 'bold', letterSpacing: '1px' }}>{character.name}</div>
+      <div className="card-name-text">{character.name}</div>
 
       {/* 等級與特性標籤 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '3px' }}>
