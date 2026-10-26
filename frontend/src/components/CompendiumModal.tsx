@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { getAllCharacters } from '../game/registry/characters';
 import { TERRAIN_POOL } from '../game/registry/terrains';
+import { PixelPieceIcon, PixelTerrainSigil } from './PixelIcons';
 
 interface CompendiumModalProps {
   onClose: () => void;
@@ -14,15 +15,15 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
     <div className="tutorial-overlay" style={{ zIndex: 1100 }} onClick={onClose}>
       <div
         className="tutorial-box"
-        style={{ width: '92%', maxWidth: '600px', maxHeight: '85vh', overflowY: 'auto' }}
+        style={{ width: '92%', maxWidth: '580px', maxHeight: '85vh', overflowY: 'auto' }}
         onClick={e => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-          <h2 style={{ color: '#ffcc00', margin: 0, textShadow: '2px 2px 0 #000' }}>
-            📖 戰術百科圖鑑
+          <h2 style={{ color: '#ffcc00', margin: 0, fontSize: '18px', letterSpacing: '1px' }}>
+            [ 戰術百科 COMPENDIUM ]
           </h2>
-          <button className="btn" style={{ padding: '6px 12px', fontSize: '12px', background: '#444' }} onClick={onClose}>
-            ✕ 關閉
+          <button className="btn" style={{ padding: '6px 14px', fontSize: '12px', background: '#334155' }} onClick={onClose}>
+            關閉
           </button>
         </div>
 
@@ -33,53 +34,57 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
             style={{
               flex: 1,
               padding: '8px',
-              fontSize: '14px',
-              background: tab === 'characters' ? '#4CAF50' : '#333'
+              fontSize: '13px',
+              background: tab === 'characters' ? '#0f766e' : '#1e293b'
             }}
             onClick={() => setTab('characters')}
           >
-            ♟ 像素角色圖鑑 ({characters.length})
+            [ 角色名錄 ] ({characters.length})
           </button>
           <button
             className="btn"
             style={{
               flex: 1,
               padding: '8px',
-              fontSize: '14px',
-              background: tab === 'terrains' ? '#2196F3' : '#333'
+              fontSize: '13px',
+              background: tab === 'terrains' ? '#0369a1' : '#1e293b'
             }}
             onClick={() => setTab('terrains')}
           >
-            🌍 戰場環境一覽 ({TERRAIN_POOL.length})
+            [ 戰場環境 ] ({TERRAIN_POOL.length})
           </button>
         </div>
 
         {/* 角色分頁 */}
         {tab === 'characters' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '5px' }}>
-              💡 每個棋子皆具備專屬特性，善用特性可在劣勢下逆襲或精準操控奇偶數！
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>
+              * 點陣西洋棋核心規格：善用特性可在劣勢下逆襲或精準操控奇偶總分。
             </div>
             {characters.map(char => (
               <div
                 key={char.id}
                 style={{
-                  background: 'rgba(255,255,255,0.06)',
-                  border: `2px solid ${char.themeColor || '#555'}`,
-                  borderRadius: '6px',
+                  background: 'rgba(15, 23, 42, 0.7)',
+                  border: `2px solid ${char.themeColor || '#475569'}`,
+                  borderRadius: '4px',
                   padding: '10px 14px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px'
+                  gap: '14px'
                 }}
               >
-                <div style={{ fontSize: '32px', minWidth: '40px', textAlign: 'center' }}>
-                  {char.avatar.src}
+                <div style={{ minWidth: '40px', display: 'flex', justifyContent: 'center' }}>
+                  <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={36} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#fff' }}>{char.name}</span>
-                    <span style={{ fontSize: '11px', color: '#888' }}>Lv.{char.level}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', letterSpacing: '1px' }}>
+                      {char.name}
+                    </span>
+                    <span style={{ fontSize: '10px', color: '#64748b', fontFamily: 'monospace' }}>
+                      LV.{char.level}
+                    </span>
                     {char.trait && (
                       <span
                         style={{
@@ -87,7 +92,7 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
                           background: '#ffcc00',
                           color: '#000',
                           padding: '1px 5px',
-                          borderRadius: '3px',
+                          borderRadius: '2px',
                           fontWeight: 'bold'
                         }}
                       >
@@ -97,11 +102,11 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
                   </div>
                   {char.trait && (
                     <div style={{ fontSize: '12px', color: '#00ffcc', lineHeight: '1.4' }}>
-                      【{char.trait.name}】：{char.trait.description}
+                      【{char.trait.name}】{char.trait.description}
                     </div>
                   )}
                   {char.lore && (
-                    <div style={{ fontSize: '10px', color: '#888', marginTop: '3px', fontStyle: 'italic' }}>
+                    <div style={{ fontSize: '10px', color: '#64748b', marginTop: '3px', fontStyle: 'italic' }}>
                       {char.lore}
                     </div>
                   )}
@@ -113,43 +118,46 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
 
         {/* 戰場分頁 */}
         {tab === 'terrains' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '5px' }}>
-              💡 戰場環境每回合隨機輪換，不同的地形會影響氣勢傳遞、倍率計算與特性發動！
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>
+              * 動態環境每回合隨機輪換，直接影響氣勢傳遞、倍率計算與特性發動。
             </div>
             {TERRAIN_POOL.map(terrain => (
               <div
                 key={terrain.id}
                 style={{
-                  background: 'rgba(255,255,255,0.06)',
+                  background: 'rgba(15, 23, 42, 0.7)',
                   border: `2px solid ${terrain.color}`,
-                  borderRadius: '6px',
+                  borderRadius: '4px',
                   padding: '10px 14px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px'
+                  gap: '14px'
                 }}
               >
-                <div style={{ fontSize: '30px', minWidth: '40px', textAlign: 'center' }}>
-                  {terrain.icon}
+                <div style={{ minWidth: '36px', display: 'flex', justifyContent: 'center' }}>
+                  <PixelTerrainSigil terrainId={terrain.icon || terrain.id} color={terrain.color} size={24} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#fff' }}>{terrain.name}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', letterSpacing: '1px' }}>
+                      {terrain.name}
+                    </span>
                     <span
                       style={{
                         fontSize: '10px',
                         background: terrain.color,
                         color: '#fff',
-                        padding: '1px 5px',
-                        borderRadius: '3px',
-                        fontWeight: 'bold'
+                        padding: '1px 6px',
+                        borderRadius: '2px',
+                        fontWeight: 'bold',
+                        fontFamily: 'monospace'
                       }}
                     >
-                      倍率 x{terrain.weight}
+                      x{terrain.weight}
                     </span>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#ddd', lineHeight: '1.4' }}>
+                  <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>
                     {terrain.description}
                   </div>
                 </div>

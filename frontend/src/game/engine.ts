@@ -41,7 +41,7 @@ export function resolveRound(
       traitsTriggered.push({
         side: 'terrain',
         traitName: '泥沼阻滯',
-        text: '🌲 泥沼阻滯！雙方氣勢無法發揮！'
+        text: '[ 泥沼 SWAMP ] 雙方氣勢受阻無效！'
       });
     }
 
@@ -51,11 +51,11 @@ export function resolveRound(
     if (terrain.id === 'palace') {
       if (pChar.level >= 4) {
         terrainBonusP += 1;
-        traitsTriggered.push({ side: 'player', traitName: '王座加冕', text: '🏛️ 皇宮王座護體，戰力 +1！' });
+        traitsTriggered.push({ side: 'player', traitName: '王座加冕', text: '[ 皇宮 PALACE ] 王座護體戰力 +1！' });
       }
       if (eChar.level >= 4) {
         terrainBonusE += 1;
-        traitsTriggered.push({ side: 'enemy', traitName: '王座加冕', text: '🏛️ 敵方王座護體，戰力 +1！' });
+        traitsTriggered.push({ side: 'enemy', traitName: '王座加冕', text: '[ 皇宮 PALACE ] 敵方王座護體戰力 +1！' });
       }
     }
 
@@ -190,7 +190,7 @@ export function resolveRound(
         traitsTriggered.push({
           side: 'terrain',
           traitName: terrain.name,
-          text: `${terrain.icon} ${terrain.name}環境修正：積分調整為 ${score} 分！`
+          text: `[ ${terrain.name} ] 積分調整為 ${score} 分！`
         });
       }
     }

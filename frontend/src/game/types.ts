@@ -48,7 +48,7 @@ export interface Character {
   level: number;            // 基礎等級/點數 (1~6 或自訂)
   avatar: {
     type: 'unicode' | 'image';
-    src: string;            // 符號如 '♟' 或圖片路徑 '/sprites/char.png'
+    src: string;            // 代號如 'pawn' 或圖片路徑 '/sprites/char.png'
   };
   themeColor?: string;      // 專屬主題色彩
   lore?: string;            // 角色背景故事
@@ -59,7 +59,7 @@ export interface Terrain {
   id: string;
   name: string;
   weight: number;           // 預設乘數倍率 (1, 2, 3...)
-  icon: string;             // 像素圖示，如 🌲, ⚔️, 🏛️
+  icon: string;             // 標誌標識，如 'swamp', 'arena', 'palace'
   description: string;      // 環境規則說明
   color: string;            // 邊框與背景標籤顏色
   isSilenceSanctuary?: boolean; // 是否封印所有特性

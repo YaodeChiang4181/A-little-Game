@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Character } from '../game/types';
+import { PixelPieceIcon } from './PixelIcons';
 
 interface CardViewProps {
   character: Character | null;
@@ -51,8 +52,8 @@ export const CardView: React.FC<CardViewProps> = ({
         borderColor: character.themeColor || (color === 'white' ? '#000' : '#000')
       }}
     >
-      {/* 棋子圖示 */}
-      <div style={{ fontSize: '32px', marginBottom: '3px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {/* 像素角色圖示 */}
+      <div style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {isImg ? (
           <img
             src={character.avatar.src}
@@ -60,25 +61,32 @@ export const CardView: React.FC<CardViewProps> = ({
             style={{ width: '36px', height: '36px', imageRendering: 'pixelated' }}
           />
         ) : (
-          <span>{character.avatar.src}</span>
+          <PixelPieceIcon type={character.avatar.src || character.id} color={color} size={36} />
         )}
       </div>
 
       {/* 角色名稱 */}
-      <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{character.name}</div>
+      <div style={{ fontSize: '13px', fontWeight: 'bold', letterSpacing: '1px' }}>{character.name}</div>
 
       {/* 等級與特性標籤 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginTop: '2px' }}>
-        <span style={{ fontSize: '10px', color: color === 'white' ? '#666' : '#aaa' }}>
-          Lv.{character.level}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '3px' }}>
+        <span
+          style={{
+            fontSize: '10px',
+            color: color === 'white' ? '#475569' : '#94a3b8',
+            fontFamily: 'monospace',
+            fontWeight: 'bold'
+          }}
+        >
+          LV.{character.level}
         </span>
         {character.trait && (
           <span
             style={{
               fontSize: '9px',
-              padding: '1px 3px',
+              padding: '1px 4px',
               borderRadius: '2px',
-              background: color === 'white' ? '#222' : '#ffcc00',
+              background: color === 'white' ? '#0f172a' : '#ffcc00',
               color: color === 'white' ? '#00ffcc' : '#000',
               fontWeight: 'bold',
               letterSpacing: '0.5px'
@@ -89,18 +97,18 @@ export const CardView: React.FC<CardViewProps> = ({
         )}
       </div>
 
-      {/* 特性懸浮說明 Tooltip */}
+      {/* 特性懸浮說明 Tooltip (零 Emoji，精簡公式) */}
       {showTooltip && hovered && character.trait && (
         <div className="card-trait-tooltip" onClick={e => e.stopPropagation()}>
-          <div style={{ color: '#ffcc00', fontWeight: 'bold', marginBottom: '4px' }}>
-            {character.name} · {character.trait.name}
+          <div style={{ color: '#ffcc00', fontWeight: 'bold', marginBottom: '3px', fontSize: '12px' }}>
+            {character.name} · 【{character.trait.badge}】
           </div>
-          <div style={{ fontSize: '11px', color: '#eee', lineHeight: '1.4' }}>
+          <div style={{ fontSize: '11px', color: '#e2e8f0', lineHeight: '1.4' }}>
             {character.trait.description}
           </div>
           {character.lore && (
-            <div style={{ fontSize: '9px', color: '#999', marginTop: '4px', fontStyle: 'italic' }}>
-              「{character.lore}」
+            <div style={{ fontSize: '9px', color: '#64748b', marginTop: '4px', fontStyle: 'italic' }}>
+              {character.lore}
             </div>
           )}
         </div>

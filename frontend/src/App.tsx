@@ -5,6 +5,7 @@ import { initGameSession, resolveTurn, GameSession } from './game/gameService';
 import { CardView } from './components/CardView';
 import { TerrainBanner } from './components/TerrainBanner';
 import { CompendiumModal } from './components/CompendiumModal';
+import { PixelHeart, PixelPieceIcon } from './components/PixelIcons';
 
 export default function App() {
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'game_over'>('idle');
@@ -193,10 +194,11 @@ export default function App() {
     }
   }, [resolveStep, pendingResult]);
 
+  // 16x16 點陣像素心之容器
   const renderHearts = (hp: number) => {
     return Array.from({ length: 3 }).map((_, i) => (
-      <span key={i} className="heart" style={{ opacity: i < hp ? 1 : 0.2 }}>
-        ❤
+      <span key={i} style={{ display: 'inline-flex', marginRight: '4px' }}>
+        <PixelHeart filled={i < hp} size={18} />
       </span>
     ));
   };
@@ -205,53 +207,53 @@ export default function App() {
   const isDeployReady = deployedCount === 3;
   const currentTerrains = session?.currentTerrains || [];
 
-  // 升級版遊戲教學頁面（涵蓋 4選3、角色特性與動態戰場）
+  // 專業像素風格無 Emoji 教學頁面
   const TUTORIAL_PAGES = [
     {
-      title: "～奇偶博弈與陣營輪替～",
-      text: "雙方陣營分為【ODD 奇數】與【EVEN 偶數】，每局會自動換邊！\n所有戰場的（等級差值 × 戰場倍率）加總為【總積分】。\n總積分為奇數則 ODD 攻擊，為偶數則 EVEN 攻擊！率先將對手扣至 0 血者獲勝。",
+      title: "[ 奇偶博弈與陣營輪替 ]",
+      text: "雙方陣營分為 [ ODD 奇數 ] 與 [ EVEN 偶數 ]，每局自動換邊！\n所有戰場的 (等級差值 × 戰場倍率) 加總為【全場總積分】。\n總積分為奇數則 ODD 攻擊，偶數則 EVEN 攻擊！率先扣光敵方 3 點生命值者勝出。",
       graphic: (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', background: 'rgba(255,255,255,0.1)', padding: '12px', borderRadius: '8px', width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', background: 'rgba(15,23,42,0.8)', padding: '12px', border: '2px solid #334155', borderRadius: '4px', width: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#aaa' }}>Round 1:</span> <span style={{ color: '#4CAF50' }}>玩家 (ODD)</span> <span>vs</span> <span style={{ color: '#ff4747' }}>對手 (EVEN)</span>
+            <span style={{ color: '#94a3b8' }}>ROUND 1:</span> <span style={{ color: '#00ffcc', fontWeight: 'bold' }}>玩家 [ ODD ]</span> <span>VS</span> <span style={{ color: '#ff4747', fontWeight: 'bold' }}>對手 [ EVEN ]</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#aaa' }}>Round 2:</span> <span style={{ color: '#4CAF50' }}>玩家 (EVEN)</span> <span>vs</span> <span style={{ color: '#ff4747' }}>對手 (ODD)</span>
+            <span style={{ color: '#94a3b8' }}>ROUND 2:</span> <span style={{ color: '#ff4747', fontWeight: 'bold' }}>玩家 [ EVEN ]</span> <span>VS</span> <span style={{ color: '#00ffcc', fontWeight: 'bold' }}>對手 [ ODD ]</span>
           </div>
         </div>
       )
     },
     {
-      title: "～手牌管理：4 選 3 佈署～",
-      text: "每回合系統會發放 4 張角色手牌！\n您需要從中精選 3 張佈署於三大戰場，剩餘的 1 張將留在手牌作為備用。\n多達 24 種出牌組合，讓您自由掌控奇偶走向與陣容搭配。",
+      title: "[ 手牌管理：4 抽選 3 佈署 ]",
+      text: "每回合發放 4 位兵力手牌！\n從中精選 3 張佈署至三大戰場，剩餘 1 張作為備用。\n24 種出牌組合，讓您精確計算奇偶總分走向與環境相剋。",
       graphic: (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '12px', width: '100%' }}>
-          <div style={{ padding: '8px', border: '2px solid #fff', borderRadius: '4px', background: '#333' }}>♟ 1</div>
-          <div style={{ padding: '8px', border: '2px solid #fff', borderRadius: '4px', background: '#333' }}>♞ 2</div>
-          <div style={{ padding: '8px', border: '2px solid #fff', borderRadius: '4px', background: '#333' }}>♜ 3</div>
-          <div style={{ padding: '8px', border: '2px dashed #ffcc00', borderRadius: '4px', background: '#222', color: '#ffcc00' }}>♚ 6 (備用)</div>
+          <div style={{ padding: '8px 12px', border: '2px solid #fff', borderRadius: '2px', background: '#0f172a' }}>小兵 LV.1</div>
+          <div style={{ padding: '8px 12px', border: '2px solid #fff', borderRadius: '2px', background: '#0f172a' }}>騎士 LV.2</div>
+          <div style={{ padding: '8px 12px', border: '2px solid #fff', borderRadius: '2px', background: '#0f172a' }}>主塔 LV.3</div>
+          <div style={{ padding: '8px 12px', border: '2px dashed #f59e0b', borderRadius: '2px', background: '#1e293b', color: '#f59e0b' }}>國王 LV.6 [備用]</div>
         </div>
       )
     },
     {
-      title: "～角色專屬特性～",
-      text: "每個棋子皆身懷絕技：\n♟ 小兵【以弱勝強】：面對 Lv.4~6 強敵判定直接逆襲獲勝！\n♜ 主塔【堅壁防線】：戰敗時差值強制鎖定為 1，控分止損！\n♞ 騎士【奇襲破陣】：破除敵方氣勢；♛ 皇后【威壓】：勝者氣勢躍升 +2！",
+      title: "[ 角色專屬特性 ]",
+      text: "每顆棋子皆身懷戰術特性：\n【逆襲】小兵：面對 LV.4~6 強敵時直接勝出！\n【堅守】主塔：戰敗時差值強制鎖定為 1，控分止損！\n【破陣】騎士：斬斷敵方氣勢；【威壓】皇后：勝出時氣勢躍升 +2！",
       graphic: (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '13px', background: 'rgba(255,255,255,0.1)', padding: '10px', borderRadius: '8px', width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', background: 'rgba(15,23,42,0.8)', padding: '10px', border: '2px solid #334155', borderRadius: '4px', width: '100%' }}>
           <div style={{ color: '#00ffcc', fontWeight: 'bold' }}>
-            💥 小兵 Lv.1 vs 皇后 Lv.5 ➔ 小兵發動【以弱勝強】獲勝！
+            [ 逆襲 REVERSAL ] 小兵 LV.1 vs 皇后 LV.5 -{'>'} 小兵逆襲勝出！
           </div>
         </div>
       )
     },
     {
-      title: "～動態戰場環境～",
-      text: "三大戰場每回合隨機輪換，帶來不同的戰略規則：\n🌲 沼澤：泥沼阻滯，氣勢加成無效。\n⚔️ 擂台：勝者氣勢加乘翻倍 (+2)。\n🏛️ 皇宮：高階棋子戰力 +1；🪞 鏡像：總分保底偶數！",
+      title: "[ 動態戰場環境 ]",
+      text: "三大戰場每回合隨機輪換，帶來不同的戰略規則：\n[ 沼澤 ]：泥沼阻滯，氣勢加成無效。\n[ 擂台 ]：勝者氣勢加乘翻倍 (+2)。\n[ 皇宮 ]：高階棋子戰力 +1；[ 鏡像 ]：總分保底偶數！",
       graphic: (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', fontSize: '12px', width: '100%' }}>
-          <div style={{ flex: 1, padding: '8px 0', border: '2px dashed #2e7d32', backgroundColor: 'rgba(46,125,50,0.3)', borderRadius: '4px' }}>🌲 沼澤<br /><span style={{ color: '#ffcc00' }}>x1</span></div>
-          <div style={{ flex: 1, padding: '8px 0', border: '2px dashed #d32f2f', backgroundColor: 'rgba(211,47,47,0.3)', borderRadius: '4px' }}>⚔️ 擂台<br /><span style={{ color: '#ffcc00' }}>x2</span></div>
-          <div style={{ flex: 1, padding: '8px 0', border: '2px dashed #f57c00', backgroundColor: 'rgba(245,124,0,0.3)', borderRadius: '4px' }}>🏛️ 皇宮<br /><span style={{ color: '#ffcc00' }}>x3</span></div>
+          <div style={{ flex: 1, padding: '8px 0', border: '2px dashed #2e7d32', backgroundColor: 'rgba(46,125,50,0.3)', borderRadius: '2px' }}>沼澤<br /><span style={{ color: '#ffcc00' }}>x1</span></div>
+          <div style={{ flex: 1, padding: '8px 0', border: '2px dashed #d32f2f', backgroundColor: 'rgba(211,47,47,0.3)', borderRadius: '2px' }}>擂台<br /><span style={{ color: '#ffcc00' }}>x2</span></div>
+          <div style={{ flex: 1, padding: '8px 0', border: '2px dashed #f57c00', backgroundColor: 'rgba(245,124,0,0.3)', borderRadius: '2px' }}>皇宮<br /><span style={{ color: '#ffcc00' }}>x3</span></div>
         </div>
       )
     }
@@ -261,7 +263,7 @@ export default function App() {
     <div className="game-wrapper">
       {/* 頂部圖鑑百科按鈕 */}
       <button className="compendium-btn" onClick={() => setShowCompendium(true)}>
-        📖 圖鑑
+        [ 圖鑑 ]
       </button>
 
       {/* Menu 選單按鈕 */}
@@ -297,7 +299,7 @@ export default function App() {
               </button>
               <button
                 className="btn"
-                style={{ background: '#2196F3' }}
+                style={{ background: '#0284c7' }}
                 onClick={() => {
                   setShowMenu(false);
                   setShowCompendium(true);
@@ -307,7 +309,7 @@ export default function App() {
               </button>
               <button
                 className="btn"
-                style={{ background: '#ff4747' }}
+                style={{ background: '#dc2626' }}
                 onClick={() => {
                   setShowMenu(false);
                   setGameState('idle');
@@ -315,7 +317,7 @@ export default function App() {
               >
                 返回主選單
               </button>
-              <button className="btn" style={{ background: '#555' }} onClick={() => setShowMenu(false)}>
+              <button className="btn" style={{ background: '#475569' }} onClick={() => setShowMenu(false)}>
                 繼續遊戲
               </button>
             </div>
@@ -331,10 +333,10 @@ export default function App() {
         <div className="tutorial-overlay">
           <div className="tutorial-box">
             <div className="tutorial-content" style={{ width: '100%' }}>
-              <h2 style={{ color: '#00ffcc', margin: '0 0 15px 0', fontSize: '20px' }}>
+              <h2 style={{ color: '#00ffcc', margin: '0 0 15px 0', fontSize: '18px', letterSpacing: '1px' }}>
                 {TUTORIAL_PAGES[tutorialStep].title}
               </h2>
-              <div style={{ whiteSpace: 'pre-line', fontSize: '14px', marginBottom: '20px', color: '#ddd' }}>
+              <div style={{ whiteSpace: 'pre-line', fontSize: '14px', marginBottom: '20px', color: '#cbd5e1' }}>
                 {TUTORIAL_PAGES[tutorialStep].text}
               </div>
               {TUTORIAL_PAGES[tutorialStep].graphic}
@@ -343,7 +345,7 @@ export default function App() {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
               <button
                 className="btn"
-                style={{ padding: '8px 15px', fontSize: '14px', background: '#555' }}
+                style={{ padding: '8px 15px', fontSize: '14px', background: '#475569' }}
                 onClick={() => (tutorialStep > 0 ? setTutorialStep(prev => prev - 1) : setShowTutorial(false))}
               >
                 {tutorialStep > 0 ? '← 上一頁' : '關閉'}
@@ -353,7 +355,7 @@ export default function App() {
                 style={{ padding: '8px 15px', fontSize: '14px' }}
                 onClick={() => (tutorialStep < 3 ? setTutorialStep(prev => prev + 1) : setShowTutorial(false))}
               >
-                {tutorialStep < 3 ? '下一頁 →' : '開始遊戲 !'}
+                {tutorialStep < 3 ? '下一頁 →' : '開始決鬥'}
               </button>
             </div>
 
@@ -370,8 +372,8 @@ export default function App() {
       <div className="side-panel player-panel">
         {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
           <div className="hud-box player-hud">
-            <div style={{ fontWeight: 'bold', color: '#fff' }}>
-              {session?.playerRole} (玩家)
+            <div style={{ fontWeight: 'bold', color: '#00ffcc', letterSpacing: '1px' }}>
+              [ {session?.playerRole} ] 玩家
             </div>
             <div className="hp-bar">{renderHearts(displayPlayerHp)}</div>
           </div>
@@ -379,8 +381,8 @@ export default function App() {
 
         {gameState === 'playing' && (
           <div className="hand-section">
-            <div style={{ fontSize: '12px', color: '#ffcc00', textAlign: 'center', marginBottom: '2px' }}>
-              {isDeployReady ? '✦ 點擊戰場槽位可更換卡牌' : '✦ 點選 3 張角色佈署進戰場'}
+            <div style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'center', marginBottom: '2px', fontFamily: 'monospace' }}>
+              {isDeployReady ? '[ 戰備完畢 ] 點擊槽位可撤回更換' : '[ 佈署階段 ] 選擇 3 位棋子進戰場'}
             </div>
 
             {/* 4 張手牌展示區 */}
@@ -404,7 +406,7 @@ export default function App() {
                 );
               })}
               {hand.length === 0 && (
-                <div style={{ color: '#aaa', fontSize: '12px', display: 'flex', alignItems: 'center' }}>
+                <div style={{ color: '#64748b', fontSize: '12px', display: 'flex', alignItems: 'center' }}>
                   手牌已全數佈署
                 </div>
               )}
@@ -417,10 +419,10 @@ export default function App() {
               style={{ width: '100%' }}
             >
               {isResolving
-                ? '決鬥進行中...'
+                ? '決鬥交鋒中...'
                 : isDeployReady
-                ? '決鬥！'
-                : `準備兵力 (${deployedCount}/3)...`}
+                ? '出征決鬥！'
+                : `佈署兵力 (${deployedCount}/3)`}
             </button>
           </div>
         )}
@@ -430,18 +432,18 @@ export default function App() {
       <div className="main-stage">
         {gameState === 'idle' && (
           <div style={{ textAlign: 'center' }}>
-            <h1 style={{ fontSize: '3.5rem', textShadow: '4px 4px 0 #000', margin: '0 0 10px 0' }}>
+            <h1 style={{ fontSize: '3.2rem', textShadow: '4px 4px 0 #000', margin: '0 0 10px 0', letterSpacing: '2px' }}>
               氣勢連鎖<br />
-              <span style={{ fontSize: '1.6rem', color: '#00ffcc' }}>奇偶戰 · 像素西洋棋</span>
+              <span style={{ fontSize: '1.5rem', color: '#00ffcc' }}>奇偶戰 · 點陣西洋棋</span>
             </h1>
-            <div style={{ color: '#aaa', fontSize: '14px', marginBottom: '30px' }}>
-              4選3手牌管理 · 角色專屬特性 · 動態環境戰場
+            <div style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '30px', letterSpacing: '1px' }}>
+              [ 4選3手牌管理 · 角色專屬特性 · 動態環境戰場 ]
             </div>
             <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-              <button className="btn" style={{ background: '#4CAF50' }} onClick={() => startGame(true)}>
-                新手指南 (玩法教學)
+              <button className="btn" style={{ background: '#0f766e' }} onClick={() => startGame(true)}>
+                新手指南
               </button>
-              <button className="btn" style={{ background: '#ff4747' }} onClick={() => startGame(false)}>
+              <button className="btn" style={{ background: '#dc2626' }} onClick={() => startGame(false)}>
                 立即開戰
               </button>
             </div>
@@ -450,13 +452,13 @@ export default function App() {
 
         {gameState === 'playing' && (
           <>
-            {/* 本局登場角色列表 */}
+            {/* 本局登場角色列表 (零 Emoji，純像素圖示) */}
             <div className="deck-info-box">
-              <span className="deck-info-title">本局對陣名單</span>
+              <span className="deck-info-title">[ 對陣名冊 ]</span>
               {session?.roundPool.map(char => (
-                <span key={char.id} style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                  <span style={{ fontSize: '14px', color: '#fff' }}>{char.avatar.src}</span>
-                  <span style={{ fontSize: '11px' }}>{char.name}</span>
+                <span key={char.id} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={16} />
+                  <span style={{ fontSize: '11px', letterSpacing: '0.5px' }}>{char.name}</span>
                 </span>
               ))}
             </div>
@@ -471,7 +473,7 @@ export default function App() {
                   id: 'unknown',
                   name: `戰場 ${i + 1}`,
                   weight: i + 1,
-                  icon: '⚔️',
+                  icon: 'arena',
                   color: '#555',
                   description: ''
                 };
@@ -494,7 +496,7 @@ export default function App() {
                       ) : hasDealt ? (
                         <div
                           className="card black-piece fly-in"
-                          style={{ borderColor: '#000', color: '#fff', fontSize: '38px' }}
+                          style={{ borderColor: '#000', color: '#fff', fontSize: '32px', fontFamily: 'monospace' }}
                         >
                           ?
                         </div>
@@ -516,7 +518,7 @@ export default function App() {
                       }}
                     >
                       {!isClashing && (
-                        <div style={{ fontSize: '22px', color: '#ffcc00', textShadow: '2px 2px 0 #000' }}>
+                        <div style={{ fontSize: '20px', color: '#ffcc00', textShadow: '2px 2px 0 #000', letterSpacing: '2px' }}>
                           VS
                         </div>
                       )}
@@ -525,18 +527,18 @@ export default function App() {
                       {b && isClashing && (
                         <div className="equation-tooltip">
                           <div className="typewriter type-1">
-                            <span style={{ color: '#4CAF50' }}>玩家 {b.player_char.name} ({b.player_eff})</span>
+                            <span style={{ color: '#00ffcc' }}>玩家 {b.player_char.name} ({b.player_eff})</span>
                             <span style={{ margin: '0 6px' }}>vs</span>
                             <span style={{ color: '#ff4747' }}>對手 {b.enemy_char.name} ({b.enemy_eff})</span>
                           </div>
                           <div className="typewriter type-2">
-                            差值 {b.diff} × <span style={{ color: '#00ffcc' }}>x{b.weight} ({b.terrain.name})</span> ={' '}
+                            差值 {b.diff} × <span style={{ color: '#f59e0b' }}>x{b.weight} ({b.terrain.name})</span> ={' '}
                             <span style={{ color: '#ff4747', fontSize: '18px', fontWeight: 'bold' }}>
                               {b.score}
                             </span>
                           </div>
 
-                          {/* 特性觸發標籤 */}
+                          {/* 特性觸發街機標籤 */}
                           {b.traits_triggered.length > 0 && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginTop: '4px' }}>
                               {b.traits_triggered.map((t, idx) => (
@@ -575,8 +577,8 @@ export default function App() {
       <div className="side-panel enemy-panel">
         {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
           <div className="hud-box enemy-hud">
-            <div style={{ fontWeight: 'bold', color: '#fff' }}>
-              {session?.enemyRole} (對手)
+            <div style={{ fontWeight: 'bold', color: '#ff4747', letterSpacing: '1px' }}>
+              [ {session?.enemyRole} ] 對手
             </div>
             <div className="hp-bar" style={{ justifyContent: 'flex-end' }}>
               {renderHearts(displayEnemyHp)}
@@ -597,8 +599,9 @@ export default function App() {
                     opacity: hasFlashed ? 0.3 : 1,
                     transition: 'opacity 0.2s',
                     borderColor: '#000',
-                    color: '#666',
-                    fontSize: '28px'
+                    color: '#64748b',
+                    fontSize: '24px',
+                    fontFamily: 'monospace'
                   }}
                 >
                   ?
@@ -615,7 +618,7 @@ export default function App() {
           {showHistory ? (
             <div
               style={{
-                background: '#222',
+                background: '#0f172a',
                 padding: '20px',
                 border: '4px solid #fff',
                 width: '90%',
@@ -624,20 +627,23 @@ export default function App() {
                 overflowY: 'auto'
               }}
             >
-              <h2 style={{ textAlign: 'center', color: '#ffcc00', marginTop: 0 }}>戰況歷史覆盤</h2>
+              <h2 style={{ textAlign: 'center', color: '#ffcc00', marginTop: 0, fontSize: '18px', letterSpacing: '1px' }}>
+                [ 戰況歷史覆盤 HISTORY ]
+              </h2>
               {history.map((h, i) => {
                 return (
-                  <div key={i} style={{ borderBottom: '1px solid #444', padding: '15px 0' }}>
+                  <div key={i} style={{ borderBottom: '1px solid #334155', padding: '14px 0' }}>
                     <div
                       style={{
-                        color: '#aaa',
-                        marginBottom: '10px',
-                        fontSize: '15px',
-                        borderBottom: '1px dashed #444',
-                        paddingBottom: '5px'
+                        color: '#94a3b8',
+                        marginBottom: '8px',
+                        fontSize: '13px',
+                        borderBottom: '1px dashed #334155',
+                        paddingBottom: '4px',
+                        fontFamily: 'monospace'
                       }}
                     >
-                      Round {h.round} - 玩家({h.player_role}) vs 對手({h.enemy_role})
+                      ROUND {h.round} - 玩家 [ {h.player_role} ] vs 對手 [ {h.enemy_role} ]
                     </div>
                     {h.battles.map((b: SingleBattleRecord, j: number) => (
                       <div
@@ -645,16 +651,16 @@ export default function App() {
                         style={{
                           display: 'flex',
                           flexDirection: 'column',
-                          fontSize: '13px',
-                          marginBottom: '8px',
+                          fontSize: '12px',
+                          marginBottom: '6px',
                           background: 'rgba(0,0,0,0.3)',
                           padding: '8px',
-                          borderRadius: '4px'
+                          borderRadius: '2px'
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ color: b.winner === 'player' ? '#4CAF50' : '#fff', flex: 1 }}>
-                            {b.terrain.icon} {b.terrain.name}: {b.player_char.name} (Lv.{b.player_eff})
+                          <span style={{ color: b.winner === 'player' ? '#00ffcc' : '#fff', flex: 1 }}>
+                            [{b.terrain.name}] {b.player_char.name} (LV.{b.player_eff})
                           </span>
                           <span style={{ color: '#ffcc00', fontSize: '11px', margin: '0 8px' }}>VS</span>
                           <span
@@ -664,35 +670,36 @@ export default function App() {
                               textAlign: 'right'
                             }}
                           >
-                            (Lv.{b.enemy_eff}) {b.enemy_char.name}
+                            (LV.{b.enemy_eff}) {b.enemy_char.name}
                           </span>
                         </div>
-                        <div style={{ textAlign: 'center', color: '#00ffcc', fontSize: '12px', marginTop: '6px' }}>
-                          差值 {b.diff} × x{b.weight} ({b.terrain.name}) ={' '}
+                        <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '11px', marginTop: '4px' }}>
+                          差值 {b.diff} × x{b.weight} ={' '}
                           <span style={{ color: '#ff4747', fontWeight: 'bold' }}>{b.score}</span> 分
                         </div>
                         {b.traits_triggered.length > 0 && (
-                          <div style={{ fontSize: '11px', color: '#ffcc00', textAlign: 'center', marginTop: '3px' }}>
+                          <div style={{ fontSize: '11px', color: '#ffcc00', textAlign: 'center', marginTop: '2px' }}>
                             {b.traits_triggered.map(t => t.text).join(' | ')}
                           </div>
                         )}
                       </div>
                     ))}
-                    <div style={{ textAlign: 'right', marginTop: '10px', fontSize: '14px' }}>
-                      總積分: <span style={{ color: '#ffcc00', fontWeight: 'bold', fontSize: '18px' }}>{h.total_score}</span>
-                      <span style={{ color: '#888', marginLeft: '5px' }}>
+                    <div style={{ textAlign: 'right', marginTop: '8px', fontSize: '13px' }}>
+                      全場總積分: <span style={{ color: '#ffcc00', fontWeight: 'bold', fontSize: '16px' }}>{h.total_score}</span>
+                      <span style={{ color: '#64748b', marginLeft: '5px' }}>
                         ({h.total_score % 2 !== 0 ? '奇數' : '偶數'})
                       </span>
                       <br />
                       <span
                         style={{
-                          color: h.damage_to === 'enemy' ? '#4CAF50' : '#ff4747',
-                          fontSize: '14px',
+                          color: h.damage_to === 'enemy' ? '#00ffcc' : '#ff4747',
+                          fontSize: '13px',
                           display: 'inline-block',
-                          marginTop: '4px'
+                          marginTop: '4px',
+                          fontWeight: 'bold'
                         }}
                       >
-                        {h.damage_to === 'enemy' ? '💥 對手受到 1 點傷害' : '🩸 玩家受到 1 點傷害'}
+                        {h.damage_to === 'enemy' ? '[ 命中 HIT ] 對手受到 1 點傷害' : '[ 受創 DAMAGE ] 玩家受到 1 點傷害'}
                       </span>
                     </div>
                   </div>
@@ -706,25 +713,26 @@ export default function App() {
             <>
               <h1
                 style={{
-                  fontSize: '4rem',
-                  color: winner === 'player' ? '#4CAF50' : '#ff4747',
+                  fontSize: '3.6rem',
+                  color: winner === 'player' ? '#00ffcc' : '#ff4747',
                   textShadow: '4px 4px 0 #000',
-                  margin: '0 0 10px 0'
+                  margin: '0 0 10px 0',
+                  letterSpacing: '3px'
                 }}
               >
                 {winner === 'player' ? 'VICTORY' : 'DEFEAT'}
               </h1>
-              <div style={{ color: '#ccc', marginBottom: '30px', fontSize: '16px' }}>
-                {winner === 'player' ? '恭喜您運籌帷幄，擊潰對手！' : '勝敗乃兵家常事，重整旗鼓再戰一局！'}
+              <div style={{ color: '#94a3b8', marginBottom: '30px', fontSize: '15px' }}>
+                {winner === 'player' ? '奇偶相生，智冠全場！' : '勝敗乃兵家常事，重整旗鼓再決一戰！'}
               </div>
               <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <button className="btn engage" onClick={() => startGame(false)}>
-                  再來一局
+                  再次對決
                 </button>
-                <button className="btn" style={{ background: '#555' }} onClick={() => setShowHistory(true)}>
+                <button className="btn" style={{ background: '#334155' }} onClick={() => setShowHistory(true)}>
                   戰況歷史
                 </button>
-                <button className="btn" style={{ background: '#333' }} onClick={() => setGameState('idle')}>
+                <button className="btn" style={{ background: '#1e293b' }} onClick={() => setGameState('idle')}>
                   主選單
                 </button>
               </div>
