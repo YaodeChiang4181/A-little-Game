@@ -341,3 +341,112 @@ body {
 .walking-sprite {
   animation: bounce 0.3s infinite alternate;
 }
+
+/* ================= 角色特性與戰場環境全新 UI 樣式 ================= */
+
+/* 卡牌特性浮動說明 (Tooltip) */
+.card-trait-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  border: 2px solid #ffcc00;
+  border-radius: 6px;
+  padding: 8px 10px;
+  width: 170px;
+  text-align: left;
+  z-index: 100;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+}
+
+/* 戰場環境橫幅 (Terrain Banner) */
+.terrain-banner {
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid #555;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s, border-color 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.terrain-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+}
+
+/* 戰場環境詳細說明 Tooltip */
+.terrain-tooltip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 10, 15, 0.95);
+  border: 2px solid #00ffcc;
+  border-radius: 6px;
+  padding: 8px 12px;
+  width: 200px;
+  z-index: 90;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+  text-align: left;
+}
+
+/* 4選3中尚未佈署/保留的手牌樣式 */
+.unselected-hand-card {
+  filter: contrast(0.85);
+  border-style: dashed !important;
+  opacity: 0.85;
+}
+.unselected-hand-card::after {
+  content: '備用';
+  position: absolute;
+  bottom: -6px;
+  background: #444;
+  color: #fff;
+  font-size: 9px;
+  padding: 0 4px;
+  border-radius: 2px;
+  border: 1px solid #777;
+}
+
+/* 特性觸發浮動文字 (Combat Floating Text) */
+.trait-popup-badge {
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid #ffcc00;
+  color: #ffcc00;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-top: 4px;
+  animation: popBadge 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+  white-space: nowrap;
+}
+
+@keyframes popBadge {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* 圖鑑與百科小按鈕 */
+.compendium-btn {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffcc00;
+  border: 2px solid #ffcc00;
+  padding: 6px 12px;
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 100;
+  border-radius: 4px;
+}
+.compendium-btn:hover {
+  background: #333;
+}
