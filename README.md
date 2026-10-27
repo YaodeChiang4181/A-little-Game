@@ -65,6 +65,10 @@ AI 引擎採用即時賽局模擬：
   * `src/game/gameService.ts`：對局生命週期與狀態管理。
   * `src/game/soundManager.ts`：純前端 Web Audio 8-Bit 晶片音樂與戰鬥音效合成引擎（零外部流量依賴、100% 免費版權）。
   * `src/components/SettingsModal.tsx`：音效與背景音樂設定面板（支援獨立開關、音量滑桿與多首輕快戰鬥曲目切換）。
+  * `src/game/towerEngine.ts`：奇偶試煉 (Tower Run) 刷塔核心引擎（關卡階梯配置、血量跨層繼承、分數加權與本地排行榜）。
+  * `src/game/towerCardGenerator.ts`：HTML5 Canvas 8-Bit 像素戰報卡生成器（純前端繪製可分享之戰報海報）。
+  * `src/components/TowerView.tsx`：獨立刷塔試煉模式主窗口（層級戰況、專屬 HUD、修整營地與 Boss 決戰）。
+  * `src/components/TowerResultModal.tsx`：試煉結算、歷史 Top 10 榮譽榜與戰報海報複製/下載彈窗。
 * **部署支援**：Vercel、GitHub Pages 等靜態託管平台（100% 永久免費）。
 
 ---
@@ -87,4 +91,5 @@ npm run dev
   * **代理人工作流與規範**：建置 `read-readme-first`、`post-change-sync` 技能與 `GEMINI.md` 常駐約束，強制行動前閱讀機制與每次改動後自動更新文件與 Git 遠端推送。
   * **視覺風格規範純化**：全面移除系統設定與頂部導覽中之 Emoji 符號，全站嚴格遵循專業像素點陣與方括號 `[ ]` 終端機排版風格。
   * **首頁與局內導覽職責重構**：移除開始畫面中央重複的「系統設定」按鈕，聚焦「新手指南」與「立即開戰」雙核心；首頁右上角對稱放置 `[ 設定 ]`，並將「三槓選單 (☰)」調整為僅在戰鬥進行中顯示（作為局內暫停與設定選單），消除功能重複。
+  * **單機刷塔模式「奇偶試煉 (The Parity Spire)」**：新增獨立於單局對決的 5 層 Roguelite 刷塔窗口，支援 5 點生命跨層繼承、戰場變異詞綴、第 4 層營地整補與第 5 層 Boss 永劫棋王；引入街機計分體系、本機排行榜與 HTML5 Canvas 8-Bit 像素海報一鍵複製/下載分享。
 

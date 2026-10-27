@@ -6,12 +6,21 @@ import { CardView } from './components/CardView';
 import { TerrainBanner } from './components/TerrainBanner';
 import { CompendiumModal } from './components/CompendiumModal';
 import { SettingsModal } from './components/SettingsModal';
+import { TowerView } from './components/TowerView';
 import { PixelHeart, PixelPieceIcon } from './components/PixelIcons';
 import { soundManager } from './game/soundManager';
+import { createTowerRun, TowerRunState, getTowerHighScore } from './game/towerEngine';
 
 export default function App() {
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'game_over'>('idle');
+  const [gameState, setGameState] = useState<'idle' | 'playing' | 'game_over' | 'tower'>('idle');
   const [session, setSession] = useState<GameSession | null>(null);
+  const [towerState, setTowerState] = useState<TowerRunState | null>(null);
+  const [highScore, setHighScore] = useState<number>(0);
+
+  // 初始化讀取本機最高刷塔分
+  useEffect(() => {
+    setHighScore(getTowerHighScore());
+  }, []);
 
   // 當前手牌（4選3：手上持有牌庫抽出的卡牌）
   const [hand, setHand] = useState<Character[]>([]);
@@ -91,6 +100,19 @@ export default function App() {
       setShowTutorial(true);
       setTutorialStep(0);
     }
+  };
+
+  /**
+   * 啟動奇偶試煉 (獨立刷塔模式窗口)
+   */
+  const startTowerRun = () => {
+    soundManager.ensureContext().then(() => {
+      soundManager.startBgm();
+      soundManager.playSfx('click');
+    });
+    const newTower = createTowerRun();
+    setTowerState(newTower);
+    setGameState('tower');
   };
 
   /**
@@ -312,6 +334,23 @@ export default function App() {
       )
     }
   ];
+
+  // 若當前處於【奇偶試煉 (刷塔模式)】，渲染專屬窗口
+  if (gameState === 'tower' && towerState) {
+    return (
+      <TowerView
+        initialState={towerState}
+        onExit={() => {
+          setGameState('idle');
+          setHighScore(getTowerHighScore());
+        }}
+        onRestart={() => {
+          const newTower = createTowerRun();
+          setTowerState(newTower);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="game-wrapper">
@@ -604,12 +643,41 @@ export default function App() {
             <div style={{ color: '#94a3b8', fontSize: 'clamp(11px, 2.5vw, 13px)', marginBottom: '25px', letterSpacing: '1px' }}>
               [ 4選3手牌管理 · 角色專屬特性 · 動態環境戰場 ]
             </div>
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-              <button className="btn" style={{ background: '#0f766e', fontSize: 'clamp(14px, 3.5vw, 18px)', padding: '10px 20px' }} onClick={() => startGame(true)}>
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                className="btn"
+                style={{ background: '#0f766e', fontSize: 'clamp(13px, 3.2vw, 16px)', padding: '10px 18px' }}
+                onClick={() => startGame(true)}
+              >
                 新手指南
               </button>
-              <button className="btn" style={{ background: '#dc2626', fontSize: 'clamp(14px, 3.5vw, 18px)', padding: '10px 20px' }} onClick={() => startGame(false)}>
-                立即開戰
+
+              <button
+                className="btn"
+                style={{ background: '#dc2626', fontSize: 'clamp(13px, 3.2vw, 16px)', padding: '10px 18px' }}
+                onClick={() => startGame(false)}
+              >
+                經典單局
+              </button>
+
+              <button
+                className="btn engage"
+                style={{
+                  fontSize: 'clamp(13px, 3.2vw, 16px)',
+                  padding: '10px 20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2px'
+                }}
+                onClick={startTowerRun}
+              >
+                <span>奇偶試煉 (刷塔)</span>
+                {highScore > 0 && (
+                  <span style={{ fontSize: '10px', color: '#ffcc00', fontFamily: 'monospace' }}>
+                    [ 最佳: {highScore.toLocaleString()} PTS ]
+                  </span>
+                )}
               </button>
             </div>
           </div>
