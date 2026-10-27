@@ -333,7 +333,7 @@ export default function App() {
           setShowSettings(true);
         }}
       >
-        [ ⚙️ 設定 ]
+        [ 設定 ]
       </button>
 
       {/* 電腦版 Menu 選單按鈕 */}
@@ -384,7 +384,7 @@ export default function App() {
               setShowSettings(true);
             }}
           >
-            [ ⚙️ ]
+            [ 設定 ]
           </button>
 
           <button
@@ -431,7 +431,7 @@ export default function App() {
                   setShowSettings(true);
                 }}
               >
-                ⚙️ 音訊與系統設定
+                系統與音效設定
               </button>
               <button
                 className="btn"
@@ -613,7 +613,7 @@ export default function App() {
                   setShowSettings(true);
                 }}
               >
-                ⚙️ 音訊設定
+                系統設定
               </button>
             </div>
           </div>

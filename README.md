@@ -85,4 +85,5 @@ npm run dev
   * **8-Bit 晶片音訊引擎**：整合純前端 Web Audio API 音訊合成器 (`src/game/soundManager.ts`)，內建 3 首輕快戰鬥配樂（《疾馳交鋒》、《賽局博弈》、《王城決戰》）與全套 8-bit 打擊音效。
   * **系統設定面板**：新增收納式設定彈窗 (`src/components/SettingsModal.tsx`)，支援獨立開關 BGM/SFX、音量滑桿與即時換曲，設定自動留存至 `localStorage`。
   * **代理人工作流與規範**：建置 `read-readme-first`、`post-change-sync` 技能與 `GEMINI.md` 常駐約束，強制行動前閱讀機制與每次改動後自動更新文件與 Git 遠端推送。
+  * **視覺風格規範純化**：全面移除系統設定與頂部導覽中之 Emoji 符號，全站嚴格遵循專業像素點陣與方括號 `[ ]` 終端機排版風格。
 

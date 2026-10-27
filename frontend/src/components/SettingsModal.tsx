@@ -67,10 +67,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
       >
         {/* 標題列 */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid #334155', paddingBottom: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '20px' }}>⚙️</span>
+          <div>
             <h2 style={{ color: '#00ffcc', margin: 0, fontSize: '18px', letterSpacing: '1.5px', textShadow: '2px 2px 0 #000' }}>
-              [ 系統設定 SETTINGS ]
+              [ SETTINGS ]
             </h2>
           </div>
           <button
@@ -90,10 +89,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <div>
               <div style={{ fontWeight: 'bold', fontSize: '15px', color: '#fff', letterSpacing: '0.5px' }}>
-                🎵 背景音樂 (BGM)
+                [ 背景音樂 BGM ]
               </div>
               <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
-                8-Bit 純程式碼合成戰鬥配樂 · 零流量延遲
+                戰鬥配樂
               </div>
             </div>
             <button
@@ -107,7 +106,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
               }}
               onClick={handleToggleBgm}
             >
-              {settings.bgmEnabled ? '已開啟 ON' : '已靜音 OFF'}
+              {settings.bgmEnabled ? 'ON' : 'OFF'}
             </button>
           </div>
 
@@ -132,7 +131,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
           {/* 曲目選擇 */}
           <div style={{ opacity: settings.bgmEnabled ? 1 : 0.4 }}>
             <div style={{ fontSize: '12px', color: '#ffcc00', fontWeight: 'bold', marginBottom: '8px' }}>
-              【 戰鬥音樂曲目庫 · 免費授權 】
+              【 配樂曲目庫 】
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {BGM_TRACKS.map(track => {
@@ -186,7 +185,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <div>
               <div style={{ fontWeight: 'bold', fontSize: '15px', color: '#fff', letterSpacing: '0.5px' }}>
-                ⚔️ 戰鬥音效 (SFX)
+                [ 戰鬥音效 SFX ]
               </div>
               <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
                 落子、交鋒、氣勢翻牌、特性觸發與扣血打擊音
@@ -231,14 +230,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
               disabled={!settings.sfxEnabled}
               style={{
                 background: '#4338ca',
-                padding: '6px 12px',
+                padding: '6px 14px',
                 fontSize: '11px',
                 opacity: settings.sfxEnabled ? 1 : 0.4,
                 cursor: settings.sfxEnabled ? 'pointer' : 'not-allowed'
               }}
               onClick={handleTestSfx}
             >
-              🔔 測試特性音效
+              [ 測試特性音效 ]
             </button>
           </div>
         </div>
