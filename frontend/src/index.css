@@ -84,43 +84,48 @@ html, body {
   }
 
   .side-panel {
-    width: 250px;
-    padding: 24px;
+    width: 280px;
+    padding: 16px 14px;
     display: flex;
     flex-direction: column;
-    gap: 25px;
+    gap: 12px;
     z-index: 10;
+    max-height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .hud-box {
     background: rgba(15, 23, 42, 0.85);
-    padding: 12px 18px;
+    padding: 10px 14px;
     border: 2px solid #fff;
     border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 15px;
+    gap: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
   }
-  .player-hud { margin-top: 50px; }
-  .enemy-hud { margin-top: 50px; }
+  .player-hud { margin-top: 45px; }
+  .enemy-hud { margin-top: 45px; }
+  .tower-panel .player-hud,
+  .tower-panel .enemy-hud { margin-top: 0 !important; }
 
   .hand-section {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 10px;
   }
 
   .hand-container, .enemy-hand-container {
     display: flex;
-    gap: 12px;
-    padding: 16px;
+    gap: 10px;
+    padding: 10px 8px;
     border-radius: 8px;
     border: 2px solid #555;
     flex-wrap: wrap;
     justify-content: center;
-    min-height: 180px;
+    min-height: unset;
   }
   .hand-container { background: rgba(0, 0, 0, 0.5); }
   .enemy-hand-container { background: rgba(0, 0, 0, 0.3); }

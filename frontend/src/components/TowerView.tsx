@@ -352,24 +352,46 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
       {/* ============ 3. 戰鬥交鋒主舞台 (Battling) ============ */}
       {state.status === 'battling' && state.currentSession && (
         <>
-          {/* ============ 手機版專用頂部簡約對陣狀態條 ============ */}
-          <div className="mobile-top-bar mobile-only">
-            <div className="mobile-hud player">
-              <span>[ {state.currentSession.playerRole} ] {state.playerHp} HP</span>
-              <div className="hp-bar">{renderHearts(state.playerHp, state.playerMaxHp, 11)}</div>
+          {/* ============ 手機版專用頂部整合導覽與 HUD ============ */}
+          <div className="mobile-header-bar mobile-only">
+            {/* 第一行：撤退至主選單與關卡進度 */}
+            <div className="mobile-nav-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button
+                className="mobile-btn"
+                onClick={() => {
+                  soundManager.playSfx('click');
+                  onExit();
+                }}
+              >
+                [ 撤退至主選單 ]
+              </button>
+              <div style={{ fontSize: '11px', color: '#ffcc00', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                FLOOR 0{state.currentFloor}/0{state.maxFloors} · {state.score.toLocaleString()} PTS
+              </div>
             </div>
-            <div className="mobile-hud-vs" style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '10px', color: '#ffcc00' }}>F0{state.currentFloor}</div>
-              <div style={{ fontSize: '9px', color: '#94a3b8' }}>R{floorRounds}</div>
-            </div>
-            <div className="mobile-hud enemy">
-              <span>[ {state.currentSession.enemyRole} ] {displayEnemyHp} HP</span>
-              <div className="hp-bar">{renderHearts(displayEnemyHp, currentFloorConfig.enemyHp, 11)}</div>
+
+            {/* 第二行：對局 HUD 資訊列 (不擠壓、空間獨立) */}
+            <div className="mobile-huds-row">
+              <div className="mobile-hud player" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '10px' }}>[ {state.currentSession.playerRole} ]</span>
+                <div className="hp-bar" style={{ display: 'flex' }}>
+                  {renderHearts(state.playerHp, state.playerMaxHp, 11)}
+                </div>
+              </div>
+              <div className="mobile-hud-vs" style={{ padding: '0 6px', fontSize: '10px', color: '#ffcc00' }}>
+                R{floorRounds}
+              </div>
+              <div className="mobile-hud enemy" style={{ display: 'flex', alignItems: 'center', gap: '4px', flexDirection: 'row-reverse' }}>
+                <span style={{ fontSize: '10px' }}>[ {state.currentSession.enemyRole} ]</span>
+                <div className="hp-bar" style={{ display: 'flex' }}>
+                  {renderHearts(displayEnemyHp, currentFloorConfig.enemyHp, 11)}
+                </div>
+              </div>
             </div>
           </div>
 
           {/* ============ 玩家控制面板 (左側 / 電腦版) ============ */}
-          <div className="side-panel player-panel desktop-only">
+          <div className="side-panel player-panel tower-panel desktop-only">
             {/* 頂部撤退按鈕 */}
             <button
               className="btn"
@@ -382,27 +404,32 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
               [ 撤退至主選單 ]
             </button>
 
-            {/* 玩家情報 HUD */}
-            <div className="hud-box player-hud" style={{ marginTop: '0' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div style={{ fontWeight: 'bold', color: '#00ffcc', letterSpacing: '1px' }}>
+            {/* 玩家情報 HUD (兩排獨立佈局，防止擠壓折行) */}
+            <div className="hud-box player-hud" style={{ padding: '10px 14px', flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
+              {/* 上列：身分與血量 */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 'bold', color: '#00ffcc', letterSpacing: '1px', fontSize: '13px', whiteSpace: 'nowrap' }}>
                   [ {state.currentSession.playerRole} ] 試煉者
-                </div>
-                <div style={{ fontSize: '11px', color: '#ffcc00', fontFamily: 'monospace' }}>
-                  FLOOR 0{state.currentFloor} / 0{state.maxFloors}
-                </div>
-                <div style={{ fontSize: '10px', color: '#94a3b8', fontFamily: 'monospace' }}>
-                  SCORE: <span style={{ color: '#00ffcc', fontWeight: 'bold' }}>{state.score.toLocaleString()}</span> PTS
+                </span>
+                <div className="hp-bar" style={{ display: 'flex' }}>
+                  {renderHearts(state.playerHp, state.playerMaxHp, 15)}
                 </div>
               </div>
-              <div className="hp-bar" style={{ display: 'flex' }}>
-                {renderHearts(state.playerHp, state.playerMaxHp, 15)}
+
+              {/* 下列：樓層與積分 */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #334155', paddingTop: '6px', fontSize: '11px', fontFamily: 'monospace' }}>
+                <span style={{ color: '#ffcc00', whiteSpace: 'nowrap' }}>
+                  FLOOR 0{state.currentFloor} / 0{state.maxFloors}
+                </span>
+                <span style={{ color: '#fff', whiteSpace: 'nowrap' }}>
+                  SCORE: <span style={{ color: '#00ffcc', fontWeight: 'bold' }}>{state.score.toLocaleString()}</span> PTS
+                </span>
               </div>
             </div>
 
             {/* 電腦版顯示的手牌區 (4 張) */}
             <div className="hand-section">
-              <div className="deck-tag" style={{ color: '#00ffcc' }}>
+              <div className="deck-tag" style={{ color: '#00ffcc', whiteSpace: 'nowrap', fontSize: '11px' }}>
                 [ 戰備手牌 · 4 抽選 3 佈署 ]
               </div>
               <div
@@ -422,7 +449,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
                   </div>
                 ))}
                 {hand.length === 0 && (
-                  <div style={{ color: '#64748b', fontSize: '12px', display: 'flex', alignItems: 'center' }}>
+                  <div style={{ color: '#64748b', fontSize: '12px', display: 'flex', alignItems: 'center', padding: '15px 0' }}>
                     手牌已全數佈署
                   </div>
                 )}
@@ -430,7 +457,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
 
               <button
                 className={`btn ${isDeployReady && !isResolving ? 'engage' : ''}`}
-                style={{ width: '100%', padding: '12px', fontSize: '16px' }}
+                style={{ width: '100%', padding: '10px', fontSize: '15px' }}
                 onClick={submitDeployment}
                 disabled={!isDeployReady || isResolving}
               >
@@ -442,11 +469,11 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
           {/* ============ 中央主戰場區 (Center Stage) ============ */}
           <div className="main-stage">
             {/* 電腦版頂部情報列 */}
-            <div className="deck-info-box desktop-only" style={{ maxWidth: '640px', whiteSpace: 'normal', padding: '6px 18px', textAlign: 'center' }}>
-              <span style={{ color: '#ffcc00', fontWeight: 'bold', marginRight: '10px' }}>
+            <div className="deck-info-box desktop-only" style={{ maxWidth: '680px', whiteSpace: 'normal', padding: '6px 18px', textAlign: 'center', top: '15px' }}>
+              <span style={{ color: '#ffcc00', fontWeight: 'bold', marginRight: '8px' }}>
                 [ 第 {state.currentFloor} 層 · {currentFloorConfig.title} ]
               </span>
-              <span style={{ color: '#cbd5e1', fontSize: '12px' }}>
+              <span style={{ color: '#cbd5e1', fontSize: '11px' }}>
                 {currentFloorConfig.modifierDesc}
               </span>
             </div>
@@ -547,15 +574,18 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
                           style={{
                             borderColor: 'rgba(255,255,255,0.25)',
                             display: 'flex',
+                            flexDirection: 'column',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            color: '#64748b',
+                            color: '#94a3b8',
                             fontSize: '11px',
                             textAlign: 'center',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            gap: '3px'
                           }}
                         >
-                          [ 點選佈署 ]
+                          <span style={{ fontSize: '15px', color: '#64748b' }}>+</span>
+                          <span>[ 點選佈署 ]</span>
                         </div>
                       )}
                     </div>
@@ -566,43 +596,54 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
           </div>
 
           {/* ============ 對手控制面板 (右側 / 電腦版) ============ */}
-          <div className="side-panel enemy-panel desktop-only">
-            {/* 首領戰況 HUD */}
-            <div className="hud-box enemy-hud" style={{ marginTop: '0' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'right' }}>
-                <div style={{ fontWeight: 'bold', color: currentFloorConfig.isBoss ? '#ff4747' : currentFloorConfig.isElite ? '#ffcc00' : '#f87171', letterSpacing: '1px' }}>
+          <div className="side-panel enemy-panel tower-panel desktop-only">
+            {/* 頂部佔位以對齊左側撤退按鈕 */}
+            <div style={{ height: '27px', marginBottom: '0' }} />
+
+            {/* 首領情報 HUD (兩排獨立佈局，防止擠壓折行) */}
+            <div className="hud-box enemy-hud" style={{ padding: '10px 14px', flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
+              {/* 上列：首領名稱與血量 */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 'bold', color: currentFloorConfig.isBoss ? '#ff4747' : currentFloorConfig.isElite ? '#ffcc00' : '#f87171', letterSpacing: '1px', fontSize: '13px', whiteSpace: 'nowrap' }}>
                   [ {state.currentSession.enemyRole} ] {currentFloorConfig.enemyName}
-                </div>
-                <div style={{ fontSize: '10px', color: '#cbd5e1' }}>
-                  {currentFloorConfig.enemyTitle}
+                </span>
+                <div className="hp-bar" style={{ display: 'flex' }}>
+                  {renderHearts(displayEnemyHp, currentFloorConfig.enemyHp, 15)}
                 </div>
               </div>
-              <div className="hp-bar" style={{ justifyContent: 'flex-end', display: 'flex' }}>
-                {renderHearts(displayEnemyHp, currentFloorConfig.enemyHp, 15)}
+
+              {/* 下列：頭銜稱號 */}
+              <div style={{ textAlign: 'right', borderTop: '1px solid #334155', paddingTop: '6px', fontSize: '11px', color: '#cbd5e1', whiteSpace: 'nowrap' }}>
+                {currentFloorConfig.enemyTitle}
               </div>
             </div>
 
             {/* 電腦版顯示的神秘敵方手牌 (4 張) */}
-            <div className="enemy-hand-container">
-              {Array.from({ length: 4 }).map((_, i) => {
-                const hasFlashed = dealStep > i || resolveStep >= 0;
-                return (
-                  <div
-                    key={i}
-                    className="card black-piece"
-                    style={{
-                      opacity: hasFlashed ? 0.3 : 1,
-                      transition: 'opacity 0.2s',
-                      borderColor: '#000',
-                      color: '#64748b',
-                      fontSize: '24px',
-                      fontFamily: 'monospace'
-                    }}
-                  >
-                    ?
-                  </div>
-                );
-              })}
+            <div className="hand-section">
+              <div className="deck-tag" style={{ color: '#ff4747', textAlign: 'right', whiteSpace: 'nowrap', fontSize: '11px' }}>
+                [ 敵方戰備手牌 (4) ]
+              </div>
+              <div className="enemy-hand-container">
+                {Array.from({ length: 4 }).map((_, i) => {
+                  const hasFlashed = dealStep > i || resolveStep >= 0;
+                  return (
+                    <div
+                      key={i}
+                      className="card black-piece"
+                      style={{
+                        opacity: hasFlashed ? 0.3 : 1,
+                        transition: 'opacity 0.2s',
+                        borderColor: '#000',
+                        color: '#64748b',
+                        fontSize: '24px',
+                        fontFamily: 'monospace'
+                      }}
+                    >
+                      ?
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
