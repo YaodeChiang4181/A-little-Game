@@ -326,18 +326,21 @@ export default function App() {
         [ 圖鑑 ]
       </button>
 
-      <button
-        className="settings-btn desktop-only"
-        onClick={() => {
-          soundManager.playSfx('click');
-          setShowSettings(true);
-        }}
-      >
-        [ 設定 ]
-      </button>
+      {/* 電腦版設定按鈕 (僅在 idle 首頁右上角顯示，與左上角圖鑑對稱) */}
+      {gameState === 'idle' && (
+        <button
+          className="settings-btn desktop-only"
+          onClick={() => {
+            soundManager.playSfx('click');
+            setShowSettings(true);
+          }}
+        >
+          [ 設定 ]
+        </button>
+      )}
 
-      {/* 電腦版 Menu 選單按鈕 */}
-      {(gameState === 'playing' || gameState === 'idle') && !showTutorial && !showMenu && (
+      {/* 電腦版 Menu 選單按鈕 (僅在 playing 戰鬥中顯示為局內暫停與設定選單) */}
+      {gameState === 'playing' && !showTutorial && !showMenu && (
         <button
           className="help-btn desktop-only"
           onClick={() => {
@@ -376,26 +379,29 @@ export default function App() {
             ))}
           </div>
 
-          <button
-            className="mobile-btn"
-            style={{ borderColor: '#00ffcc', color: '#00ffcc' }}
-            onClick={() => {
-              soundManager.playSfx('click');
-              setShowSettings(true);
-            }}
-          >
-            [ 設定 ]
-          </button>
-
-          <button
-            className="mobile-btn menu-btn"
-            onClick={() => {
-              soundManager.playSfx('click');
-              setShowMenu(true);
-            }}
-          >
-            [ 選單 ]
-          </button>
+          {/* 手機版：首頁顯示 [ 設定 ]，對局中則顯示 [ 選單 ] */}
+          {gameState === 'idle' ? (
+            <button
+              className="mobile-btn"
+              style={{ borderColor: '#00ffcc', color: '#00ffcc' }}
+              onClick={() => {
+                soundManager.playSfx('click');
+                setShowSettings(true);
+              }}
+            >
+              [ 設定 ]
+            </button>
+          ) : (
+            <button
+              className="mobile-btn menu-btn"
+              onClick={() => {
+                soundManager.playSfx('click');
+                setShowMenu(true);
+              }}
+            >
+              [ 選單 ]
+            </button>
+          )}
         </div>
 
         {/* 第二列：雙方血量與陣營狀態 (進行中或結算時) */}
@@ -598,22 +604,12 @@ export default function App() {
             <div style={{ color: '#94a3b8', fontSize: 'clamp(11px, 2.5vw, 13px)', marginBottom: '25px', letterSpacing: '1px' }}>
               [ 4選3手牌管理 · 角色專屬特性 · 動態環境戰場 ]
             </div>
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
               <button className="btn" style={{ background: '#0f766e', fontSize: 'clamp(14px, 3.5vw, 18px)', padding: '10px 20px' }} onClick={() => startGame(true)}>
                 新手指南
               </button>
               <button className="btn" style={{ background: '#dc2626', fontSize: 'clamp(14px, 3.5vw, 18px)', padding: '10px 20px' }} onClick={() => startGame(false)}>
                 立即開戰
-              </button>
-              <button
-                className="btn"
-                style={{ background: '#1e293b', border: '2px solid #00ffcc', color: '#00ffcc', fontSize: 'clamp(13px, 3vw, 16px)', padding: '10px 16px' }}
-                onClick={() => {
-                  soundManager.playSfx('click');
-                  setShowSettings(true);
-                }}
-              >
-                系統設定
               </button>
             </div>
           </div>

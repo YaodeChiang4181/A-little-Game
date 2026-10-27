@@ -595,11 +595,11 @@ html, body {
   background: #334155;
 }
 
-/* 系統設定按鈕 (電腦版) */
+/* 系統設定按鈕 (電腦版首頁右上角，與左上角圖鑑呼應對稱) */
 .settings-btn {
   position: absolute;
   top: 15px;
-  left: 105px;
+  right: 15px;
   background: rgba(15, 23, 42, 0.85);
   color: var(--color-cyan);
   border: 2px solid var(--color-cyan);
