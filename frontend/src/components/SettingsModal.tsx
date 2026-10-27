@@ -188,7 +188,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                 [ 戰鬥音效 SFX ]
               </div>
               <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
-                落子、交鋒、氣勢翻牌、特性觸發與扣血打擊音
+                出擊、交鋒、氣勢翻牌、特性觸發與扣血的音效
               </div>
             </div>
             <button
@@ -244,7 +244,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
 
         {/* 底部說明 */}
         <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', borderTop: '1px dashed #334155', paddingTop: '12px' }}>
-          * 設定將自動保存於本機瀏覽器。配樂為純前端動態晶片合成，100% 免費開源可商用。
+          * 設定將自動保存於本機瀏覽器。配樂為純前端動態晶片合成
         </div>
       </div>
     </div>
