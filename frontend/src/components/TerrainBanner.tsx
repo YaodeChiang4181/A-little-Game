@@ -43,7 +43,7 @@ export const TerrainBanner: React.FC<TerrainBannerProps> = ({ terrain }) => {
           <div style={{ color: '#ffcc00', fontWeight: 'bold', marginBottom: '4px', fontSize: '12px' }}>
             [ {terrain.name} · 倍率 x{terrain.weight} ]
           </div>
-          <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: '1.4' }}>
+          <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: '1.6' }}>
             {terrain.description}
           </div>
         </div>

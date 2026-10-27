@@ -101,7 +101,7 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
                     )}
                   </div>
                   {char.trait && (
-                    <div style={{ fontSize: '12px', color: '#00ffcc', lineHeight: '1.4' }}>
+                    <div style={{ fontSize: '12px', color: '#00ffcc', lineHeight: '1.6' }}>
                       【{char.trait.name}】{char.trait.description}
                     </div>
                   )}
@@ -157,7 +157,7 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
                       x{terrain.weight}
                     </span>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4' }}>
+                  <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.6' }}>
                     {terrain.description}
                   </div>
                 </div>

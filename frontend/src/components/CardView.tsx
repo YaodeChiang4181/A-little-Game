@@ -125,7 +125,7 @@ export const CardView: React.FC<CardViewProps> = ({
           <div style={{ color: '#ffcc00', fontWeight: 'bold', marginBottom: '3px', fontSize: '12px' }}>
             {character.name} · 【{character.trait.badge}】
           </div>
-          <div style={{ fontSize: '11px', color: '#e2e8f0', lineHeight: '1.4' }}>
+          <div style={{ fontSize: '11px', color: '#e2e8f0', lineHeight: '1.6' }}>
             {character.trait.description}
           </div>
           {character.lore && (

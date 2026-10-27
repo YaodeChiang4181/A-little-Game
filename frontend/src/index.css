@@ -7,7 +7,7 @@
   --color-accent: #ff4747;
   --color-cyan: #00ffcc;
   --color-gold: #ffcc00;
-  --font-pixel: 'DotGothic16', monospace, sans-serif;
+  --font-pixel: 'DotGothic16', 'Microsoft JhengHei', 'PingFang TC', monospace, sans-serif;
 }
 
 * { 
@@ -25,6 +25,7 @@ html, body {
   background-color: var(--color-bg);
   color: var(--color-white);
   font-family: var(--font-pixel);
+  line-height: 1.5;
   user-select: none;
 }
 
@@ -623,15 +624,18 @@ html, body {
   bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(15, 23, 42, 0.98);
   border: 2px solid #ffcc00;
   border-radius: 6px;
-  padding: 6px 8px;
-  width: 160px;
+  padding: 8px 12px;
+  width: 220px;
   text-align: left;
   z-index: 100;
   pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85);
+  white-space: normal !important;
+  word-break: break-word;
+  line-height: 1.6;
 }
 
 /* 戰場環境橫幅 (Terrain Banner) */
@@ -657,15 +661,18 @@ html, body {
   top: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(10, 10, 15, 0.95);
+  background: rgba(10, 10, 15, 0.98);
   border: 2px solid #00ffcc;
   border-radius: 6px;
-  padding: 8px 10px;
-  width: 190px;
-  z-index: 90;
+  padding: 8px 12px;
+  width: 240px;
+  z-index: 120;
   pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85);
   text-align: left;
+  white-space: normal !important;
+  word-break: break-word;
+  line-height: 1.6;
 }
 
 /* 4選3中尚未佈署/保留的手牌樣式 */
