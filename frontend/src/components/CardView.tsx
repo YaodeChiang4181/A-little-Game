@@ -9,6 +9,7 @@ interface CardViewProps {
   isLoser?: boolean;
   isClashing?: boolean;
   isUnselectedHand?: boolean; // 4選3中尚未佈署的手牌
+  isRevealed?: boolean; // 是否翻開揭示 (敵方暗牌/揭曉動畫)
   onClick?: () => void;
   showTooltip?: boolean;
 }
@@ -20,6 +21,7 @@ export const CardView: React.FC<CardViewProps> = ({
   isLoser,
   isClashing,
   isUnselectedHand,
+  isRevealed = true,
   onClick,
   showTooltip = true
 }) => {
@@ -27,6 +29,26 @@ export const CardView: React.FC<CardViewProps> = ({
 
   if (!character) {
     return <div className="card empty" onClick={onClick} />;
+  }
+
+  if (isRevealed === false) {
+    return (
+      <div
+        className={`card ${color}-piece`}
+        onClick={onClick}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderColor: '#000',
+          color: '#64748b',
+          fontSize: '24px',
+          fontFamily: 'monospace'
+        }}
+      >
+        ?
+      </div>
+    );
   }
 
   let animClass = '';

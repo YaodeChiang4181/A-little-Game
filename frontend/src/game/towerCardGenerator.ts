@@ -140,16 +140,21 @@ export function generateTowerScorecard(state: TowerRunState): Promise<string> {
 }
 
 /**
- * 將圖片複製到使用者系統剪貼簿
+ * 將圖片複製到使用者系統剪貼簿 (相容嚴格 TypeScript 與跨瀏覽器環境)
  */
 export async function copyImageToClipboard(dataUrl: string): Promise<boolean> {
   try {
     const res = await fetch(dataUrl);
     const blob = await res.blob();
-    await navigator.clipboard.write([
-      new ClipboardItem({ 'image/png': blob })
-    ]);
-    return true;
+    const ClipboardItemClass = (window as unknown as { ClipboardItem?: any }).ClipboardItem;
+    const clipboard = typeof navigator !== 'undefined' ? (navigator.clipboard as any) : null;
+    if (ClipboardItemClass && clipboard && typeof clipboard.write === 'function') {
+      await clipboard.write([
+        new ClipboardItemClass({ 'image/png': blob })
+      ]);
+      return true;
+    }
+    return false;
   } catch (e) {
     return false;
   }

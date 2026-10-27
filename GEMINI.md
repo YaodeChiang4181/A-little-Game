@@ -33,3 +33,14 @@
 
 * **模組化資料驅動 (Data-Driven)**：新增棋子角色與戰場環境應優先擴充 `src/game/registry/characters.ts` 與 `src/game/registry/terrains.ts`，確保引擎 (`engine.ts`) 與 AI 決策器 (`aiAgent.ts`) 自動感知。
 * **純客戶端無伺服器優先**：遊戲邏輯核心運行於前端，保持毫秒級即時運算體驗。
+
+---
+
+## 5. 平台部署記憶與規範 (Vercel Deployment Memory) - 永久約束
+
+* **雲端託管平台**：本專案已正式部署於 **Vercel**（採用無伺服器純前端架構，Vercel 設定 Root Directory 為 `frontend`）。
+* **嚴格型別編譯標準**：Vercel CI/CD 建置指令為 `tsc && vite build`，在嚴格模式 (`strict: true`) 下執行：
+  1. 嚴格禁止缺漏 props 型別、未定義型別、或未宣告介面屬性（例如組件屬性必須完整定義）。
+  2. 瀏覽器特有 API（如 `ClipboardItem`、`webkitAudioContext` 等）必須具備安全型別判定與容錯 fallback，不可引發編譯失敗。
+  3. 保障 SPA 重寫路由：確保 `frontend/vercel.json` 包含 `rewrites: [{ source: "/(.*)", destination: "/index.html" }]`，避免網頁重整時出現 404。
+  4. 每次推送前確認代碼完全符合 TypeScript 嚴格標準，不可讓 Vercel CI/CD 出現任何建置錯誤。
