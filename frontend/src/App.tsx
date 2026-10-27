@@ -5,7 +5,9 @@ import { initGameSession, resolveTurn, GameSession } from './game/gameService';
 import { CardView } from './components/CardView';
 import { TerrainBanner } from './components/TerrainBanner';
 import { CompendiumModal } from './components/CompendiumModal';
+import { SettingsModal } from './components/SettingsModal';
 import { PixelHeart, PixelPieceIcon } from './components/PixelIcons';
+import { soundManager } from './game/soundManager';
 
 export default function App() {
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'game_over'>('idle');
@@ -32,6 +34,29 @@ export default function App() {
   const [tutorialStep, setTutorialStep] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
   const [showCompendium, setShowCompendium] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
+  // 初次互動解鎖音訊上下文並啟動 BGM (若已啟用)
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      soundManager.ensureContext().then(() => {
+        soundManager.startBgm();
+      });
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+    };
+
+    window.addEventListener('click', handleFirstInteraction);
+    window.addEventListener('keydown', handleFirstInteraction);
+    window.addEventListener('touchstart', handleFirstInteraction);
+
+    return () => {
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+    };
+  }, []);
 
   // 勝負與血量展示（基於 session 或過渡狀態）
   const [displayPlayerHp, setDisplayPlayerHp] = useState(3);
@@ -42,6 +67,10 @@ export default function App() {
    * 啟動全新對局（純客戶端秒開，無伺服器延遲）
    */
   const startGame = (showHelp: boolean = false) => {
+    soundManager.ensureContext().then(() => {
+      soundManager.startBgm();
+      soundManager.playSfx('click');
+    });
     const newSession = initGameSession();
     setSession(newSession);
     setHand(newSession.playerHand);
@@ -71,6 +100,7 @@ export default function App() {
     if (isResolving) return;
     const emptySlot = deployment.findIndex(s => s === null);
     if (emptySlot !== -1) {
+      soundManager.ensureContext();
       const newDeployment = [...deployment];
       newDeployment[emptySlot] = card;
       setDeployment(newDeployment);
@@ -78,6 +108,13 @@ export default function App() {
       const newHand = [...hand];
       newHand.splice(index, 1);
       setHand(newHand);
+
+      const count = newDeployment.filter(c => c !== null).length;
+      if (count === 3) {
+        soundManager.playSfx('deployReady');
+      } else {
+        soundManager.playSfx('cardDeploy');
+      }
     }
   };
 
@@ -86,6 +123,8 @@ export default function App() {
    */
   const handleSlotClick = (card: Character | null, index: number) => {
     if (isResolving || card === null) return;
+    soundManager.ensureContext();
+    soundManager.playSfx('cardRecall');
     setHand(prev => [...prev, card]);
     const newDeployment = [...deployment];
     newDeployment[index] = null;
@@ -99,6 +138,8 @@ export default function App() {
     const deployedCount = deployment.filter(c => c !== null).length;
     if (deployedCount < 3 || !session || isResolving) return;
 
+    soundManager.ensureContext();
+    soundManager.playSfx('startClash');
     setIsResolving(true);
 
     // 本地純前端引擎即時結算（0ms 延遲，包含特性鉤子與 AI 24 種模擬）
@@ -122,6 +163,7 @@ export default function App() {
   // 第一階段動畫：敵方卡片依序飛入戰場
   useEffect(() => {
     if (dealStep >= 0 && dealStep < 3) {
+      soundManager.playSfx('enemyDeal');
       const timer = setTimeout(() => {
         setDealStep(prev => prev + 1);
       }, 300);
@@ -138,6 +180,12 @@ export default function App() {
   useEffect(() => {
     if (resolveStep >= 0 && resolveStep < 3 && pendingResult) {
       const currentBattle = pendingResult.battles[resolveStep];
+      soundManager.playSfx('cardReveal');
+      if (currentBattle.traits_triggered && currentBattle.traits_triggered.length > 0) {
+        setTimeout(() => {
+          soundManager.playSfx('traitTrigger');
+        }, 400);
+      }
       setBattleLogs(prev => {
         const newLogs = [...prev];
         newLogs[resolveStep] = currentBattle;
@@ -152,6 +200,7 @@ export default function App() {
     } else if (resolveStep === 3 && pendingResult) {
       // 3 個戰場全部結算完畢，結算總傷害與更新血量
       const endTimer = setTimeout(() => {
+        soundManager.playSfx('hitDamage');
         setDisplayPlayerHp(pendingResult.player_hp);
         setDisplayEnemyHp(pendingResult.enemy_hp);
 
@@ -172,6 +221,11 @@ export default function App() {
           if (pendingResult.game_over) {
             setWinner(pendingResult.winner);
             setGameState('game_over');
+            if (pendingResult.winner === 'player') {
+              soundManager.playSfx('victory');
+            } else {
+              soundManager.playSfx('defeat');
+            }
           } else {
             // 自動過渡至下一回合
             setDeployment([null, null, null]);
@@ -262,15 +316,34 @@ export default function App() {
   return (
     <div className="game-wrapper">
       {/* ============ 電腦版專屬頂部導覽按鈕 ============ */}
-      <button className="compendium-btn desktop-only" onClick={() => setShowCompendium(true)}>
+      <button
+        className="compendium-btn desktop-only"
+        onClick={() => {
+          soundManager.playSfx('click');
+          setShowCompendium(true);
+        }}
+      >
         [ 圖鑑 ]
+      </button>
+
+      <button
+        className="settings-btn desktop-only"
+        onClick={() => {
+          soundManager.playSfx('click');
+          setShowSettings(true);
+        }}
+      >
+        [ ⚙️ 設定 ]
       </button>
 
       {/* 電腦版 Menu 選單按鈕 */}
       {(gameState === 'playing' || gameState === 'idle') && !showTutorial && !showMenu && (
         <button
           className="help-btn desktop-only"
-          onClick={() => setShowMenu(true)}
+          onClick={() => {
+            soundManager.playSfx('click');
+            setShowMenu(true);
+          }}
           style={{ display: 'flex', flexDirection: 'column', padding: '8px' }}
         >
           <div style={{ width: '24px', height: '4px', background: '#fff', margin: '2px 0' }} />
@@ -283,7 +356,13 @@ export default function App() {
       <header className="mobile-header-bar mobile-only">
         {/* 第一列：快捷操作與本局登場名冊 */}
         <div className="mobile-nav-row">
-          <button className="mobile-btn" onClick={() => setShowCompendium(true)}>
+          <button
+            className="mobile-btn"
+            onClick={() => {
+              soundManager.playSfx('click');
+              setShowCompendium(true);
+            }}
+          >
             [ 圖鑑 ]
           </button>
 
@@ -297,7 +376,24 @@ export default function App() {
             ))}
           </div>
 
-          <button className="mobile-btn menu-btn" onClick={() => setShowMenu(true)}>
+          <button
+            className="mobile-btn"
+            style={{ borderColor: '#00ffcc', color: '#00ffcc' }}
+            onClick={() => {
+              soundManager.playSfx('click');
+              setShowSettings(true);
+            }}
+          >
+            [ ⚙️ ]
+          </button>
+
+          <button
+            className="mobile-btn menu-btn"
+            onClick={() => {
+              soundManager.playSfx('click');
+              setShowMenu(true);
+            }}
+          >
             [ 選單 ]
           </button>
         </div>
@@ -328,7 +424,19 @@ export default function App() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <button
                 className="btn"
+                style={{ background: '#059669' }}
                 onClick={() => {
+                  soundManager.playSfx('click');
+                  setShowMenu(false);
+                  setShowSettings(true);
+                }}
+              >
+                ⚙️ 音訊與系統設定
+              </button>
+              <button
+                className="btn"
+                onClick={() => {
+                  soundManager.playSfx('click');
                   setShowMenu(false);
                   setShowTutorial(true);
                   setTutorialStep(0);
@@ -340,6 +448,7 @@ export default function App() {
                 className="btn"
                 style={{ background: '#0284c7' }}
                 onClick={() => {
+                  soundManager.playSfx('click');
                   setShowMenu(false);
                   setShowCompendium(true);
                 }}
@@ -350,19 +459,30 @@ export default function App() {
                 className="btn"
                 style={{ background: '#dc2626' }}
                 onClick={() => {
+                  soundManager.playSfx('click');
                   setShowMenu(false);
                   setGameState('idle');
                 }}
               >
                 返回主選單
               </button>
-              <button className="btn" style={{ background: '#475569' }} onClick={() => setShowMenu(false)}>
+              <button
+                className="btn"
+                style={{ background: '#475569' }}
+                onClick={() => {
+                  soundManager.playSfx('click');
+                  setShowMenu(false);
+                }}
+              >
                 繼續遊戲
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* 系統設定模態彈窗 */}
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
 
       {/* 圖鑑百科模態彈窗 */}
       {showCompendium && <CompendiumModal onClose={() => setShowCompendium(false)} />}
@@ -478,12 +598,22 @@ export default function App() {
             <div style={{ color: '#94a3b8', fontSize: 'clamp(11px, 2.5vw, 13px)', marginBottom: '25px', letterSpacing: '1px' }}>
               [ 4選3手牌管理 · 角色專屬特性 · 動態環境戰場 ]
             </div>
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button className="btn" style={{ background: '#0f766e', fontSize: 'clamp(14px, 3.5vw, 18px)', padding: '10px 20px' }} onClick={() => startGame(true)}>
                 新手指南
               </button>
               <button className="btn" style={{ background: '#dc2626', fontSize: 'clamp(14px, 3.5vw, 18px)', padding: '10px 20px' }} onClick={() => startGame(false)}>
                 立即開戰
+              </button>
+              <button
+                className="btn"
+                style={{ background: '#1e293b', border: '2px solid #00ffcc', color: '#00ffcc', fontSize: 'clamp(13px, 3vw, 16px)', padding: '10px 16px' }}
+                onClick={() => {
+                  soundManager.playSfx('click');
+                  setShowSettings(true);
+                }}
+              >
+                ⚙️ 音訊設定
               </button>
             </div>
           </div>

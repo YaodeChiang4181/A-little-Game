@@ -63,6 +63,8 @@ AI 引擎採用即時賽局模擬：
   * `src/game/engine.ts`：全特性與動態環境支援的戰鬥結算引擎。
   * `src/game/aiAgent.ts`：特性感知與環境適應型 AI 策略決策器。
   * `src/game/gameService.ts`：對局生命週期與狀態管理。
+  * `src/game/soundManager.ts`：純前端 Web Audio 8-Bit 晶片音樂與戰鬥音效合成引擎（零外部流量依賴、100% 免費版權）。
+  * `src/components/SettingsModal.tsx`：音效與背景音樂設定面板（支援獨立開關、音量滑桿與多首輕快戰鬥曲目切換）。
 * **部署支援**：Vercel、GitHub Pages 等靜態託管平台（100% 永久免費）。
 
 ---
@@ -74,3 +76,13 @@ cd frontend
 npm install
 npm run dev
 ```
+
+---
+
+## 📝 更新日誌 (Changelog)
+
+* **2026-10-27**：
+  * **8-Bit 晶片音訊引擎**：整合純前端 Web Audio API 音訊合成器 (`src/game/soundManager.ts`)，內建 3 首輕快戰鬥配樂（《疾馳交鋒》、《賽局博弈》、《王城決戰》）與全套 8-bit 打擊音效。
+  * **系統設定面板**：新增收納式設定彈窗 (`src/components/SettingsModal.tsx`)，支援獨立開關 BGM/SFX、音量滑桿與即時換曲，設定自動留存至 `localStorage`。
+  * **代理人工作流與規範**：建置 `read-readme-first`、`post-change-sync` 技能與 `GEMINI.md` 常駐約束，強制行動前閱讀機制與每次改動後自動更新文件與 Git 遠端推送。
+

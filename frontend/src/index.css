@@ -595,6 +595,26 @@ html, body {
   background: #334155;
 }
 
+/* 系統設定按鈕 (電腦版) */
+.settings-btn {
+  position: absolute;
+  top: 15px;
+  left: 105px;
+  background: rgba(15, 23, 42, 0.85);
+  color: var(--color-cyan);
+  border: 2px solid var(--color-cyan);
+  padding: 6px 14px;
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  cursor: pointer;
+  z-index: 100;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+.settings-btn:hover {
+  background: #334155;
+}
+
 /* ================= 角色特性與戰場環境全新 UI 樣式 ================= */
 
 /* 卡牌特性浮動說明 (Tooltip) */
