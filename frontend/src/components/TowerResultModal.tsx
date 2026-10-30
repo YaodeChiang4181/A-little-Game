@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TowerRunState, calculateRank, getTowerLeaderboard } from '../game/towerEngine';
+import { TowerRunState, calculateRank, getTowerLeaderboard, TOWER_FLOORS } from '../game/towerEngine';
 import { generateTowerScorecard, copyImageToClipboard } from '../game/towerCardGenerator';
 import { soundManager } from '../game/soundManager';
 
@@ -16,6 +16,18 @@ export const TowerResultModal: React.FC<TowerResultModalProps> = ({ state, onRes
   const [copyTip, setCopyTip] = useState(false);
   const [activeTab, setActiveTab] = useState<'summary' | 'leaderboard'>('summary');
   const leaderboard = getTowerLeaderboard();
+
+  const rankTitle =
+    rank === 'S'
+      ? '奇偶至尊'
+      : rank === 'A'
+      ? '高階博弈者'
+      : rank === 'B'
+      ? '精算行家'
+      : '見習棋手';
+
+  const rankColor =
+    rank === 'S' ? '#fbbf24' : rank === 'A' ? '#38bdf8' : rank === 'B' ? '#cbd5e1' : '#94a3b8';
 
   const handleGeneratePoster = async () => {
     soundManager.playSfx('click');
@@ -43,129 +55,149 @@ export const TowerResultModal: React.FC<TowerResultModalProps> = ({ state, onRes
   };
 
   return (
-    <div className="tutorial-overlay" style={{ zIndex: 1100 }}>
-      <div
-        className="tutorial-box"
-        style={{
-          width: '92%',
-          maxWidth: '560px',
-          maxHeight: '88vh',
-          overflowY: 'auto',
-          background: 'rgba(15, 23, 42, 0.98)',
-          border: `3px solid ${isVictory ? '#00ffcc' : '#ff4747'}`,
-          boxShadow: isVictory ? '0 0 30px rgba(0,255,204,0.3)' : '0 0 30px rgba(255,71,71,0.3)',
-          padding: '24px'
-        }}
-      >
-        {/* 標題橫幅 */}
-        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <h2
-            style={{
-              margin: '0 0 6px 0',
-              fontSize: '24px',
-              color: isVictory ? '#00ffcc' : '#ff4747',
-              letterSpacing: '2px',
-              textShadow: '2px 2px 0 #000'
+    <div className="arcade-overlay">
+      <div className={`arcade-tally-window ${isVictory ? 'victory' : 'defeat'}`}>
+        {/* 1. 街機頂部公告橫幅 */}
+        <div className="arcade-marquee-header">
+          <div className="arcade-marquee-banner">
+            {isVictory ? '[ 試煉登頂 · VICTORY ]' : `[ 終局折戟 · DEFEAT ]`}
+          </div>
+          <div className="arcade-seed-badge">
+            EXPEDITION ARCHIVE // SEED #{state.seed}
+          </div>
+        </div>
+
+        {/* 2. 街機記分銘牌與作戰矩陣 */}
+        <div className="arcade-score-board">
+          <div className="arcade-score-label">
+            ── FINAL SCORE 結算總分 ──
+          </div>
+          <div className="arcade-score-digits">
+            {state.score.toLocaleString()} <span>PTS</span>
+          </div>
+          <div className="arcade-stats-grid">
+            <div className="arcade-stat-item">
+              <span className="arcade-stat-label">終止階層</span>
+              <span className="arcade-stat-value">
+                FLOOR 0{state.currentFloor} / 05
+              </span>
+            </div>
+            <div className="arcade-stat-item">
+              <span className="arcade-stat-label">作戰評級</span>
+              <span className="arcade-stat-value" style={{ color: rankColor }}>
+                [ {rank} · {rankTitle} ]
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. 街機實體切換分頁 */}
+        <div className="arcade-tab-bar">
+          <button
+            className={`arcade-tab-btn ${activeTab === 'summary' ? 'active' : ''}`}
+            onClick={() => {
+              soundManager.playSfx('click');
+              setActiveTab('summary');
             }}
           >
-            {isVictory ? '[ 試煉登頂 · TOWER CONQUERED ]' : `[ 止步第 ${state.currentFloor} 層 · DEFEAT ]`}
-          </h2>
-          <div style={{ color: '#94a3b8', fontSize: '12px', fontFamily: 'monospace' }}>
-            EXPEDITION SEED: #{state.seed}
-          </div>
-        </div>
-
-        {/* 總分與評級牌匾 */}
-        <div
-          style={{
-            background: 'rgba(30, 41, 59, 0.7)',
-            border: '2px solid #334155',
-            borderRadius: '4px',
-            padding: '16px',
-            textAlign: 'center',
-            marginBottom: '20px'
-          }}
-        >
-          <div style={{ color: '#94a3b8', fontSize: '11px', letterSpacing: '1px' }}>
-            FINAL SCORE
-          </div>
-          <div style={{ color: '#ffcc00', fontSize: '38px', fontWeight: 'bold', fontFamily: 'monospace', margin: '4px 0' }}>
-            {state.score.toLocaleString()} <span style={{ fontSize: '16px' }}>PTS</span>
-          </div>
-          <div style={{ display: 'inline-block', background: '#0f172a', border: '1px solid #475569', padding: '4px 12px', borderRadius: '3px', fontSize: '13px', color: rank === 'S' ? '#00ffcc' : '#38bdf8' }}>
-            [ 評級 RANK: {rank} ] {rank === 'S' ? '奇偶至尊' : rank === 'A' ? '高階博弈者' : rank === 'B' ? '精算行家' : '見習棋手'}
-          </div>
-        </div>
-
-        {/* 分頁按鈕 */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '15px' }}>
-          <button
-            className="btn"
-            style={{ flex: 1, padding: '8px', fontSize: '12px', background: activeTab === 'summary' ? '#0f766e' : '#1e293b' }}
-            onClick={() => setActiveTab('summary')}
-          >
-            [ 本局戰況明細 ]
+            [ 歷層戰報 BATTLE LOG ]
           </button>
           <button
-            className="btn"
-            style={{ flex: 1, padding: '8px', fontSize: '12px', background: activeTab === 'leaderboard' ? '#0f766e' : '#1e293b' }}
-            onClick={() => setActiveTab('leaderboard')}
+            className={`arcade-tab-btn ${activeTab === 'leaderboard' ? 'active' : ''}`}
+            onClick={() => {
+              soundManager.playSfx('click');
+              setActiveTab('leaderboard');
+            }}
           >
-            [ 歷史榮譽榜 TOP 10 ]
+            [ 殿堂榜單 TOP 10 ]
           </button>
         </div>
 
-        {/* 本局戰況分頁 */}
+        {/* 4. 分頁內容區 */}
         {activeTab === 'summary' && (
           <div>
-            <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid #334155', borderRadius: '4px', padding: '10px 14px', marginBottom: '15px' }}>
-              <div style={{ fontSize: '11px', color: '#ffcc00', fontWeight: 'bold', marginBottom: '8px' }}>
-                各層交鋒戰報
+            <div className="arcade-panel-box">
+              <div className="arcade-panel-title">
+                <span>作戰各層明細</span>
+                <span style={{ color: '#94a3b8', fontSize: '10px' }}>
+                  TOTAL {state.history.length} CLEARED
+                </span>
               </div>
               {state.history.map((h, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', padding: '6px 0', borderBottom: i < state.history.length - 1 ? '1px dashed #334155' : 'none' }}>
-                  <span style={{ color: '#fff' }}>
-                    FLOOR 0{h.floor} {h.flawless && <span style={{ color: '#00ffcc', fontSize: '10px', marginLeft: '4px' }}>[無傷]</span>}
-                  </span>
-                  <span style={{ color: '#94a3b8', fontSize: '11px' }}>
+                <div key={i} className="arcade-log-row">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ color: '#fff', fontWeight: 'bold' }}>
+                      0{h.floor}F
+                    </span>
+                    <span style={{ color: '#cbd5e1' }}>
+                      {TOWER_FLOORS[h.floor - 1]?.enemyName || '先鋒對手'}
+                    </span>
+                    {h.flawless && (
+                      <span
+                        style={{
+                          color: '#34d399',
+                          fontSize: '10px',
+                          border: '1px solid #059669',
+                          padding: '0 4px'
+                        }}
+                      >
+                        [無傷]
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ color: '#94a3b8', fontSize: '11px' }}>
                     {h.roundsTaken} 回合 / 承傷 {h.damageTaken} 點
-                  </span>
-                  <span style={{ color: '#ffcc00', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                  </div>
+                  <div style={{ color: '#fbbf24', fontWeight: 'bold', fontFamily: 'monospace' }}>
                     +{h.scoreGained} PTS
-                  </span>
+                  </div>
                 </div>
               ))}
               {state.history.length === 0 && (
-                <div style={{ color: '#64748b', fontSize: '12px', textAlign: 'center', padding: '10px' }}>
-                  未通過任何層數
+                <div className="arcade-tactical-dispatch">
+                  <div className="arcade-dispatch-title">
+                    [ 01F 哨站斥候 ] ── 初戰受挫 · 於先鋒交鋒中力竭 (+0 PTS)
+                  </div>
+                  <div className="arcade-dispatch-desc">
+                    戰術指引：開局需權衡手牌奇偶分配，善用小兵以弱勝強與主塔止損特性。
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* 像素戰報海報展示區 */}
+            {/* 戰報海報按鈕與展示 */}
             {!posterUrl ? (
-              <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                <button
-                  className="btn"
-                  style={{ width: '100%', background: '#4338ca', padding: '10px', fontSize: '14px' }}
-                  onClick={handleGeneratePoster}
-                >
-                  [ 繪製 8-Bit 像素戰報海報 (可分享) ]
+              <div style={{ marginBottom: '16px' }}>
+                <button className="arcade-poster-btn" onClick={handleGeneratePoster}>
+                  [ 鐫刻戰績海報 · GENERATE POSTER ]
                 </button>
               </div>
             ) : (
-              <div style={{ background: '#090d16', border: '2px solid #00ffcc', borderRadius: '4px', padding: '12px', marginBottom: '20px', textAlign: 'center' }}>
+              <div className="arcade-poster-preview">
                 <img
                   src={posterUrl}
                   alt="Tower Scorecard"
-                  style={{ maxWidth: '100%', maxHeight: '280px', borderRadius: '2px', border: '1px solid #334155', imageRendering: 'pixelated' }}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '260px',
+                    border: '2px solid #000',
+                    imageRendering: 'pixelated'
+                  }}
                 />
-                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '10px' }}>
-                  <button className="btn" style={{ flex: 1, background: '#0284c7', padding: '8px', fontSize: '12px' }} onClick={handleCopyPoster}>
-                    {copyTip ? '[ 已複製至剪貼簿！]' : '[ 複製圖片 ]'}
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '10px' }}>
+                  <button
+                    className="arcade-btn-secondary"
+                    style={{ padding: '8px', fontSize: '12px' }}
+                    onClick={handleCopyPoster}
+                  >
+                    {copyTip ? '[ 已複製至剪貼簿！]' : '[ 複製圖片 · COPY ]'}
                   </button>
-                  <button className="btn" style={{ flex: 1, background: '#059669', padding: '8px', fontSize: '12px' }} onClick={handleDownloadPoster}>
-                    [ 下載海報 PNG ]
+                  <button
+                    className="arcade-btn-secondary"
+                    style={{ padding: '8px', fontSize: '12px', background: '#065f46', color: '#6ee7b7' }}
+                    onClick={handleDownloadPoster}
+                  >
+                    [ 下載海報 · SAVE PNG ]
                   </button>
                 </div>
               </div>
@@ -173,29 +205,34 @@ export const TowerResultModal: React.FC<TowerResultModalProps> = ({ state, onRes
           </div>
         )}
 
-        {/* 歷史榮譽榜分頁 */}
+        {/* 殿堂榮譽榜 */}
         {activeTab === 'leaderboard' && (
-          <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid #334155', borderRadius: '4px', padding: '10px 14px', marginBottom: '20px' }}>
-            <div style={{ fontSize: '11px', color: '#ffcc00', fontWeight: 'bold', marginBottom: '8px' }}>
-              本機最佳試煉紀錄 (TOP 10)
+          <div className="arcade-panel-box">
+            <div className="arcade-panel-title">
+              <span>殿堂榮譽榜單</span>
+              <span style={{ color: '#94a3b8', fontSize: '10px' }}>LOCAL ARCHIVE</span>
             </div>
             {leaderboard.map((item, idx) => (
-              <div
-                key={idx}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  fontSize: '12px',
-                  padding: '7px 0',
-                  borderBottom: idx < leaderboard.length - 1 ? '1px dashed #334155' : 'none'
-                }}
-              >
+              <div key={idx} className="arcade-log-row">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ color: idx === 0 ? '#ffcc00' : idx === 1 ? '#e2e8f0' : idx === 2 ? '#b45309' : '#94a3b8', fontWeight: 'bold', width: '20px' }}>
-                    #{idx + 1}
+                  <span
+                    style={{
+                      color:
+                        idx === 0
+                          ? '#fbbf24'
+                          : idx === 1
+                          ? '#e2e8f0'
+                          : idx === 2
+                          ? '#b45309'
+                          : '#64748b',
+                      fontWeight: 'bold',
+                      width: '24px',
+                      fontFamily: 'monospace'
+                    }}
+                  >
+                    #{idx + 1 < 10 ? `0${idx + 1}` : idx + 1}
                   </span>
-                  <span style={{ color: item.isVictory ? '#00ffcc' : '#fff' }}>
+                  <span style={{ color: item.isVictory ? '#34d399' : '#fff' }}>
                     {item.isVictory ? '[登頂通關]' : `第 ${item.floor} 層`}
                   </span>
                   <span style={{ fontSize: '10px', color: '#64748b' }}>
@@ -203,47 +240,53 @@ export const TowerResultModal: React.FC<TowerResultModalProps> = ({ state, onRes
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '10px', background: '#1e293b', color: '#38bdf8', padding: '1px 5px', borderRadius: '2px' }}>
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      border: '1px solid #334155',
+                      padding: '1px 6px',
+                      color: item.rank === 'S' ? '#fbbf24' : '#94a3b8'
+                    }}
+                  >
                     RANK {item.rank}
                   </span>
-                  <span style={{ color: '#ffcc00', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                  <span style={{ color: '#fbbf24', fontWeight: 'bold', fontFamily: 'monospace' }}>
                     {item.score.toLocaleString()} PTS
                   </span>
                 </div>
               </div>
             ))}
             {leaderboard.length === 0 && (
-              <div style={{ color: '#64748b', fontSize: '12px', textAlign: 'center', padding: '14px' }}>
-                暫無榮譽紀錄，完成一輪試煉即可留名！
+              <div style={{ color: '#64748b', fontSize: '12px', textAlign: 'center', padding: '16px 0' }}>
+                殿堂尚無留名者，完成一次試煉即刻鐫刻名號！
               </div>
             )}
           </div>
         )}
 
-        {/* 底部操作按鈕 */}
-        <div style={{ display: 'flex', gap: '12px' }}>
+        {/* 5. 底部操作按鈕 */}
+        <div className="arcade-action-row">
           <button
-            className="btn engage"
-            style={{ flex: 1, padding: '10px', fontSize: '14px' }}
+            className={`arcade-btn-primary ${isVictory ? 'victory' : 'defeat'}`}
             onClick={() => {
               soundManager.playSfx('click');
               onRestart();
             }}
           >
-            再次試煉
+            [ 重返試煉 · RETRY ]
           </button>
           <button
-            className="btn"
-            style={{ flex: 1, background: '#334155', padding: '10px', fontSize: '14px' }}
+            className="arcade-btn-secondary"
             onClick={() => {
               soundManager.playSfx('click');
               onMainMenu();
             }}
           >
-            返回主選單
+            [ 返回大廳 · MAIN MENU ]
           </button>
         </div>
       </div>
     </div>
   );
 };
+

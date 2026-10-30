@@ -294,7 +294,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
               style={{ width: '100%', padding: '12px', fontSize: '16px', letterSpacing: '1px' }}
               onClick={handleStartFloor}
             >
-              [ 啟程迎戰 ENGAGE ]
+              [ 開始 ]
             </button>
           </div>
         </div>

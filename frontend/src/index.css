@@ -717,3 +717,343 @@ html, body {
   0% { transform: scale(0.6); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
+
+/* ================= 街機式硬派戰果結算牌 (Arcade Score Tally Ledger) ================= */
+
+/* 街機黑色遮罩 (告別 AI 感模糊濾鏡，回歸純淨街機暗房) */
+.arcade-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(3, 7, 18, 0.92);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+  pointer-events: auto;
+  padding: 12px;
+}
+
+/* 街機雙重實體外框面板 (無圓角、硬派像素投影) */
+.arcade-tally-window {
+  width: 94%;
+  max-width: 540px;
+  max-height: 88vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: #0b0f19;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 8px 8px;
+  border: 4px solid #000;
+  border-radius: 0 !important;
+  box-shadow: 8px 8px 0px #000;
+  padding: 20px 22px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 戰敗主題外框 */
+.arcade-tally-window.defeat {
+  outline: 3px solid #991b1b;
+}
+
+/* 登頂勝捷主題外框 */
+.arcade-tally-window.victory {
+  outline: 3px solid #b45309;
+}
+
+/* 捲軸硬派直角化 */
+.arcade-tally-window::-webkit-scrollbar {
+  width: 6px;
+}
+.arcade-tally-window::-webkit-scrollbar-track {
+  background: #060911;
+  border-left: 1px solid #1e293b;
+}
+.arcade-tally-window::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 0 !important;
+}
+.arcade-tally-window::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* 街機頂部告示橫幅 */
+.arcade-marquee-header {
+  text-align: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px dashed #1e293b;
+}
+
+.arcade-marquee-banner {
+  display: inline-block;
+  padding: 6px 18px;
+  border: 2px solid #000;
+  box-shadow: 3px 3px 0px #000;
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.arcade-tally-window.defeat .arcade-marquee-banner {
+  background: #3b0707;
+  border-color: #7f1d1d;
+  color: #f87171;
+}
+
+.arcade-tally-window.victory .arcade-marquee-banner {
+  background: #064e3b;
+  border-color: #047857;
+  color: #34d399;
+}
+
+.arcade-seed-badge {
+  color: #64748b;
+  font-size: 11px;
+  letter-spacing: 1px;
+  font-family: monospace;
+}
+
+/* 街機計分銘牌 */
+.arcade-score-board {
+  background: #060911;
+  border: 2px solid #1e293b;
+  box-shadow: inset 2px 2px 0px #000;
+  padding: 14px 16px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.arcade-score-label {
+  color: #94a3b8;
+  font-size: 11px;
+  letter-spacing: 2px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.arcade-score-digits {
+  color: #fbbf24;
+  font-size: 38px;
+  font-weight: bold;
+  font-family: monospace;
+  line-height: 1.1;
+  text-shadow: 2px 2px 0px #000;
+  letter-spacing: 1px;
+}
+
+.arcade-score-digits span {
+  font-size: 16px;
+  color: #d97706;
+  margin-left: 4px;
+}
+
+/* 戰績概覽規格矩陣 */
+.arcade-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #1e293b;
+  font-size: 12px;
+}
+
+.arcade-stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #0b0f19;
+  border: 1px solid #1e293b;
+  padding: 6px 10px;
+}
+
+.arcade-stat-label {
+  color: #64748b;
+}
+
+.arcade-stat-value {
+  color: #e2e8f0;
+  font-weight: bold;
+  font-family: monospace;
+}
+
+/* 街機實體分頁按鈕群 (無高彩度混亂雜色) */
+.arcade-tab-bar {
+  display: flex;
+  background: #000;
+  border: 2px solid #1e293b;
+  padding: 3px;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.arcade-tab-btn {
+  flex: 1;
+  padding: 8px;
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  border: none;
+  border-radius: 0 !important;
+  cursor: pointer;
+  background: #0f1420;
+  color: #64748b;
+  letter-spacing: 1px;
+  transition: none;
+}
+
+.arcade-tab-btn:hover {
+  background: #182234;
+  color: #cbd5e1;
+}
+
+.arcade-tab-btn.active {
+  background: #1e293b;
+  color: #fbbf24;
+  font-weight: bold;
+  box-shadow: inset 0 -3px 0 #fbbf24;
+}
+
+/* 作戰日誌 / 榮譽榜內容面板 */
+.arcade-panel-box {
+  background: #060911;
+  border: 2px solid #1e293b;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 12px;
+}
+
+.arcade-panel-title {
+  font-size: 11px;
+  color: #fbbf24;
+  font-weight: bold;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.arcade-log-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px dashed #1e293b;
+}
+
+.arcade-log-row:last-child {
+  border-bottom: none;
+}
+
+/* 零層戰敗時的戰術指引箱 */
+.arcade-tactical-dispatch {
+  padding: 14px 10px;
+  text-align: center;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px dashed #334155;
+}
+
+.arcade-dispatch-title {
+  color: #f87171;
+  font-weight: bold;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.arcade-dispatch-desc {
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+/* 街機海報按鈕 */
+.arcade-poster-btn {
+  width: 100%;
+  background: #161e2e;
+  border: 2px solid #d97706;
+  color: #fbbf24;
+  padding: 10px;
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #000;
+  border-radius: 0 !important;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.arcade-poster-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #000;
+}
+
+.arcade-poster-preview {
+  background: #060911;
+  border: 2px solid #d97706;
+  padding: 12px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+/* 底部操作雙按鈕 */
+.arcade-action-row {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.arcade-btn-primary {
+  flex: 1;
+  padding: 12px 10px;
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border: 3px solid #000;
+  border-radius: 0 !important;
+  box-shadow: 4px 4px 0 #000;
+  color: #fff;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.arcade-btn-primary.defeat {
+  background: #b91c1c;
+}
+
+.arcade-btn-primary.victory {
+  background: #059669;
+}
+
+.arcade-btn-secondary {
+  flex: 1;
+  padding: 12px 10px;
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border: 3px solid #000;
+  border-radius: 0 !important;
+  box-shadow: 4px 4px 0 #000;
+  background: #1e293b;
+  color: #cbd5e1;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.arcade-btn-primary:active,
+.arcade-btn-secondary:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #000;
+}
+
