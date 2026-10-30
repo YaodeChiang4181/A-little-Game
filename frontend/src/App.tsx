@@ -44,6 +44,7 @@ export default function App() {
   const [showMenu, setShowMenu] = useState(false);
   const [showCompendium, setShowCompendium] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [inspectedTerrainIndex, setInspectedTerrainIndex] = useState<number | null>(null);
 
   // 初次互動解鎖音訊上下文並啟動 BGM (若已啟用)
   useEffect(() => {
@@ -160,6 +161,7 @@ export default function App() {
     const deployedCount = deployment.filter(c => c !== null).length;
     if (deployedCount < 3 || !session || isResolving) return;
 
+    setInspectedTerrainIndex(null);
     soundManager.ensureContext();
     soundManager.playSfx('startClash');
     setIsResolving(true);
@@ -696,6 +698,24 @@ export default function App() {
               ))}
             </div>
 
+            {/* 即時戰場戰術情報橫條 (全寬展開，徹底解決彈窗遮蔽卡牌與邊界截斷問題) */}
+            {inspectedTerrainIndex !== null && currentTerrains[inspectedTerrainIndex] && (
+              <div
+                className="terrain-stage-intel-bar"
+                onClick={() => setInspectedTerrainIndex(null)}
+              >
+                <span style={{ color: currentTerrains[inspectedTerrainIndex].color, fontWeight: 'bold' }}>
+                  [ {currentTerrains[inspectedTerrainIndex].name} · 倍率 x{currentTerrains[inspectedTerrainIndex].weight} ]
+                </span>
+                <span style={{ color: '#cbd5e1' }}>
+                  {currentTerrains[inspectedTerrainIndex].description}
+                </span>
+                <span style={{ marginLeft: 'auto', color: '#64748b', fontSize: '10px' }}>
+                  [ 點擊收起 ✕ ]
+                </span>
+              </div>
+            )}
+
             {/* 三大動態戰場佈署區 */}
             <div className="battlefield">
               {deployment.map((playerChar, i) => {
@@ -714,7 +734,12 @@ export default function App() {
                 return (
                   <div key={i} className="field-slot">
                     {/* 動態戰場環境橫幅 */}
-                    <TerrainBanner terrain={terrain} index={i} />
+                    <TerrainBanner
+                      terrain={terrain}
+                      index={i}
+                      isSelected={inspectedTerrainIndex === i}
+                      onSelect={() => setInspectedTerrainIndex(prev => (prev === i ? null : i))}
+                    />
 
                     {/* 敵方陣地 */}
                     <div className="slot-card-box">
@@ -748,7 +773,7 @@ export default function App() {
 
                       {/* 翻牌交鋒時的動態算式 Tooltip */}
                       {b && isClashing && (
-                        <div className="equation-tooltip">
+                        <div className={`equation-tooltip slot-${i}`}>
                           <div className="typewriter type-1">
                             <span style={{ color: '#00ffcc' }}>玩家 {b.player_char.name} ({b.player_eff})</span>
                             <span style={{ margin: '0 6px' }}>vs</span>

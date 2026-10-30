@@ -39,6 +39,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
   // 當前回合數與承傷紀錄
   const [floorRounds, setFloorRounds] = useState(1);
   const [displayEnemyHp, setDisplayEnemyHp] = useState(3);
+  const [inspectedTerrainIndex, setInspectedTerrainIndex] = useState<number | null>(null);
 
   const currentFloorConfig = TOWER_FLOORS[state.currentFloor - 1] || TOWER_FLOORS[0];
 
@@ -52,6 +53,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
       setIsResolving(false);
       setDealStep(-1);
       setResolveStep(-1);
+      setInspectedTerrainIndex(null);
     }
   }, [state.status, state.currentFloor]);
 
@@ -192,6 +194,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
     const deployedCount = deployment.filter(c => c !== null).length;
     if (deployedCount < 3 || !state.currentSession || isResolving) return;
 
+    setInspectedTerrainIndex(null);
     soundManager.ensureContext();
     soundManager.playSfx('startClash');
     setIsResolving(true);
@@ -478,6 +481,24 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
               </span>
             </div>
 
+            {/* 即時戰場戰術情報橫條 (全寬展開，徹底解決彈窗遮蔽卡牌與邊界截斷問題) */}
+            {inspectedTerrainIndex !== null && currentTerrains[inspectedTerrainIndex] && (
+              <div
+                className="terrain-stage-intel-bar"
+                onClick={() => setInspectedTerrainIndex(null)}
+              >
+                <span style={{ color: currentTerrains[inspectedTerrainIndex].color, fontWeight: 'bold' }}>
+                  [ {currentTerrains[inspectedTerrainIndex].name} · 倍率 x{currentTerrains[inspectedTerrainIndex].weight} ]
+                </span>
+                <span style={{ color: '#cbd5e1' }}>
+                  {currentTerrains[inspectedTerrainIndex].description}
+                </span>
+                <span style={{ marginLeft: 'auto', color: '#64748b', fontSize: '10px' }}>
+                  [ 點擊收起 ✕ ]
+                </span>
+              </div>
+            )}
+
             {/* 戰場交鋒區 (嚴格套用 .battlefield 與 .field-slot) */}
             <div className="battlefield">
               {deployment.map((playerChar, i) => {
@@ -496,7 +517,12 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
                 return (
                   <div key={i} className="field-slot">
                     {/* 動態戰場環境橫幅 */}
-                    <TerrainBanner terrain={terrain} index={i} />
+                    <TerrainBanner
+                      terrain={terrain}
+                      index={i}
+                      isSelected={inspectedTerrainIndex === i}
+                      onSelect={() => setInspectedTerrainIndex(prev => (prev === i ? null : i))}
+                    />
 
                     {/* 敵方卡槽 */}
                     <div className="slot-card-box">
@@ -529,7 +555,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
                       )}
 
                       {b && isClashing && (
-                        <div className="equation-tooltip">
+                        <div className={`equation-tooltip slot-${i}`}>
                           <div className="typewriter type-1">
                             <span style={{ color: '#00ffcc' }}>玩家 {b.player_char.name} ({b.player_eff})</span>
                             <span style={{ margin: '0 6px' }}>vs</span>

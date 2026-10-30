@@ -441,38 +441,69 @@ html, body {
   }
 }
 
-/* 算式浮動對話框 (Tooltip) */
+/* 算式浮動對話框 (Tooltip) - 智能槽位錨定防截斷 */
 .equation-tooltip {
   position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(10, 15, 30, 0.95);
+  top: 50%;
+  background: rgba(10, 15, 30, 0.98);
   color: #fff;
-  padding: 8px 10px;
-  border: 2px solid var(--color-cyan);
-  border-radius: 6px;
+  padding: 6px 10px;
+  border: 2px solid #000;
+  outline: 2px solid var(--color-cyan);
+  box-shadow: 4px 4px 0px #000;
+  border-radius: 0 !important;
   font-size: 11px;
-  z-index: 50;
-  display: flex; flex-direction: column; gap: 4px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   white-space: nowrap;
+  pointer-events: none;
+  max-width: 92vw;
 }
+
 @media (min-width: 900px) {
   .equation-tooltip { 
-    font-size: 15px; 
-    padding: 12px 16px; 
-    border-radius: 8px;
+    font-size: 14px; 
+    padding: 10px 14px; 
+    gap: 4px;
   }
 }
 
-/* 打字機效果 */
+/* 槽位邊緣防跑板錨定 */
+.equation-tooltip.slot-0,
+.field-slot:nth-child(1) .equation-tooltip {
+  left: 0;
+  transform: translateY(-50%);
+  text-align: left;
+}
+
+.equation-tooltip.slot-1,
+.field-slot:nth-child(2) .equation-tooltip {
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.equation-tooltip.slot-2,
+.field-slot:nth-child(3) .equation-tooltip {
+  left: auto;
+  right: 0;
+  transform: translateY(-50%);
+  text-align: right;
+}
+
+/* 打字機效果 - 放寬上限防止長文字截斷 */
 .typewriter {
-  overflow: hidden; white-space: nowrap; border-right: 2px solid orange;
-  max-width: 0; opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid orange;
+  max-width: 0;
+  opacity: 0;
 }
 .type-1 { animation: typing 0.8s steps(30, end) forwards, blink-caret 0.5s step-end infinite; animation-delay: 0.4s; }
 .type-2 { animation: typing 0.8s steps(30, end) forwards, blink-caret 0.5s step-end infinite; animation-delay: 1.3s; }
-@keyframes typing { from { max-width: 0; opacity: 1; } to { max-width: 400px; opacity: 1; } }
+@keyframes typing { from { max-width: 0; opacity: 1; } to { max-width: 600px; opacity: 1; } }
 @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: orange } }
 
 /* 飛入與交鋒動畫 */
@@ -623,35 +654,80 @@ html, body {
 
 /* ================= 角色特性與戰場環境全新 UI 樣式 ================= */
 
-/* 卡牌特性浮動說明 (Tooltip) */
+/* 戰場即時戰術情報橫條 (全寬展示，徹底解決覆蓋卡牌與跑板問題) */
+.terrain-stage-intel-bar {
+  width: 96%;
+  max-width: 800px;
+  background: rgba(10, 15, 30, 0.98);
+  border: 2px solid #000;
+  outline: 2px solid var(--color-gold);
+  box-shadow: 4px 4px 0px #000;
+  padding: 6px 12px;
+  margin: 0 auto 8px auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.5;
+  cursor: pointer;
+  z-index: 100;
+  animation: fadeInDown 0.15s ease-out;
+  border-radius: 0 !important;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.terrain-stage-intel-bar:hover {
+  background: rgba(15, 23, 42, 0.98);
+}
+
+/* 卡牌特性浮動說明 (Tooltip) - 邊緣防溢出與像素直角化 */
 .card-trait-tooltip {
   position: absolute;
   bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
   background: rgba(15, 23, 42, 0.98);
-  border: 2px solid #ffcc00;
-  border-radius: 6px;
+  border: 2px solid #000;
+  outline: 2px solid #ffcc00;
+  box-shadow: 4px 4px 0 #000;
+  border-radius: 0 !important;
   padding: 8px 12px;
-  width: 220px;
+  width: 210px;
+  max-width: 85vw;
   text-align: left;
-  z-index: 100;
+  z-index: 250;
   pointer-events: none;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85);
   white-space: normal !important;
   word-break: break-word;
   line-height: 1.6;
+}
+
+.field-slot:nth-child(1) .card-trait-tooltip {
+  left: 0;
+  transform: none;
+}
+.field-slot:nth-child(2) .card-trait-tooltip {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.field-slot:nth-child(3) .card-trait-tooltip {
+  left: auto;
+  right: 0;
+  transform: none;
 }
 
 /* 戰場環境橫幅 (Terrain Banner) */
 .terrain-banner {
   background: rgba(15, 23, 42, 0.85);
   border: 2px solid #555;
-  border-radius: 5px;
+  border-radius: 4px;
   padding: 3px 6px;
   cursor: pointer;
   position: relative;
-  transition: transform 0.15s, border-color 0.2s;
+  transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
   white-space: nowrap;
 }
@@ -659,25 +735,47 @@ html, body {
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
 }
+.terrain-banner.selected {
+  outline: 2px solid var(--color-gold);
+  border-color: var(--color-gold) !important;
+  box-shadow: 0 0 0 2px var(--color-gold), 3px 3px 0 #000;
+}
 
-/* 戰場環境詳細說明 Tooltip */
+/* 戰場環境詳細說明 Tooltip - 邊緣防溢出與層級保障 */
 .terrain-tooltip {
   position: absolute;
   top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
   background: rgba(10, 10, 15, 0.98);
-  border: 2px solid #00ffcc;
-  border-radius: 6px;
+  border: 2px solid #000;
+  outline: 2px solid #00ffcc;
+  box-shadow: 4px 4px 0 #000;
+  border-radius: 0 !important;
   padding: 8px 12px;
-  width: 240px;
-  z-index: 120;
-  pointer-events: none;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85);
+  width: 210px;
+  max-width: 85vw;
+  z-index: 250;
+  pointer-events: auto;
   text-align: left;
   white-space: normal !important;
   word-break: break-word;
   line-height: 1.6;
+}
+
+.terrain-tooltip.slot-0,
+.field-slot:nth-child(1) .terrain-tooltip {
+  left: 0;
+  transform: none;
+}
+.terrain-tooltip.slot-1,
+.field-slot:nth-child(2) .terrain-tooltip {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.terrain-tooltip.slot-2,
+.field-slot:nth-child(3) .terrain-tooltip {
+  left: auto;
+  right: 0;
+  transform: none;
 }
 
 /* 4選3中尚未佈署/保留的手牌樣式 */

@@ -1,22 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Terrain } from '../game/types';
 import { PixelTerrainSigil } from './PixelIcons';
 
-interface TerrainBannerProps {
+export interface TerrainBannerProps {
   terrain: Terrain;
   index?: number;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }
 
-export const TerrainBanner: React.FC<TerrainBannerProps> = ({ terrain }) => {
+export const TerrainBanner: React.FC<TerrainBannerProps> = ({
+  terrain,
+  index = 1,
+  isSelected = false,
+  onSelect
+}) => {
   const [showTip, setShowTip] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // 點擊外部自動收起 (Standalone 模式)
+  useEffect(() => {
+    if (!showTip) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setShowTip(false);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [showTip]);
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onSelect) {
+      onSelect();
+    } else {
+      setShowTip(prev => !prev);
+    }
+  };
 
   return (
     <div
-      className="terrain-banner"
-      style={{ borderColor: terrain.color }}
-      onMouseEnter={() => setShowTip(true)}
-      onMouseLeave={() => setShowTip(false)}
-      onClick={() => setShowTip(prev => !prev)}
+      ref={containerRef}
+      className={`terrain-banner ${isSelected ? 'selected' : ''}`}
+      style={{
+        borderColor: isSelected ? '#ffcc00' : terrain.color,
+        zIndex: isSelected || showTip ? 150 : 5
+      }}
+      onMouseEnter={() => {
+        if (!onSelect) setShowTip(true);
+      }}
+      onMouseLeave={() => {
+        if (!onSelect) setShowTip(false);
+      }}
+      onClick={handleClick}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
         <PixelTerrainSigil terrainId={terrain.icon || terrain.id} color={terrain.color} size={15} />
@@ -38,8 +75,8 @@ export const TerrainBanner: React.FC<TerrainBannerProps> = ({ terrain }) => {
         </span>
       </div>
 
-      {showTip && (
-        <div className="terrain-tooltip" onClick={e => e.stopPropagation()}>
+      {!onSelect && showTip && (
+        <div className={`terrain-tooltip slot-${index}`} onClick={e => e.stopPropagation()}>
           <div style={{ color: '#ffcc00', fontWeight: 'bold', marginBottom: '4px', fontSize: '12px' }}>
             [ {terrain.name} · 倍率 x{terrain.weight} ]
           </div>
@@ -51,3 +88,4 @@ export const TerrainBanner: React.FC<TerrainBannerProps> = ({ terrain }) => {
     </div>
   );
 };
+
