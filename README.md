@@ -69,6 +69,10 @@ AI 引擎採用即時賽局模擬：
   * `src/game/towerCardGenerator.ts`：HTML5 Canvas 8-Bit 像素戰報卡生成器（純前端繪製可分享之戰報海報）。
   * `src/components/TowerView.tsx`：獨立刷塔試煉模式主窗口（層級戰況、專屬 HUD、修整營地與 Boss 決戰）。
   * `src/components/TowerResultModal.tsx`：試煉結算、歷史 Top 10 榮譽榜與戰報海報複製/下載彈窗。
+  * `src/game/online/types.ts`：雲端對戰網路通訊協定型別（交握、回合同步、佈署廣播與心跳監控）。
+  * `src/game/online/networkManager.ts`：基於 PeerJS WebRTC DataChannel 之純前端免伺服器 P2P 雲端連線管理器（0 後端成本、10~30ms 極致延遲）。
+  * `src/components/OnlineLobbyModal.tsx`：雲端連機大廳（支援 6 位數房間代碼創建、邀請網址一鍵複製、雷達波紋掃描等待與快速加入）。
+  * `src/components/OnlineMatchView.tsx`：雲端即時雙人博弈交鋒戰場（包含房主/挑戰者身分銘牌、即時就緒廣播、暗牌出征、同步逐格翻牌結算、血量扣減、再戰一局與斷線防護）。
 * **部署支援**：**Vercel**（官方推薦與正式部署環境，Root Directory: `frontend`，輸出目錄: `dist`，建置指令: `tsc && vite build`）、GitHub Pages 等靜態託管平台。
 
 ---
@@ -95,6 +99,14 @@ npm run dev
 ---
 
 ## 📝 更新日誌 (Changelog)
+
+* **2026-11-03**：
+  * **雙模式全方位對弈架構：支援「雲端連機 (Online Multiplayer)」與「單機模式 (Single-Player)」**：
+    * **首頁矩陣模式分流**：首頁重構為【🎮 單機模式】與【🌐 雲端連機】雙大核心街機面板。單機模式收納「經典單局 (vs 智慧 AI)」與「奇偶試煉 (Roguelite 刷塔)」；雲端連機提供「雲端連線對戰 (房間/邀請連結)」。
+    * **P2P WebRTC 零伺服器雲端連線引擎 (`src/game/online/networkManager.ts`)**：全面整合 PeerJS WebRTC DataChannel 技術，於純前端靜態託管平台 (Vercel) 實現零伺服器成本、極致低延遲 (10~30ms) 的真人跨裝置端對端加密連線。
+    * **6 位數字房間代碼與邀請網址深度連結 (`src/components/OnlineLobbyModal.tsx`)**：房主一鍵生成 6 位數字房間碼，支援一鍵複製代碼及網址帶參邀請連結 (`?room=XXXXXX`)。對手開啟連結自動識別並預先填入房間號，免手動輸入即可秒速連線！
+    * **雙向隱蔽佈署與權威房主仲裁結算 (`src/components/OnlineMatchView.tsx`)**：雙方各自保有 4 張私密手牌，完成 3 槽佈署後按下「出征決鬥！」，即時向對方發送就緒廣播；待雙方皆出征後同步揭開真實佈署，由房主權威執行戰鬥引擎演算並雙向同步逐格交鋒動畫、特性觸發、算式推演與奇偶傷害扣減。
+    * **即時連線防護與生命週期管理**：內建雙向心跳 PING/PONG 延遲監控毫秒數展示、奇偶陣營多局自動輪換、勝負結算、一鍵「再戰一局 (Rematch)」雙向確認開局與對手中途斷線提示機制。
 
 * **2026-10-30**：
   * **戰場 Tooltip 碰撞穿透與跑板問題徹底根治**：
