@@ -209,7 +209,6 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
 
       case 'ROUND_RESOLVED': {
         // 挑戰者收到房主結算結果
-        const myCards = msg.guestDeployment;
         const enemyCards = msg.hostDeployment;
 
         setOpponentDeployment(enemyCards);
