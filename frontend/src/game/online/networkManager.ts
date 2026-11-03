@@ -68,12 +68,12 @@ export class NetworkManager {
 
         this.peer = peer;
 
-        peer.on('open', (id) => {
+        peer.on('open', (id: string) => {
           this.callbacks?.onStatusChange('waiting', `房間代碼 [ ${code} ] 已就緒，等待挑戰者加入...`);
           resolve(code);
         });
 
-        peer.on('connection', (conn) => {
+        peer.on('connection', (conn: DataConnection) => {
           // 只允許單一挑戰者對戰
           if (this.connection) {
             conn.close();

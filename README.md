@@ -107,7 +107,7 @@ npm run dev
     * **6 位數字房間代碼與邀請網址深度連結 (`src/components/OnlineLobbyModal.tsx`)**：房主一鍵生成 6 位數字房間碼，支援一鍵複製代碼及網址帶參邀請連結 (`?room=XXXXXX`)。對手開啟連結自動識別並預先填入房間號，免手動輸入即可秒速連線！
     * **雙向隱蔽佈署與權威房主仲裁結算 (`src/components/OnlineMatchView.tsx`)**：雙方各自保有 4 張私密手牌，完成 3 槽佈署後按下「出征決鬥！」，即時向對方發送就緒廣播；待雙方皆出征後同步揭開真實佈署，由房主權威執行戰鬥引擎演算並雙向同步逐格交鋒動畫、特性觸發、算式推演與奇偶傷害扣減。
     * **即時連線防護與生命週期管理**：內建雙向心跳 PING/PONG 延遲監控毫秒數展示、奇偶陣營多局自動輪換、勝負結算、一鍵「再戰一局 (Rematch)」雙向確認開局與對手中途斷線提示機制。
-    * **Vercel TypeScript 嚴格編譯與 Vite 打包深度適配**：於 `tsconfig.json` 補齊 `allowSyntheticDefaultImports` 與 `esModuleInterop`，建立獨立宣告檔 `src/types/peerjs.d.ts` 與 `@types/peerjs`，並於 `vite.config.ts` 注入 `global: 'window'` 瀏覽器相容宣告，徹底解決 Vercel CI/CD `tsc && vite build` 構建報錯。
+    * **Vercel TypeScript 嚴格編譯與 Vite 打包深度適配**：於 `tsconfig.json` 補齊 `allowSyntheticDefaultImports` 與 `esModuleInterop`，建立獨立宣告檔 `src/types/peerjs.d.ts`，並於 `vite.config.ts` 注入 `global: 'window'` 瀏覽器相容宣告；同時於 `networkManager.ts` 為 `peer.on` 回呼函式之 `id: string` 與 `conn: DataConnection` 參數補齊明確型別標註，根治 Vercel 嚴格模式 `TS7006: Parameter implicitly has an 'any' type` 與 `@types/peerjs` 廢棄存根警告。
 
 * **2026-10-30**：
   * **戰場 Tooltip 碰撞穿透與跑板問題徹底根治**：
