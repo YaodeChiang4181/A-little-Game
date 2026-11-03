@@ -620,7 +620,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
             letterSpacing: '1px'
           }}
         >
-          {opponentReady ? '✓ 對手已完成佈署並就緒！' : '⏳ 對手正在策劃佈署中...'}
+          {opponentReady ? '[ 對手已就緒！等待您出征 ]' : '[ 對手正在策劃佈署中... ]'}
         </div>
 
         {/* 即時情報橫條 */}
@@ -636,7 +636,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
               {currentTerrains[inspectedTerrainIndex].description}
             </span>
             <span style={{ marginLeft: 'auto', color: '#64748b', fontSize: '10px' }}>
-              [ 點擊收起 ✕ ]
+              [ 點擊收起 ]
             </span>
           </div>
         )}

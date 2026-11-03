@@ -685,95 +685,62 @@ export default function App() {
               氣勢連鎖<br />
               <span style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.5rem)', color: '#00ffcc' }}>奇偶戰 · 點陣西洋棋</span>
             </h1>
-            <div style={{ color: '#94a3b8', fontSize: 'clamp(11px, 2.5vw, 13px)', marginBottom: '20px', letterSpacing: '1px' }}>
+            <div style={{ color: '#94a3b8', fontSize: 'clamp(11px, 2.5vw, 13px)', marginBottom: '25px', letterSpacing: '1px' }}>
               [ 4選3手牌管理 · 角色專屬特性 · 動態環境戰場 ]
             </div>
 
-            {/* 模式選擇卡片網格 (單機 vs 雲端連機) */}
-            <div className="mode-grid">
-              {/* 單機模式 卡片 */}
-              <div className="mode-box">
-                <div className="mode-box-header">
-                  <span className="mode-box-title" style={{ color: '#00ffcc' }}>
-                    [ 🎮 單機模式 ]
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap', maxWidth: '640px', margin: '0 auto' }}>
+              <button
+                className="btn"
+                style={{ background: '#0f766e', fontSize: 'clamp(13px, 3.2vw, 16px)', padding: '10px 18px' }}
+                onClick={() => startGame(true)}
+              >
+                新手指南
+              </button>
+
+              <button
+                className="btn"
+                style={{ background: '#dc2626', fontSize: 'clamp(13px, 3.2vw, 16px)', padding: '10px 18px' }}
+                onClick={() => startGame(false)}
+              >
+                經典單局
+              </button>
+
+              <button
+                className="btn"
+                style={{
+                  background: '#0284c7',
+                  border: '2px solid #38bdf8',
+                  fontSize: 'clamp(13px, 3.2vw, 16px)',
+                  padding: '10px 18px'
+                }}
+                onClick={() => {
+                  soundManager.playSfx('click');
+                  setShowOnlineLobby(true);
+                }}
+              >
+                雲端連機
+              </button>
+
+              <button
+                className="btn engage"
+                style={{
+                  fontSize: 'clamp(13px, 3.2vw, 16px)',
+                  padding: '10px 20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2px'
+                }}
+                onClick={startTowerRun}
+              >
+                <span>奇偶試煉 (刷塔)</span>
+                {highScore > 0 && (
+                  <span style={{ fontSize: '10px', color: '#ffcc00', fontFamily: 'monospace' }}>
+                    [ 最佳: {highScore.toLocaleString()} PTS ]
                   </span>
-                  <span style={{ fontSize: '11px', color: '#64748b', fontFamily: 'monospace' }}>OFFLINE</span>
-                </div>
-                <div className="mode-box-desc">
-                  與智能演算法 AI 展開博弈，或挑戰 5 層奇偶試煉永劫棋王！
-                </div>
-                <div className="mode-btn-group">
-                  <button
-                    className="btn"
-                    style={{ background: '#dc2626', width: '100%', padding: '10px 0', fontSize: '14px' }}
-                    onClick={() => startGame(false)}
-                  >
-                    經典單局 (vs AI)
-                  </button>
-
-                  <button
-                    className="btn engage"
-                    style={{
-                      width: '100%',
-                      padding: '10px 0',
-                      fontSize: '14px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '2px'
-                    }}
-                    onClick={startTowerRun}
-                  >
-                    <span>奇偶試煉 (刷塔)</span>
-                    {highScore > 0 && (
-                      <span style={{ fontSize: '10px', color: '#ffcc00', fontFamily: 'monospace' }}>
-                        [ 最佳: {highScore.toLocaleString()} PTS ]
-                      </span>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* 雲端連機 卡片 */}
-              <div className="mode-box cloud-box">
-                <div className="mode-box-header">
-                  <span className="mode-box-title" style={{ color: '#38bdf8' }}>
-                    [ 🌐 雲端連機 ]
-                  </span>
-                  <span style={{ fontSize: '11px', color: '#0284c7', fontFamily: 'monospace' }}>P2P ONLINE</span>
-                </div>
-                <div className="mode-box-desc">
-                  創建或加入 6 位代碼房間，或複製專屬連結與好友跨螢幕線上決鬥！
-                </div>
-                <div className="mode-btn-group">
-                  <button
-                    className="btn"
-                    style={{
-                      background: '#0284c7',
-                      borderColor: '#38bdf8',
-                      width: '100%',
-                      padding: '10px 0',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                      letterSpacing: '1px'
-                    }}
-                    onClick={() => {
-                      soundManager.playSfx('click');
-                      setShowOnlineLobby(true);
-                    }}
-                  >
-                    雲端連線對戰 (房間/連結)
-                  </button>
-
-                  <button
-                    className="btn"
-                    style={{ background: '#0f766e', width: '100%', padding: '10px 0', fontSize: '14px' }}
-                    onClick={() => startGame(true)}
-                  >
-                    新手玩法指南
-                  </button>
-                </div>
-              </div>
+                )}
+              </button>
             </div>
           </div>
         )}
@@ -804,7 +771,7 @@ export default function App() {
                   {currentTerrains[inspectedTerrainIndex].description}
                 </span>
                 <span style={{ marginLeft: 'auto', color: '#64748b', fontSize: '10px' }}>
-                  [ 點擊收起 ✕ ]
+                  [ 點擊收起 ]
                 </span>
               </div>
             )}

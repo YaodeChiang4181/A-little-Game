@@ -163,7 +163,7 @@ export const OnlineLobbyModal: React.FC<OnlineLobbyModalProps> = ({
               fontSize: '14px'
             }}
           >
-            ✕ 關閉
+            [ 關閉 ]
           </button>
         </div>
 
@@ -265,7 +265,7 @@ export const OnlineLobbyModal: React.FC<OnlineLobbyModalProps> = ({
 
               {copyFeedback && (
                 <div style={{ color: '#00ffcc', fontSize: '12px', marginTop: '4px', fontWeight: 'bold' }}>
-                  ✓ {copyFeedback}
+                  [ {copyFeedback} ]
                 </div>
               )}
             </div>

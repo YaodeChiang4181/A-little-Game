@@ -494,7 +494,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
                   {currentTerrains[inspectedTerrainIndex].description}
                 </span>
                 <span style={{ marginLeft: 'auto', color: '#64748b', fontSize: '10px' }}>
-                  [ 點擊收起 ✕ ]
+                  [ 點擊收起 ]
                 </span>
               </div>
             )}
