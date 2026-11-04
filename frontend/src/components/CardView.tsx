@@ -122,14 +122,26 @@ export const CardView: React.FC<CardViewProps> = ({
       {/* 特性懸浮說明 Tooltip (零 Emoji，精簡公式) */}
       {showTooltip && hovered && character.trait && (
         <div className="card-trait-tooltip" onClick={e => e.stopPropagation()}>
-          <div style={{ color: '#ffcc00', fontWeight: 'bold', marginBottom: '3px', fontSize: '12px' }}>
+          <div style={{ color: '#ffcc00', fontWeight: 'bold', marginBottom: '3px', fontSize: '12px', letterSpacing: '0.5px' }}>
             {character.name} · 【{character.trait.badge}】
           </div>
-          <div style={{ fontSize: '11px', color: '#e2e8f0', lineHeight: '1.6' }}>
+          <div style={{ fontSize: '11px', color: '#e2e8f0', lineHeight: '1.5', letterSpacing: '0.2px' }}>
             {character.trait.description}
           </div>
           {character.lore && (
-            <div style={{ fontSize: '9px', color: '#64748b', marginTop: '4px', fontStyle: 'italic' }}>
+            <div
+              className="card-trait-lore"
+              style={{
+                fontSize: '11px',
+                color: '#94a3b8',
+                marginTop: '6px',
+                paddingTop: '4px',
+                borderTop: '1px dashed #334155',
+                lineHeight: '1.4',
+                letterSpacing: '0.2px',
+                fontStyle: 'normal'
+              }}
+            >
               {character.lore}
             </div>
           )}

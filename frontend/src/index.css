@@ -685,7 +685,7 @@ html, body {
   background: rgba(15, 23, 42, 0.98);
 }
 
-/* 卡牌特性浮動說明 (Tooltip) - 邊緣防溢出與像素直角化 */
+/* 卡牌特性浮動說明 (Tooltip) - 邊緣防溢出、防遮擋頂部 HUD 與像素字體防撕裂 */
 .card-trait-tooltip {
   position: absolute;
   bottom: calc(100% + 6px);
@@ -695,28 +695,108 @@ html, body {
   box-shadow: 4px 4px 0 #000;
   border-radius: 0 !important;
   padding: 8px 12px;
-  width: 210px;
+  width: 200px;
   max-width: 85vw;
   text-align: left;
   z-index: 250;
   pointer-events: none;
   white-space: normal !important;
   word-break: break-word;
-  line-height: 1.6;
+  line-height: 1.5;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
 }
 
+.card-trait-lore {
+  font-style: normal !important;
+  font-synthesis: none !important;
+}
+
+/* 1. 戰場槽位 (Field Slot) */
 .field-slot:nth-child(1) .card-trait-tooltip {
   left: 0;
+  right: auto;
   transform: none;
 }
 .field-slot:nth-child(2) .card-trait-tooltip {
   left: 50%;
+  right: auto;
   transform: translateX(-50%);
 }
 .field-slot:nth-child(3) .card-trait-tooltip {
   left: auto;
   right: 0;
   transform: none;
+}
+
+/* 戰場中上方敵方陣地：Tooltip 朝中央向下開展，避免頂部溢出 */
+.field-slot .slot-card-box:first-of-type .card-trait-tooltip {
+  top: calc(100% + 6px);
+  bottom: auto;
+}
+/* 戰場中下方我方陣地：Tooltip 朝中央向上開展 */
+.field-slot .slot-card-box:last-of-type .card-trait-tooltip {
+  bottom: calc(100% + 6px);
+  top: auto;
+}
+
+/* 2. 電腦版手牌區 (Hand Container in Side Panel) */
+/* 手牌第 1 排 (第 1、2 張)：向下開展，徹底避免覆蓋上方 HUD、玩家血量與圖鑑按鈕 */
+.hand-container > div:nth-child(1) .card-trait-tooltip,
+.hand-container > div:nth-child(2) .card-trait-tooltip {
+  top: calc(100% + 6px);
+  bottom: auto;
+}
+/* 手牌第 2 排 (第 3、4 張)：向上開展，覆蓋於前排卡牌上方，不觸及頂部 HUD */
+.hand-container > div:nth-child(3) .card-trait-tooltip,
+.hand-container > div:nth-child(4) .card-trait-tooltip {
+  bottom: calc(100% + 6px);
+  top: auto;
+}
+/* 手牌左側欄位：靠左展開 */
+.hand-container > div:nth-child(odd) .card-trait-tooltip {
+  left: 0;
+  right: auto;
+  transform: none;
+}
+/* 手牌右側欄位：靠右展開 */
+.hand-container > div:nth-child(even) .card-trait-tooltip {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+/* 當手牌僅剩 3 張且第 3 張置中時，讓其 Tooltip 居中防超出邊界 */
+.hand-container > div:nth-child(3):last-child .card-trait-tooltip {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
+/* 當手牌僅剩 1 張且置中時，讓其 Tooltip 居中防超出邊界 */
+.hand-container > div:only-child .card-trait-tooltip {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
+
+/* 3. 手機版底部手牌列 (Mobile Hand Container) */
+.mobile-hand-container .card-trait-tooltip {
+  bottom: calc(100% + 6px);
+  top: auto;
+}
+.mobile-hand-container > div:first-child .card-trait-tooltip {
+  left: 0;
+  right: auto;
+  transform: none;
+}
+.mobile-hand-container > div:last-child .card-trait-tooltip {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+.mobile-hand-container > div:not(:first-child):not(:last-child) .card-trait-tooltip {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
 }
 
 /* 戰場環境橫幅 (Terrain Banner) */
@@ -759,6 +839,8 @@ html, body {
   white-space: normal !important;
   word-break: break-word;
   line-height: 1.6;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
 }
 
 .terrain-tooltip.slot-0,

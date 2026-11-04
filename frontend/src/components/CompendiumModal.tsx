@@ -106,7 +106,16 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
                     </div>
                   )}
                   {char.lore && (
-                    <div style={{ fontSize: '10px', color: '#64748b', marginTop: '3px', fontStyle: 'italic' }}>
+                    <div
+                      style={{
+                        fontSize: '11px',
+                        color: '#94a3b8',
+                        marginTop: '4px',
+                        fontStyle: 'normal',
+                        lineHeight: '1.4',
+                        letterSpacing: '0.2px'
+                      }}
+                    >
                       {char.lore}
                     </div>
                   )}
