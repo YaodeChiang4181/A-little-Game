@@ -10,7 +10,8 @@ import {
   resolveFloorVictory,
   resolveFloorDefeat,
   applyCampfireRest,
-  applyCampfireTactics
+  applyCampfireTactics,
+  generateFloorTerrains
 } from '../game/towerEngine';
 import { resolveTurn } from '../game/gameService';
 import { Character, SingleBattleRecord, RoundResolutionResult } from '../game/types';
@@ -208,6 +209,10 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
     setBattleLogs([]);
 
     if (nextSession) {
+      const currentFloorConfig = TOWER_FLOORS[state.currentFloor - 1];
+      if (currentFloorConfig.fixedTerrains || currentFloorConfig.isBoss) {
+        nextSession.currentTerrains = generateFloorTerrains(currentFloorConfig);
+      }
       setState(prev => ({
         ...prev,
         currentSession: nextSession

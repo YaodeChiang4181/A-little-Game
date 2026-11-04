@@ -47,7 +47,7 @@ export const TOWER_FLOORS: TowerFloorConfig[] = [
     enemyHp: 4,
     isElite: true,
     modifierDesc: '[ 狂雷爆轟 ] 第三戰場固定為雷霆斷崖，差值大於等於 2 額外計入 +2 分！',
-    fixedTerrains: [null, null, 'thunder']
+    fixedTerrains: [null, null, 'storm_cliff']
   },
   {
     floor: 4,
@@ -57,7 +57,7 @@ export const TOWER_FLOORS: TowerFloorConfig[] = [
     enemyHp: 4,
     hasCampfireAfter: true,
     modifierDesc: '[ 偶數領域 ] 第二戰場固定為鏡像之殿，結算總分保底為偶數！戰勝後可抵達休息營地。',
-    fixedTerrains: [null, 'mirror', null]
+    fixedTerrains: [null, 'mirror_hall', null]
   },
   {
     floor: 5,
