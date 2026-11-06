@@ -283,7 +283,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({
             onClick={() => {
               soundManager.playSfx('click');
               onClose();
-              onOpenDeckBuilder();
+              onOpenDeckBuilder?.();
             }}
           >
             [ 前往軍備庫編成陣容 → ]

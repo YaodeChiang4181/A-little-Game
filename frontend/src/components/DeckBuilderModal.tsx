@@ -140,7 +140,7 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
             onClick={() => {
               soundManager.playSfx('click');
               onClose();
-              onOpenShop();
+              onOpenShop?.();
             }}
           >
             [ 招募新角色 (商城) → ]
