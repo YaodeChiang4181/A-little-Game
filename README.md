@@ -123,6 +123,9 @@ npm run dev
       * 建立完整的開發手冊，詳解 4 大生命週期鉤子（`BEFORE_CLASH`、`DETERMINE_WIN`、`AFTER_CLASH`、`ON_MOMENTUM`）、算式推演註解、戰鬥上下文型別與 AI 智能感知適配範例，方便未來隨時新增自訂角色與趣味笑果。
     * **純化 8-Bit 像素視覺美學（零 Emoji 規範對齊）**：
       * 打造專屬 16x16 點陣像素金幣 SVG 圖標 (`PixelCoinIcon`)，全面取代外部表情符號，嚴格維持直角像素邊框、方括號標籤 `[ ]` 與沉浸式復古街機品質。
+    * **Vercel TypeScript 嚴格編譯適配 (`TS2305` & `TS2322` 修復)**：
+      * 於 `src/game/economy/wallet.ts` 導出 `export type PlayerWallet = WalletState;`，根治模組未導出成員型別報錯。
+      * 於 `ShopModal.tsx` 與 `DeckBuilderModal.tsx` 組件介面補齊 `isOpen?: boolean` 布林屬性與互連跳轉可選回調，確保組件於嚴格模式下相容條件渲染。
 
 * **2026-11-04**：
   * **卡牌特性 Tooltip 文字撕裂（破字/破圖）與頂部 HUD 遮擋碰撞徹底修復**：

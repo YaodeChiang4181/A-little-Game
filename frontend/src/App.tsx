@@ -659,10 +659,24 @@ export default function App() {
       {showCompendium && <CompendiumModal onClose={() => setShowCompendium(false)} />}
 
       {/* 軍需商店模態彈窗 */}
-      <ShopModal isOpen={showShop} onClose={() => setShowShop(false)} />
+      <ShopModal
+        isOpen={showShop}
+        onClose={() => setShowShop(false)}
+        onOpenDeckBuilder={() => {
+          setShowShop(false);
+          setShowDeckBuilder(true);
+        }}
+      />
 
       {/* 軍備庫陣容編排與立繪上傳彈窗 */}
-      <DeckBuilderModal isOpen={showDeckBuilder} onClose={() => setShowDeckBuilder(false)} />
+      <DeckBuilderModal
+        isOpen={showDeckBuilder}
+        onClose={() => setShowDeckBuilder(false)}
+        onOpenShop={() => {
+          setShowDeckBuilder(false);
+          setShowShop(true);
+        }}
+      />
 
       {/* 雲端連機大廳模態彈窗 */}
       <OnlineLobbyModal

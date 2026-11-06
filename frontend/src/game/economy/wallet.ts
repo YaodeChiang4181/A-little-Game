@@ -11,6 +11,8 @@ export interface WalletState {
   history: { date: string; amount: number; reason: string }[];
 }
 
+export type PlayerWallet = WalletState;
+
 const WALLET_STORAGE_KEY = 'parity_wallet_v1';
 
 // 預設經典 6 棋子配置

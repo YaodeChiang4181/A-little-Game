@@ -7,11 +7,17 @@ import { soundManager } from '../game/soundManager';
 import { PixelCoinIcon } from './PixelIcons';
 
 interface ShopModalProps {
+  isOpen?: boolean;
   onClose: () => void;
-  onOpenDeckBuilder: () => void;
+  onOpenDeckBuilder?: () => void;
 }
 
-export const ShopModal: React.FC<ShopModalProps> = ({ onClose, onOpenDeckBuilder }) => {
+export const ShopModal: React.FC<ShopModalProps> = ({
+  isOpen = true,
+  onClose,
+  onOpenDeckBuilder
+}) => {
+  if (!isOpen) return null;
   const [wallet, setWallet] = useState(getWallet());
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
 

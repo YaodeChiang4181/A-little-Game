@@ -17,11 +17,17 @@ import {
 import { soundManager } from '../game/soundManager';
 
 interface DeckBuilderModalProps {
+  isOpen?: boolean;
   onClose: () => void;
-  onOpenShop: () => void;
+  onOpenShop?: () => void;
 }
 
-export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({ onClose, onOpenShop }) => {
+export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
+  isOpen = true,
+  onClose,
+  onOpenShop
+}) => {
+  if (!isOpen) return null;
   const [wallet, setWallet] = useState(getWallet());
   const [selectedLevel, setSelectedLevel] = useState<number>(1);
   const [uploadTargetChar, setUploadTargetChar] = useState<Character | null>(null);
