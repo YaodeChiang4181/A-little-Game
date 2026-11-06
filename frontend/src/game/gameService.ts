@@ -1,5 +1,5 @@
 import { Character, Terrain, RoundResolutionResult } from './types';
-import { getAllCharacters } from './registry/characters';
+import { getAllCharacters, getActivePlayerDeck, INITIAL_CHARACTERS } from './registry/characters';
 import { drawRandomTerrains } from './registry/terrains';
 import { resolveRound } from './engine';
 import { chooseBestDeployment } from './aiAgent';
@@ -30,11 +30,15 @@ export interface GameSession {
 
 /**
  * 啟動新對局（純客戶端，秒開秒玩，零後端等待）
+ * 玩家手牌依據當前軍備庫出征牌組抽取
  */
 export function initGameSession(): GameSession {
+  const playerPool = getActivePlayerDeck();
+  const enemyPool = [...INITIAL_CHARACTERS];
   const allPool = getAllCharacters();
-  const playerHand = drawHand(HAND_DRAW_SIZE, allPool);
-  const enemyHand = drawHand(HAND_DRAW_SIZE, allPool);
+
+  const playerHand = drawHand(HAND_DRAW_SIZE, playerPool);
+  const enemyHand = drawHand(HAND_DRAW_SIZE, enemyPool);
   const currentTerrains = drawRandomTerrains();
 
   // 合併並計算本局登場角色池（唯一值）
@@ -90,8 +94,10 @@ export function resolveTurn(
   // 3. 若遊戲尚未結束，為雙方抽取下一回合 4 張手牌與新戰場環境
   if (!result.game_over) {
     const allPool = getAllCharacters();
-    const nextPlayerHand = drawHand(HAND_DRAW_SIZE, allPool);
-    const nextEnemyHand = drawHand(HAND_DRAW_SIZE, allPool);
+    const playerPool = getActivePlayerDeck();
+    const enemyPool = [...INITIAL_CHARACTERS];
+    const nextPlayerHand = drawHand(HAND_DRAW_SIZE, playerPool);
+    const nextEnemyHand = drawHand(HAND_DRAW_SIZE, enemyPool);
     const nextTerrains = drawRandomTerrains();
 
     const poolIds = new Set([...nextPlayerHand.map(c => c.id), ...nextEnemyHand.map(c => c.id)]);

@@ -73,6 +73,10 @@ AI 引擎採用即時賽局模擬：
   * `src/game/online/networkManager.ts`：基於 PeerJS WebRTC DataChannel 之純前端免伺服器 P2P 雲端連線管理器（0 後端成本、10~30ms 極致延遲）。
   * `src/components/OnlineLobbyModal.tsx`：雲端連機大廳（支援 6 位數房間代碼創建、邀請網址一鍵複製、雷達波紋掃描等待與快速加入）。
   * `src/components/OnlineMatchView.tsx`：雲端即時雙人博弈交鋒戰場（包含房主/挑戰者身分銘牌、即時就緒廣播、暗牌出征、同步逐格翻牌結算、血量扣減、再戰一局與斷線防護）。
+  * `src/game/economy/wallet.ts`：本地永久錢包與軍備陣容管理（支援 localStorage 金幣持久化、已徵召特職棋手庫存、出征卡組 6 槽位自由裝備與自訂立繪 Base64 快照）。
+  * `src/components/ShopModal.tsx`：軍需商城模態窗口（支援 6 位全新西洋特職棋手招募、8-Bit 像素金幣音效與餘額即時扣除）。
+  * `src/components/DeckBuilderModal.tsx`：軍備庫陣容編成與像素立繪上傳工坊（支援 1~6 階棋手自由替換出征、直接選取本機像素圖 PNG/GIF/WebP 即時替換卡面立繪，純前端 0 後端圖床依賴）。
+  * `src/game/registry/CUSTOM_CHARACTERS_GUIDE.md`：開發者自訂角色與全新效果設定開發指南（包含 4 大生命週期鉤子、戰力修正與環境聯動完整教學）。
 * **部署支援**：**Vercel**（官方推薦與正式部署環境，Root Directory: `frontend`，輸出目錄: `dist`，建置指令: `tsc && vite build`）、GitHub Pages 等靜態託管平台。
 
 ---
@@ -99,6 +103,26 @@ npm run dev
 ---
 
 ## 📝 更新日誌 (Changelog)
+
+* **2026-11-06**：
+  * **方向 D 實作：永久錢包經濟體系、對局金幣軍餉、軍需商城、陣容編成與本機像素立繪上傳工坊**：
+    * **永久錢包與全模式對局軍餉體系 (`src/game/economy/wallet.ts`)**：
+      * 採用純前端無伺服器持久化架構 (`localStorage: parity_battle_wallet_v1`)，永久保存玩家擁有的金幣、已徵召棋手清單、當前出征卡組 6 槽位與自訂立繪快照。
+      * **全模式獲勝/奮戰收益發放**：
+        * **經典單局**：獲勝基本獎勵 `+60 G`，若無損 (滿 3 點血) 獲勝觸發完美戰役加成 `+40 G` (共 `+100 G`)；惜敗慰問金 `+20 G`。
+        * **奇偶試煉 (刷塔)**：每突破一層獲取 `40 + 層數 × 20 G`（最高第 5 層 `140 G`），登頂通關額外發放大捷賞金 `+100 G`，失敗慰問金 `+25 G`。
+        * **雲端對戰 (Online Match)**：P2P WebRTC 雲端交鋒勝者獲取 `+80 G`，敗者獲取 `+30 G`。
+      * 結算畫面與對戰結束彈窗加入專屬戰後軍餉收益橫幅，配合純前端 Web Audio 8-Bit 金幣音效 (`coin`)，即時回饋戰果！
+    * **軍需商城 (Shop) 招募系統 (`src/components/ShopModal.tsx`)**：
+      * 推出 6 位各具專屬異能的全新西洋特職棋手（影武流浪者 Lv.1、荒野獵人 Lv.2、攻城投石車 Lv.3、禁忌鍊金術師 Lv.4、奧術魔導師 Lv.5、暴虐征服者 Lv.6）。
+      * 整合 8-Bit 晶片硬幣音效、即時餘額檢核與狀態防重複購買機制；招募後立即入庫，可於軍備庫自由換裝。
+    * **軍備庫陣容編成與自訂像素立繪工坊 (`src/components/DeckBuilderModal.tsx`)**：
+      * **1~6 階陣容自由換裝**：嚴格保障「奇偶數陣營博弈」與「4 抽選 3」數學天秤平衡，玩家可於 Lv.1~6 槽位中自由裝備經典棋子或特職棋手，並即時預覽出征卡組。
+      * **本機直接上傳像素圖片 (`FileReader -> Base64 DataURL`)**：玩家可直接點擊 `[ 上傳像素立繪 ]` 選取本機任意像素圖檔（PNG/GIF/WebP），純客戶端自動轉換為輕量 DataURL 並綁定至角色身上；搭配 `image-rendering: pixelated` 硬邊縮放，立即在戰場、手牌與結算畫面完美呈現個人專屬像素立繪！隨時可一鍵 `[ 恢復官方像素 ]`。
+    * **自訂新角色與笑果（效果）資料驅動開發指南 (`src/game/registry/CUSTOM_CHARACTERS_GUIDE.md`)**：
+      * 建立完整的開發手冊，詳解 4 大生命週期鉤子（`BEFORE_CLASH`、`DETERMINE_WIN`、`AFTER_CLASH`、`ON_MOMENTUM`）、算式推演註解、戰鬥上下文型別與 AI 智能感知適配範例，方便未來隨時新增自訂角色與趣味笑果。
+    * **純化 8-Bit 像素視覺美學（零 Emoji 規範對齊）**：
+      * 打造專屬 16x16 點陣像素金幣 SVG 圖標 (`PixelCoinIcon`)，全面取代外部表情符號，嚴格維持直角像素邊框、方括號標籤 `[ ]` 與沉浸式復古街機品質。
 
 * **2026-11-04**：
   * **卡牌特性 Tooltip 文字撕裂（破字/破圖）與頂部 HUD 遮擋碰撞徹底修復**：

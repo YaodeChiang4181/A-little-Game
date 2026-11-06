@@ -652,6 +652,72 @@ html, body {
   background: #334155;
 }
 
+/* 軍備庫按鈕 (電腦版首頁左上) */
+.deck-builder-btn {
+  position: absolute;
+  top: 15px;
+  left: 105px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #38bdf8;
+  border: 2px solid #38bdf8;
+  padding: 6px 14px;
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  cursor: pointer;
+  z-index: 100;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+.deck-builder-btn:hover {
+  background: #334155;
+}
+
+/* 像素商城按鈕 (電腦版首頁右上) */
+.shop-btn {
+  position: absolute;
+  top: 15px;
+  right: 105px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #fbbf24;
+  border: 2px solid #fbbf24;
+  padding: 6px 14px;
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  cursor: pointer;
+  z-index: 100;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+.shop-btn:hover {
+  background: #334155;
+}
+
+/* 金幣計數晶片 (電腦版首頁頂部中央) */
+.gold-badge-chip {
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.9);
+  color: #ffcc00;
+  border: 2px solid #ffcc00;
+  padding: 6px 16px;
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 100;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.1s, background-color 0.15s;
+}
+.gold-badge-chip:hover {
+  background: #334155;
+  transform: translateX(-50%) translateY(-2px);
+}
+
 /* ================= 角色特性與戰場環境全新 UI 樣式 ================= */
 
 /* 戰場即時戰術情報橫條 (全寬展示，徹底解決覆蓋卡牌與跑板問題) */

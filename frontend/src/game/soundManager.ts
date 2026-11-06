@@ -15,7 +15,8 @@ export type SfxType =
   | 'traitTrigger'
   | 'hitDamage'
   | 'victory'
-  | 'defeat';
+  | 'defeat'
+  | 'coin';
 
 export interface BgmTrack {
   id: string;
@@ -431,6 +432,23 @@ class SoundManager {
           osc.start(start);
           osc.stop(start + 0.23);
         });
+        break;
+      }
+
+      case 'coin': {
+        // 經典 8-Bit 金幣音效 (B5 987.77Hz 快速銜接 E6 1318.51Hz)
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(987.77, t);
+        osc.frequency.setValueAtTime(1318.51, t + 0.08);
+        gain.gain.setValueAtTime(0.35, t);
+        gain.gain.setValueAtTime(0.35, t + 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(t);
+        osc.stop(t + 0.36);
         break;
       }
     }

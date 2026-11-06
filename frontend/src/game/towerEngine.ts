@@ -4,7 +4,7 @@
  */
 
 import { Character, Terrain } from './types';
-import { getAllCharacters } from './registry/characters';
+import { getAllCharacters, getActivePlayerDeck, INITIAL_CHARACTERS } from './registry/characters';
 import { TERRAIN_POOL, drawRandomTerrains } from './registry/terrains';
 import { GameSession, drawHand, HAND_DRAW_SIZE } from './gameService';
 
@@ -164,8 +164,10 @@ export function createTowerRun(customSeed?: string): TowerRunState {
 export function startFloorBattle(state: TowerRunState): TowerRunState {
   const config = TOWER_FLOORS[state.currentFloor - 1];
   const allPool = getAllCharacters();
-  const playerHand = drawHand(HAND_DRAW_SIZE, allPool);
-  const enemyHand = drawHand(HAND_DRAW_SIZE, allPool);
+  const playerPool = getActivePlayerDeck();
+  const enemyPool = [...INITIAL_CHARACTERS];
+  const playerHand = drawHand(HAND_DRAW_SIZE, playerPool);
+  const enemyHand = drawHand(HAND_DRAW_SIZE, enemyPool);
   const currentTerrains = generateFloorTerrains(config);
 
   const poolIds = new Set([...playerHand.map(c => c.id), ...enemyHand.map(c => c.id)]);

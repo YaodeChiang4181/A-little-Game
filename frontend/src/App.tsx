@@ -9,9 +9,12 @@ import { SettingsModal } from './components/SettingsModal';
 import { TowerView } from './components/TowerView';
 import { OnlineLobbyModal } from './components/OnlineLobbyModal';
 import { OnlineMatchView } from './components/OnlineMatchView';
-import { PixelHeart, PixelPieceIcon } from './components/PixelIcons';
+import { PixelHeart, PixelPieceIcon, PixelCoinIcon } from './components/PixelIcons';
 import { soundManager } from './game/soundManager';
 import { createTowerRun, TowerRunState, getTowerHighScore } from './game/towerEngine';
+import { ShopModal } from './components/ShopModal';
+import { DeckBuilderModal } from './components/DeckBuilderModal';
+import { getWallet, subscribeWallet, addGold, PlayerWallet } from './game/economy/wallet';
 
 export default function App() {
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'game_over' | 'tower' | 'online_match'>('idle');
@@ -61,7 +64,20 @@ export default function App() {
   const [showMenu, setShowMenu] = useState(false);
   const [showCompendium, setShowCompendium] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showShop, setShowShop] = useState(false);
+  const [showDeckBuilder, setShowDeckBuilder] = useState(false);
   const [inspectedTerrainIndex, setInspectedTerrainIndex] = useState<number | null>(null);
+
+  // 永久錢包與結算金幣
+  const [wallet, setWallet] = useState<PlayerWallet>(getWallet());
+  const [earnedGold, setEarnedGold] = useState<{ amount: number; reason: string } | null>(null);
+
+  useEffect(() => {
+    const unsub = subscribeWallet((newWallet) => {
+      setWallet(newWallet);
+    });
+    return unsub;
+  }, []);
 
   // 初次互動解鎖音訊上下文並啟動 BGM (若已啟用)
   useEffect(() => {
@@ -113,6 +129,7 @@ export default function App() {
     setResolveStep(-1);
     setPendingResult(null);
     setIsResolving(false);
+    setEarnedGold(null);
 
     if (showHelp) {
       setShowTutorial(true);
@@ -264,8 +281,19 @@ export default function App() {
             setGameState('game_over');
             if (pendingResult.winner === 'player') {
               soundManager.playSfx('victory');
+              const baseGold = 60;
+              const flawlessBonus = displayPlayerHp === 3 ? 40 : 0;
+              const totalAward = baseGold + flawlessBonus;
+              const reason = flawlessBonus > 0 ? '大獲全勝 (無損加成)' : '單局勝利獎勵';
+              addGold(totalAward, reason);
+              setEarnedGold({ amount: totalAward, reason });
+              setTimeout(() => soundManager.playSfx('coin'), 700);
             } else {
               soundManager.playSfx('defeat');
+              const award = 20;
+              addGold(award, '奮戰慰問金');
+              setEarnedGold({ amount: award, reason: '奮戰慰問金' });
+              setTimeout(() => soundManager.playSfx('coin'), 700);
             }
           } else {
             // 自動過渡至下一回合
@@ -397,6 +425,38 @@ export default function App() {
         [ 圖鑑 ]
       </button>
 
+      <button
+        className="deck-builder-btn desktop-only"
+        onClick={() => {
+          soundManager.playSfx('click');
+          setShowDeckBuilder(true);
+        }}
+      >
+        [ 軍備 ]
+      </button>
+
+      <div
+        className="gold-badge-chip desktop-only"
+        onClick={() => {
+          soundManager.playSfx('click');
+          setShowShop(true);
+        }}
+        title="點擊開啟軍需商城"
+      >
+        <PixelCoinIcon size={14} />
+        <span>{wallet.gold.toLocaleString()} G</span>
+      </div>
+
+      <button
+        className="shop-btn desktop-only"
+        onClick={() => {
+          soundManager.playSfx('click');
+          setShowShop(true);
+        }}
+      >
+        [ 商店 ]
+      </button>
+
       {/* 電腦版設定按鈕 (僅在 idle 首頁右上角顯示，與左上角圖鑑對稱) */}
       {gameState === 'idle' && (
         <button
@@ -438,6 +498,40 @@ export default function App() {
             }}
           >
             [ 圖鑑 ]
+          </button>
+
+          <button
+            className="mobile-btn"
+            style={{ borderColor: '#a855f7', color: '#c084fc' }}
+            onClick={() => {
+              soundManager.playSfx('click');
+              setShowDeckBuilder(true);
+            }}
+          >
+            [ 軍備 ]
+          </button>
+
+          <div
+            className="gold-badge-chip"
+            style={{ fontSize: '11px', padding: '3px 6px' }}
+            onClick={() => {
+              soundManager.playSfx('click');
+              setShowShop(true);
+            }}
+          >
+            <PixelCoinIcon size={12} />
+            <span>{wallet.gold} G</span>
+          </div>
+
+          <button
+            className="mobile-btn"
+            style={{ borderColor: '#facc15', color: '#fef08a' }}
+            onClick={() => {
+              soundManager.playSfx('click');
+              setShowShop(true);
+            }}
+          >
+            [ 商店 ]
           </button>
 
           {/* 手機版精簡名冊晶片 */}
@@ -563,6 +657,12 @@ export default function App() {
 
       {/* 圖鑑百科模態彈窗 */}
       {showCompendium && <CompendiumModal onClose={() => setShowCompendium(false)} />}
+
+      {/* 軍需商店模態彈窗 */}
+      <ShopModal isOpen={showShop} onClose={() => setShowShop(false)} />
+
+      {/* 軍備庫陣容編排與立繪上傳彈窗 */}
+      <DeckBuilderModal isOpen={showDeckBuilder} onClose={() => setShowDeckBuilder(false)} />
 
       {/* 雲端連機大廳模態彈窗 */}
       <OnlineLobbyModal
@@ -740,6 +840,38 @@ export default function App() {
                     [ 最佳: {highScore.toLocaleString()} PTS ]
                   </span>
                 )}
+              </button>
+
+              <button
+                className="btn"
+                style={{
+                  background: '#7c3aed',
+                  border: '2px solid #a855f7',
+                  fontSize: 'clamp(13px, 3.2vw, 16px)',
+                  padding: '10px 18px'
+                }}
+                onClick={() => {
+                  soundManager.playSfx('click');
+                  setShowDeckBuilder(true);
+                }}
+              >
+                陣容軍備
+              </button>
+
+              <button
+                className="btn"
+                style={{
+                  background: '#ca8a04',
+                  border: '2px solid #facc15',
+                  fontSize: 'clamp(13px, 3.2vw, 16px)',
+                  padding: '10px 18px'
+                }}
+                onClick={() => {
+                  soundManager.playSfx('click');
+                  setShowShop(true);
+                }}
+              >
+                軍需商店
               </button>
             </div>
           </div>
@@ -1078,9 +1210,30 @@ export default function App() {
               >
                 {winner === 'player' ? 'VICTORY' : 'DEFEAT'}
               </h1>
-              <div style={{ color: '#94a3b8', marginBottom: '30px', fontSize: '15px' }}>
+              <div style={{ color: '#94a3b8', marginBottom: '20px', fontSize: '15px' }}>
                 {winner === 'player' ? '奇偶相生，智冠全場！' : '勝敗乃兵家常事，重整旗鼓再決一戰！'}
               </div>
+
+              {earnedGold && (
+                <div
+                  style={{
+                    margin: '0 auto 24px auto',
+                    padding: '10px 18px',
+                    background: 'rgba(234, 179, 8, 0.15)',
+                    border: '2px solid #eab308',
+                    borderRadius: '4px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '14px',
+                    color: '#fef08a'
+                  }}
+                >
+                  <span>[ 戰後軍餉 ]</span>
+                  <span style={{ fontWeight: 'bold', color: '#ffea79' }}>+{earnedGold.amount} G</span>
+                  <span style={{ color: '#cbd5e1', fontSize: '12px' }}>({earnedGold.reason})</span>
+                </div>
+              )}
               <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <button className="btn engage" onClick={() => startGame(false)}>
                   再次對決

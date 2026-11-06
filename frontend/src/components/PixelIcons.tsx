@@ -71,6 +71,51 @@ export const PixelHeart: React.FC<PixelIconProps & { filled?: boolean }> = ({
 };
 
 /**
+ * 16x16 點陣像素金幣 (Pixel Coin)
+ */
+export const PixelCoinIcon: React.FC<PixelIconProps> = ({
+  size = 16,
+  className = ''
+}) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      className={className}
+      style={{ shapeRendering: 'crispEdges', display: 'inline-block', verticalAlign: 'middle' }}
+    >
+      {/* 黑色外緣輪廓 */}
+      <rect x="4" y="1" width="8" height="2" fill="#000" />
+      <rect x="2" y="3" width="2" height="2" fill="#000" />
+      <rect x="12" y="3" width="2" height="2" fill="#000" />
+      <rect x="1" y="5" width="2" height="6" fill="#000" />
+      <rect x="13" y="5" width="2" height="6" fill="#000" />
+      <rect x="2" y="11" width="2" height="2" fill="#000" />
+      <rect x="12" y="11" width="2" height="2" fill="#000" />
+      <rect x="4" y="13" width="8" height="2" fill="#000" />
+
+      {/* 金黃色本體 */}
+      <rect x="4" y="3" width="8" height="10" fill="#facc15" />
+      <rect x="3" y="5" width="10" height="6" fill="#facc15" />
+
+      {/* 陰影邊緣 */}
+      <rect x="11" y="5" width="2" height="6" fill="#ca8a04" />
+      <rect x="5" y="11" width="6" height="2" fill="#ca8a04" />
+
+      {/* 白色反光高光 */}
+      <rect x="4" y="3" width="2" height="2" fill="#ffffff" />
+      <rect x="3" y="5" width="1" height="3" fill="#ffffff" />
+
+      {/* 內圈 8-bit 刻印 */}
+      <rect x="7" y="5" width="2" height="6" fill="#854d0e" />
+      <rect x="6" y="5" width="4" height="1" fill="#854d0e" />
+      <rect x="6" y="10" width="4" height="1" fill="#854d0e" />
+    </svg>
+  );
+};
+
+/**
  * 24x24 專業像素西洋棋圖騰 (Pixel Chess Sprites)
  */
 export const PixelPieceIcon: React.FC<{
@@ -188,6 +233,111 @@ export const PixelPieceIcon: React.FC<{
           <rect x="10" y="11" width="4" height="6" fill={shadeColor} />
           <rect x="4" y="17" width="16" height="4" fill={outlineColor} />
           <rect x="5" y="18" width="14" height="2" fill={mainColor} />
+        </g>
+      )}
+
+      {/* 盜賊 Rogue (兜帽與刺客面罩) */}
+      {type === 'rogue' && (
+        <g>
+          <rect x="8" y="2" width="8" height="3" fill={outlineColor} />
+          <rect x="6" y="5" width="12" height="7" fill={outlineColor} />
+          <rect x="8" y="4" width="8" height="5" fill="#10b981" />
+          <rect x="9" y="8" width="2" height="2" fill="#000" />
+          <rect x="13" y="8" width="2" height="2" fill="#000" />
+          <rect x="10" y="8" width="1" height="1" fill="#fff" />
+          <rect x="14" y="8" width="1" height="1" fill="#fff" />
+          <rect x="7" y="11" width="10" height="4" fill="#047857" />
+          <rect x="5" y="15" width="14" height="4" fill={outlineColor} />
+          <rect x="6" y="16" width="12" height="2" fill={mainColor} />
+        </g>
+      )}
+
+      {/* 獵人 Hunter (連弩與箭簇) */}
+      {type === 'hunter' && (
+        <g>
+          <rect x="11" y="2" width="2" height="4" fill="#38bdf8" />
+          <rect x="6" y="6" width="12" height="3" fill={outlineColor} />
+          <rect x="7" y="7" width="10" height="1" fill="#0284c7" />
+          <rect x="8" y="9" width="8" height="6" fill={outlineColor} />
+          <rect x="9" y="10" width="6" height="5" fill={mainColor} />
+          <rect x="11" y="10" width="2" height="5" fill="#f59e0b" />
+          <rect x="5" y="16" width="14" height="4" fill={outlineColor} />
+          <rect x="6" y="17" width="12" height="2" fill={shadeColor} />
+        </g>
+      )}
+
+      {/* 投石機 Catapult (重型拋竿與滾輪) */}
+      {type === 'catapult' && (
+        <g>
+          <rect x="16" y="2" width="4" height="3" fill="#ef4444" />
+          <rect x="14" y="4" width="3" height="4" fill={outlineColor} />
+          <rect x="10" y="7" width="5" height="3" fill={outlineColor} />
+          <rect x="6" y="9" width="12" height="4" fill={outlineColor} />
+          <rect x="7" y="10" width="10" height="2" fill="#b45309" />
+          <rect x="5" y="13" width="5" height="5" fill={outlineColor} />
+          <rect x="6" y="14" width="3" height="3" fill="#f59e0b" />
+          <rect x="14" y="13" width="5" height="5" fill={outlineColor} />
+          <rect x="15" y="14" width="3" height="3" fill="#f59e0b" />
+          <rect x="4" y="18" width="16" height="3" fill={outlineColor} />
+        </g>
+      )}
+
+      {/* 鍊金術士 Alchemist (燒瓶與秘法藥劑) */}
+      {type === 'alchemist' && (
+        <g>
+          <rect x="10" y="2" width="4" height="2" fill="#a855f7" />
+          <rect x="11" y="4" width="2" height="4" fill={outlineColor} />
+          <rect x="9" y="8" width="6" height="3" fill={outlineColor} />
+          <rect x="7" y="10" width="10" height="6" fill={outlineColor} />
+          <rect x="8" y="11" width="8" height="5" fill="#c084fc" />
+          <rect x="9" y="13" width="6" height="2" fill="#7e22ce" />
+          <rect x="10" y="12" width="1" height="1" fill="#fff" />
+          <rect x="5" y="17" width="14" height="4" fill={outlineColor} />
+          <rect x="6" y="18" width="12" height="2" fill={mainColor} />
+        </g>
+      )}
+
+      {/* 大魔導師 Archmage (法杖奧術之星) */}
+      {type === 'archmage' && (
+        <g>
+          <rect x="10" y="1" width="4" height="2" fill="#ec4899" />
+          <rect x="8" y="3" width="8" height="2" fill="#ec4899" />
+          <rect x="7" y="5" width="10" height="3" fill={outlineColor} />
+          <rect x="9" y="5" width="6" height="3" fill="#f472b6" />
+          <rect x="11" y="8" width="2" height="8" fill={outlineColor} />
+          <rect x="11" y="9" width="2" height="7" fill="#fbbf24" />
+          <rect x="6" y="12" width="12" height="4" fill={outlineColor} />
+          <rect x="7" y="13" width="10" height="3" fill="#831843" />
+          <rect x="4" y="17" width="16" height="4" fill={outlineColor} />
+          <rect x="5" y="18" width="14" height="2" fill={mainColor} />
+        </g>
+      )}
+
+      {/* 暴君 Tyrant (黑曜荊棘王冠與利刃) */}
+      {type === 'tyrant' && (
+        <g>
+          <rect x="4" y="2" width="3" height="3" fill="#dc2626" />
+          <rect x="10" y="1" width="4" height="3" fill="#dc2626" />
+          <rect x="17" y="2" width="3" height="3" fill="#dc2626" />
+          <rect x="5" y="5" width="14" height="6" fill="#000" />
+          <rect x="6" y="6" width="12" height="5" fill="#450a0a" />
+          <rect x="11" y="7" width="2" height="2" fill="#f87171" />
+          <rect x="8" y="11" width="8" height="6" fill="#000" />
+          <rect x="9" y="12" width="6" height="5" fill="#7f1d1d" />
+          <rect x="3" y="17" width="18" height="4" fill="#000" />
+          <rect x="4" y="18" width="16" height="2" fill="#ef4444" />
+        </g>
+      )}
+
+      {/* 通用自訂角色備用圖示 */}
+      {!['pawn', 'knight', 'rook', 'bishop', 'queen', 'king', 'rogue', 'hunter', 'catapult', 'alchemist', 'archmage', 'tyrant'].includes(type) && (
+        <g>
+          <rect x="8" y="3" width="8" height="6" fill={outlineColor} />
+          <rect x="9" y="4" width="6" height="4" fill={mainColor} />
+          <rect x="9" y="10" width="6" height="6" fill={outlineColor} />
+          <rect x="10" y="11" width="4" height="4" fill={shadeColor} />
+          <rect x="5" y="17" width="14" height="4" fill={outlineColor} />
+          <rect x="6" y="18" width="12" height="2" fill={mainColor} />
         </g>
       )}
     </svg>

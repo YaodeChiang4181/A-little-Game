@@ -16,6 +16,7 @@ import {
 import { resolveTurn } from '../game/gameService';
 import { Character, SingleBattleRecord, RoundResolutionResult } from '../game/types';
 import { TowerResultModal } from './TowerResultModal';
+import { addGold } from '../game/economy/wallet';
 
 interface TowerViewProps {
   initialState: TowerRunState;
@@ -119,6 +120,14 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
             const nextTowerState = resolveFloorVictory(updatedState, floorRounds);
             setState(nextTowerState);
             setFloorRounds(1);
+
+            // 結算試煉突破金幣
+            const floorGold = 40 + state.currentFloor * 20;
+            addGold(floorGold, `奇偶試煉 第 ${state.currentFloor} 層突破`);
+            if (nextTowerState.status === 'victory') {
+              addGold(100, '奇偶試煉 登頂通關賞金');
+            }
+            setTimeout(() => soundManager.playSfx('coin'), 600);
           } else if (newPlayerHp <= 0) {
             // 玩家陣亡 (試煉失敗)
             soundManager.playSfx('defeat');
@@ -128,6 +137,8 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
               floorDamageTaken: newFloorDamage
             });
             setState(defeatState);
+            addGold(25, '奇偶試煉 探險慰問金');
+            setTimeout(() => soundManager.playSfx('coin'), 600);
           } else {
             // 自動過渡至該層下一回合 (換邊)
             setState(prev => ({

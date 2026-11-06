@@ -46,9 +46,11 @@ export interface Character {
   id: string;               // 唯一 ID，如 'pawn', 'knight'
   name: string;             // 顯示名稱，如「小兵」
   level: number;            // 基礎等級/點數 (1~6 或自訂)
+  price?: number;           // 商城招募金幣售價 (0 或未定義表示預設已擁有)
+  category?: 'classic' | 'shop' | 'custom'; // 角色類別
   avatar: {
     type: 'unicode' | 'image';
-    src: string;            // 代號如 'pawn' 或圖片路徑 '/sprites/char.png'
+    src: string;            // 代號如 'pawn' 或圖片路徑 '/characters/xxx.png'
   };
   themeColor?: string;      // 專屬主題色彩
   lore?: string;            // 角色背景故事

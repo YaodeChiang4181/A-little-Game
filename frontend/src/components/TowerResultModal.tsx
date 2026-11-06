@@ -88,6 +88,12 @@ export const TowerResultModal: React.FC<TowerResultModalProps> = ({ state, onRes
                 [ {rank} · {rankTitle} ]
               </span>
             </div>
+            <div className="arcade-stat-item">
+              <span className="arcade-stat-label">軍餉入袋</span>
+              <span className="arcade-stat-value" style={{ color: '#ffea79' }}>
+                +{state.history.reduce((sum, h) => sum + (40 + h.floor * 20), 0) + (isVictory ? 100 : 25)} G
+              </span>
+            </div>
           </div>
         </div>
 

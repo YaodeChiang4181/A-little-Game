@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Character } from '../game/types';
 import { PixelPieceIcon } from './PixelIcons';
+import { getCustomCharacterAvatar } from '../game/economy/wallet';
 
 interface CardViewProps {
   character: Character | null;
@@ -61,7 +62,9 @@ export const CardView: React.FC<CardViewProps> = ({
     if (isLoser) animClass += 'resolved-loser ';
   }
 
-  const isImg = character.avatar.type === 'image';
+  const customAvatar = character ? getCustomCharacterAvatar(character.id) : null;
+  const isImg = customAvatar ? true : character.avatar.type === 'image';
+  const avatarSrc = customAvatar || character.avatar.src;
 
   return (
     <div
@@ -78,9 +81,9 @@ export const CardView: React.FC<CardViewProps> = ({
       <div className="card-icon-container" style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {isImg ? (
           <img
-            src={character.avatar.src}
+            src={avatarSrc}
             alt={character.name}
-            style={{ imageRendering: 'pixelated' }}
+            style={{ imageRendering: 'pixelated', maxWidth: '36px', maxHeight: '36px', objectFit: 'contain' }}
           />
         ) : (
           <PixelPieceIcon type={character.avatar.src || character.id} color={color} />

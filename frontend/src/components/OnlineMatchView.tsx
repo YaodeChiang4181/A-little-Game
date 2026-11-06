@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Character, Terrain, SingleBattleRecord, RoundResolutionResult } from '../game/types';
 import { drawHand, HAND_DRAW_SIZE } from '../game/gameService';
-import { getAllCharacters } from '../game/registry/characters';
+import { getActivePlayerDeck } from '../game/registry/characters';
 import { drawRandomTerrains } from '../game/registry/terrains';
+import { addGold } from '../game/economy/wallet';
 import { resolveRound } from '../game/engine';
 import { networkManager } from '../game/online/networkManager';
 import { NetworkMessage } from '../game/online/types';
@@ -49,6 +50,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
   // 狀態與歷史
   const [gameOver, setGameOver] = useState<boolean>(false);
   const [winner, setWinner] = useState<'me' | 'opponent' | null>(null);
+  const [earnedReward, setEarnedReward] = useState<{ amount: number; text: string } | null>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [inspectedTerrainIndex, setInspectedTerrainIndex] = useState<number | null>(null);
@@ -79,7 +81,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
    * 房主啟動指定回合 (deal new round)
    */
   const hostStartRound = (targetRound: number, currentHostHp: number, currentGuestHp: number) => {
-    const allPool = getAllCharacters();
+    const allPool = getActivePlayerDeck();
     const hostHand = drawHand(HAND_DRAW_SIZE, allPool);
     const guestHand = drawHand(HAND_DRAW_SIZE, allPool);
     const terrains = drawRandomTerrains();
@@ -108,6 +110,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
     setResolveStep(-1);
     setPendingResult(null);
     setBattleLogs([]);
+    setEarnedReward(null);
 
     guestDeploymentRef.current = null;
     hostDeploymentRef.current = null;
@@ -421,8 +424,14 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
             setWinner(iWon ? 'me' : 'opponent');
             if (iWon) {
               soundManager.playSfx('victory');
+              addGold(80, '雲端對戰 獲勝獎勵');
+              setEarnedReward({ amount: 80, text: '雲端對決 獲勝軍餉' });
+              setTimeout(() => soundManager.playSfx('coin'), 700);
             } else {
               soundManager.playSfx('defeat');
+              addGold(30, '雲端對戰 奮戰慰問金');
+              setEarnedReward({ amount: 30, text: '雲端對決 奮戰慰問金' });
+              setTimeout(() => soundManager.playSfx('coin'), 700);
             }
           } else {
             // 若為房主，過渡至下一回合
@@ -851,9 +860,30 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
             >
               {winner === 'me' ? 'VICTORY' : 'DEFEAT'}
             </h1>
-            <div style={{ color: '#94a3b8', marginBottom: '25px', fontSize: '14px' }}>
+            <div style={{ color: '#94a3b8', marginBottom: '20px', fontSize: '14px' }}>
               {winner === 'me' ? '雲端博弈，棋開得勝！' : '旗鼓相當，再戰一局見分曉！'}
             </div>
+
+            {earnedReward && (
+              <div
+                style={{
+                  margin: '0 auto 20px auto',
+                  padding: '8px 16px',
+                  background: 'rgba(234, 179, 8, 0.15)',
+                  border: '2px solid #eab308',
+                  borderRadius: '4px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '13px',
+                  color: '#fef08a'
+                }}
+              >
+                <span>[ 對局軍餉 ]</span>
+                <span style={{ fontWeight: 'bold', color: '#ffea79' }}>+{earnedReward.amount} G</span>
+                <span style={{ color: '#cbd5e1', fontSize: '11px' }}>({earnedReward.text})</span>
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
