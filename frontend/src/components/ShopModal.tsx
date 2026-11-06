@@ -49,16 +49,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({
   return (
     <div className="tutorial-overlay" style={{ zIndex: 1200 }} onClick={onClose}>
       <div
-        className="tutorial-box"
-        style={{
-          width: '95%',
-          maxWidth: '820px',
-          maxHeight: '90dvh',
-          display: 'flex',
-          flexDirection: 'column',
-          padding: '24px 20px',
-          overflow: 'hidden'
-        }}
+        className="tutorial-box deck-builder-window"
         onClick={e => e.stopPropagation()}
       >
         {/* 頂部標題與金幣餘額 HUD */}
@@ -166,7 +157,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({
               >
                 {/* 角色卡片與基礎資訊 */}
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                  <div style={{ transform: 'scale(0.9)', transformOrigin: 'top left' }}>
+                  <div className="shop-thumb-card">
                     <CardView character={char} color="white" showTooltip={true} />
                   </div>
 

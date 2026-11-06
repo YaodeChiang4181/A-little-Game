@@ -79,16 +79,7 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
   return (
     <div className="tutorial-overlay" style={{ zIndex: 1200 }} onClick={onClose}>
       <div
-        className="tutorial-box"
-        style={{
-          width: '95%',
-          maxWidth: '860px',
-          maxHeight: '90dvh',
-          display: 'flex',
-          flexDirection: 'column',
-          padding: '24px 20px',
-          overflow: 'hidden'
-        }}
+        className="tutorial-box deck-builder-window"
         onClick={e => e.stopPropagation()}
       >
         {/* 隱藏式本機檔案上傳器 */}
@@ -101,16 +92,7 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
         />
 
         {/* 頂部標題與說明 */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            borderBottom: '2px solid #334155',
-            paddingBottom: '14px',
-            marginBottom: '16px'
-          }}
-        >
+        <div className="deck-builder-header">
           <div>
             <h2
               style={{
@@ -148,31 +130,14 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
         </div>
 
         {/* 核心區：左側 6 槽位預覽 + 右側階級候選選擇 */}
-        <div style={{ display: 'flex', gap: '16px', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-          {/* 左側：當前出征陣容 (6 牌固定梯隊) */}
-          <div
-            style={{
-              width: '280px',
-              background: 'rgba(0, 0, 0, 0.4)',
-              border: '2px solid #334155',
-              padding: '12px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px'
-            }}
-          >
+        <div className="deck-builder-body">
+          {/* 左側 / 行動版頂部：當前出征陣容 (6 牌固定梯隊) */}
+          <div className="deck-builder-left-roster">
             <div style={{ fontSize: '12px', color: '#ffcc00', fontWeight: 'bold', marginBottom: '2px' }}>
               [ 當前出征軍備 (6 牌) ]
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '8px',
-                flex: 1
-              }}
-            >
+            <div className="deck-roster-grid">
               {activeDeckChars.map(char => {
                 const isSelected = selectedLevel === char.level;
                 return (
@@ -182,23 +147,12 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
                       soundManager.playSfx('click');
                       setSelectedLevel(char.level);
                     }}
-                    style={{
-                      cursor: 'pointer',
-                      border: `2px solid ${isSelected ? 'var(--color-cyan)' : '#334155'}`,
-                      background: isSelected ? 'rgba(0, 255, 204, 0.1)' : 'rgba(15, 23, 42, 0.6)',
-                      padding: '4px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '4px',
-                      borderRadius: '2px',
-                      transition: 'all 0.15s'
-                    }}
+                    className={`deck-slot-item ${isSelected ? 'selected' : ''}`}
                   >
                     <div style={{ fontSize: '10px', color: '#ffcc00', fontWeight: 'bold' }}>
                       LV.{char.level}
                     </div>
-                    <div style={{ transform: 'scale(0.8)', transformOrigin: 'top center', height: '80px' }}>
+                    <div className="deck-mini-card">
                       <CardView character={char} color="white" showTooltip={false} />
                     </div>
                     <div style={{ fontSize: '11px', color: '#fff', fontWeight: 'bold' }}>
@@ -216,7 +170,7 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
                 padding: '6px 0',
                 fontSize: '11px',
                 background: '#475569',
-                marginTop: '4px'
+                marginTop: 'auto'
               }}
               onClick={() => {
                 soundManager.playSfx('click');
@@ -227,19 +181,9 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
             </button>
           </div>
 
-          {/* 右側：選定等級 (selectedLevel) 候選角色替換清單 */}
-          <div
-            style={{
-              flex: 1,
-              background: 'rgba(15, 23, 42, 0.85)',
-              border: '2px solid #334155',
-              padding: '14px',
-              display: 'flex',
-              flexDirection: 'column',
-              overflowY: 'auto'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          {/* 右側 / 行動版底部：選定等級 (selectedLevel) 候選角色替換清單 */}
+          <div className="deck-builder-right-candidates">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '4px' }}>
               <div style={{ fontSize: '14px', color: '#fff', fontWeight: 'bold' }}>
                 [ Lv.{selectedLevel} 槽位候選棋手 ]
               </div>
@@ -248,7 +192,7 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {availableCandidates.map(candidate => {
                 const isUnlocked = wallet.unlockedCharacterIds.includes(candidate.id);
                 const isEquipped = wallet.activeDeck[candidate.level] === candidate.id;
@@ -257,52 +201,47 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
                 return (
                   <div
                     key={candidate.id}
-                    style={{
-                      border: `2px solid ${isEquipped ? 'var(--color-cyan)' : isUnlocked ? '#475569' : '#334155'}`,
-                      background: isEquipped ? 'rgba(0, 255, 204, 0.05)' : 'rgba(0, 0, 0, 0.4)',
-                      padding: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '14px',
-                      opacity: isUnlocked ? 1 : 0.6
-                    }}
+                    className={`candidate-item-card ${isEquipped ? 'equipped' : ''}`}
+                    style={{ opacity: isUnlocked ? 1 : 0.6 }}
                   >
-                    {/* 卡牌縮圖 */}
-                    <div style={{ transform: 'scale(0.85)', transformOrigin: 'left center' }}>
-                      <CardView character={candidate} color="white" showTooltip={true} />
-                    </div>
+                    <div className="candidate-card-top-row" style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, minWidth: 0 }}>
+                      {/* 卡牌縮圖 (使用專屬 .candidate-thumb-card 尺寸，零 scale 溢出) */}
+                      <div className="candidate-thumb-card">
+                        <CardView character={candidate} color="white" showTooltip={true} />
+                      </div>
 
-                    {/* 角色詳細介紹 */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
-                        <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#fff' }}>
-                          {candidate.name}
-                        </span>
-                        <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>
-                          LV.{candidate.level}
-                        </span>
-                        {candidate.trait && (
-                          <span
-                            style={{
-                              fontSize: '10px',
-                              background: candidate.themeColor || '#ffcc00',
-                              color: '#000',
-                              fontWeight: 'bold',
-                              padding: '1px 6px',
-                              borderRadius: '2px'
-                            }}
-                          >
-                            【{candidate.trait.badge}】
+                      {/* 角色詳細介紹 */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#fff' }}>
+                            {candidate.name}
                           </span>
-                        )}
-                      </div>
+                          <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>
+                            LV.{candidate.level}
+                          </span>
+                          {candidate.trait && (
+                            <span
+                              style={{
+                                fontSize: '10px',
+                                background: candidate.themeColor || '#ffcc00',
+                                color: '#000',
+                                fontWeight: 'bold',
+                                padding: '1px 6px',
+                                borderRadius: '2px'
+                              }}
+                            >
+                              【{candidate.trait.badge}】
+                            </span>
+                          )}
+                        </div>
 
-                      <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4', marginBottom: '4px' }}>
-                        {candidate.trait?.description}
-                      </div>
+                        <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4', marginBottom: '4px' }}>
+                          {candidate.trait?.description}
+                        </div>
 
-                      <div style={{ fontSize: '10px', color: '#64748b', fontStyle: 'normal' }}>
-                        {candidate.lore}
+                        <div style={{ fontSize: '10px', color: '#64748b' }}>
+                          {candidate.lore}
+                        </div>
                       </div>
                     </div>
 

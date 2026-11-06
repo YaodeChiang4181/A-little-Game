@@ -123,10 +123,9 @@ npm run dev
       * 建立完整的開發手冊，詳解 4 大生命週期鉤子（`BEFORE_CLASH`、`DETERMINE_WIN`、`AFTER_CLASH`、`ON_MOMENTUM`）、算式推演註解、戰鬥上下文型別與 AI 智能感知適配範例，方便未來隨時新增自訂角色與趣味笑果。
     * **純化 8-Bit 像素視覺美學（零 Emoji 規範對齊）**：
       * 打造專屬 16x16 點陣像素金幣 SVG 圖標 (`PixelCoinIcon`)，全面取代外部表情符號，嚴格維持直角像素邊框、方括號標籤 `[ ]` 與沉浸式復古街機品質。
-    * **Vercel TypeScript 嚴格編譯適配 (`TS2305`、`TS2322` 與 `TS2722` 修復)**：
-      * 於 `src/game/economy/wallet.ts` 導出 `export type PlayerWallet = WalletState;`，根治模組未導出成員型別報錯。
-      * 於 `ShopModal.tsx` 與 `DeckBuilderModal.tsx` 組件介面補齊 `isOpen?: boolean` 布林屬性與互連跳轉可選回調，確保組件於嚴格模式下相容條件渲染。
-      * 全面為可選跳轉回調函式改採安全可選鏈調用（`onOpenShop?.()` 與 `onOpenDeckBuilder?.()`），根除 `TS2722: Cannot invoke an object which is possibly 'undefined'` 報錯。
+    * **軍備庫與商城全平台響應式佈局重構（徹底根治破圖、溢出與重疊破版）**：
+      * **根治 CSS Scale 虛假縮放導致的邊界溢出**：捨棄原先對 90px 卡牌使用 `transform: scale(0.8)` 的 Hack 手法（DOM 佔位未減導致 LV.3 與 LV.6 卡槽破框穿透右側邊界並遮蔽候選清單），改為在 `index.css` 定義具備確切物理尺寸的微縮卡牌類別（`.deck-mini-card` 寬 68px、`.candidate-thumb-card` 寬 70px），3 欄排列完美收納於 330px 左側面板內，零邊界碰撞與文字穿透。
+      * **行動版 (<820px) 縱向無縫適配**：採用上下分流架構，上方以 6 槽橫向一字展開微縮槽位（`.deck-roster-grid` 6 欄寬 44px），下方充盈展開候選清單並改為直向卡片式佈局，按鈕與介紹自適應換行，解決橫向 650px+ 佈局在手機直立螢幕（360~420px）嚴重擠壓破版問題。
 
 * **2026-11-04**：
   * **卡牌特性 Tooltip 文字撕裂（破字/破圖）與頂部 HUD 遮擋碰撞徹底修復**：

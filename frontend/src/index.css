@@ -1315,5 +1315,247 @@ html, body {
   }
 }
 
+/* ================= 軍備庫與商城全響應式系統 (跨平台防破版防溢出) ================= */
+.deck-builder-window {
+  width: 95%;
+  max-width: 960px;
+  height: 88dvh;
+  max-height: 88dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.deck-builder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #334155;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.deck-builder-body {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.deck-builder-left-roster {
+  width: 330px;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px solid #334155;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.deck-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  align-content: start;
+}
+
+.deck-slot-item {
+  cursor: pointer;
+  border: 2px solid #334155;
+  background: rgba(15, 23, 42, 0.7);
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border-radius: 2px;
+  transition: all 0.15s;
+  box-sizing: border-box;
+}
+.deck-slot-item:hover {
+  border-color: #64748b;
+  background: rgba(30, 41, 59, 0.8);
+}
+.deck-slot-item.selected {
+  border-color: var(--color-cyan) !important;
+  background: rgba(0, 255, 204, 0.12) !important;
+  box-shadow: 0 0 8px rgba(0, 255, 204, 0.35);
+}
+
+.deck-builder-right-candidates {
+  flex: 1;
+  min-width: 0;
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid #334155;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.candidate-item-card {
+  border: 2px solid #475569;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+.candidate-item-card.equipped {
+  border-color: var(--color-cyan);
+  background: rgba(0, 255, 204, 0.06);
+}
+
+.candidate-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 130px;
+  flex-shrink: 0;
+}
+
+/* 緊湊微縮卡牌尺寸，徹底杜絕 CSS scale 破版與溢出 */
+.deck-mini-card .card {
+  width: 68px !important;
+  height: 94px !important;
+  border-width: 2px !important;
+  box-shadow: 2px 2px 0 #000 !important;
+  padding: 2px !important;
+  cursor: pointer;
+  margin: 0 auto;
+}
+.deck-mini-card .card .card-icon-container svg {
+  width: 26px !important;
+  height: 26px !important;
+}
+.deck-mini-card .card-name-text {
+  font-size: 10px !important;
+  line-height: 1.1;
+}
+
+.candidate-thumb-card .card {
+  width: 70px !important;
+  height: 96px !important;
+  border-width: 2px !important;
+  box-shadow: 2px 2px 0 #000 !important;
+  padding: 2px !important;
+  margin: 0;
+}
+.candidate-thumb-card .card .card-icon-container svg {
+  width: 28px !important;
+  height: 28px !important;
+}
+.candidate-thumb-card .card-name-text {
+  font-size: 11px !important;
+}
+
+/* 商城微縮卡牌尺寸 */
+.shop-thumb-card .card {
+  width: 70px !important;
+  height: 98px !important;
+  border-width: 2px !important;
+  box-shadow: 2px 2px 0 #000 !important;
+  padding: 2px !important;
+  margin: 0;
+}
+.shop-thumb-card .card .card-icon-container svg {
+  width: 28px !important;
+  height: 28px !important;
+}
+.shop-thumb-card .card-name-text {
+  font-size: 11px !important;
+}
+
+/* ============ 行動版特別適配 (<820px) ============ */
+@media (max-width: 819px) {
+  .deck-builder-window {
+    width: 96%;
+    padding: 12px;
+    height: 94dvh;
+    max-height: 94dvh;
+  }
+
+  .deck-builder-body {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .deck-builder-left-roster {
+    width: 100%;
+    max-height: 190px;
+    padding: 8px;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .deck-roster-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+  }
+
+  .deck-mini-card .card {
+    width: 44px !important;
+    height: 64px !important;
+    border-width: 1px !important;
+    box-shadow: 1px 1px 0 #000 !important;
+    padding: 1px !important;
+  }
+  .deck-mini-card .card .card-icon-container svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  .deck-mini-card .card-name-text {
+    font-size: 8px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 40px;
+  }
+
+  .deck-builder-right-candidates {
+    padding: 10px;
+    flex: 1;
+  }
+
+  .candidate-item-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .candidate-card-top-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .candidate-actions {
+    width: 100%;
+    min-width: unset;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .candidate-actions button,
+  .candidate-actions div {
+    flex: 1;
+    min-width: 90px;
+  }
+}
+
+
 
 
