@@ -171,7 +171,7 @@ export function startFloorBattle(state: TowerRunState): TowerRunState {
   const currentTerrains = generateFloorTerrains(config);
 
   const poolIds = new Set([...playerHand.map(c => c.id), ...enemyHand.map(c => c.id)]);
-  const roundPool = allPool.filter(c => poolIds.has(c.id));
+  const roundPool = allPool.filter(c => poolIds.has(c.id)).sort((a, b) => a.level - b.level);
 
   const session: GameSession = {
     gameId: `${state.runId}_f${state.currentFloor}`,

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './index.css';
 import { Character, SingleBattleRecord, RoundResolutionResult } from './game/types';
-import { initGameSession, resolveTurn, GameSession } from './game/gameService';
+import { initGameSession, resolveTurn, GameSession, groupRosterByTier } from './game/gameService';
 import { CardView } from './components/CardView';
 import { TerrainBanner } from './components/TerrainBanner';
 import { CompendiumModal } from './components/CompendiumModal';
@@ -430,9 +430,9 @@ export default function App() {
         [ 圖鑑 ]
       </button>
 
-      {/* 頂部中央：個人錢包金幣 (點擊亦可快速開啟商城) */}
+      {/* 頂部右上角：個人錢包金幣 (點擊亦可快速開啟商城，避開中央名冊) */}
       <div
-        className="gold-badge-chip desktop-only"
+        className={`gold-badge-chip desktop-only ${gameState === 'playing' ? 'in-battle' : ''}`}
         onClick={() => {
           soundManager.playSfx('click');
           setShowShop(true);
@@ -508,12 +508,29 @@ export default function App() {
             </div>
           ) : (
             <div className="mobile-deck-roster">
-              {session?.roundPool.map(char => (
-                <span key={char.id} className="mobile-roster-item" title={`${char.name} (LV.${char.level})`}>
-                  <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={13} />
-                  <span>{char.name}</span>
-                </span>
-              ))}
+              {groupRosterByTier(session?.roundPool || []).map(group => {
+                if (group.characters.length === 1) {
+                  const char = group.characters[0];
+                  return (
+                    <span key={char.id} className="mobile-roster-item" title={`${char.name} (LV.${char.level})`}>
+                      <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={13} />
+                      <span>{char.name}</span>
+                    </span>
+                  );
+                }
+                return (
+                  <span key={`tier_${group.level}`} className="mobile-roster-item conflict-tier" title={`同階對陣 (LV.${group.level})`}>
+                    <span style={{ color: '#facc15', fontSize: '9px', fontWeight: 'bold' }}>L{group.level}:</span>
+                    {group.characters.map((char, idx) => (
+                      <span key={char.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                        {idx > 0 && <span style={{ color: '#64748b' }}>/</span>}
+                        <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={12} />
+                        <span style={{ color: '#fef08a' }}>{char.name}</span>
+                      </span>
+                    ))}
+                  </span>
+                );
+              })}
             </div>
           )}
 
@@ -862,12 +879,29 @@ export default function App() {
             {/* 本局登場角色列表 (電腦版專屬) */}
             <div className="deck-info-box desktop-only">
               <span className="deck-info-title">[ 對陣名冊 ]</span>
-              {session?.roundPool.map(char => (
-                <span key={char.id} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={16} />
-                  <span style={{ fontSize: '11px', letterSpacing: '0.5px' }}>{char.name}</span>
-                </span>
-              ))}
+              {groupRosterByTier(session?.roundPool || []).map(group => {
+                if (group.characters.length === 1) {
+                  const char = group.characters[0];
+                  return (
+                    <span key={char.id} className="roster-item single" title={`${char.name} (LV.${char.level})`}>
+                      <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={15} />
+                      <span className="roster-name">{char.name}</span>
+                    </span>
+                  );
+                }
+                return (
+                  <div key={`tier_${group.level}`} className="roster-tier-chip conflict" title={`同階棋手對陣 (LV.${group.level})`}>
+                    <span className="roster-level-tag">LV.{group.level}:</span>
+                    {group.characters.map((char, idx) => (
+                      <span key={char.id} className="roster-pair-entry">
+                        {idx > 0 && <span className="roster-slash">/</span>}
+                        <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={14} />
+                        <span className="roster-name conflict-name">{char.name}</span>
+                      </span>
+                    ))}
+                  </div>
+                );
+              })}
             </div>
 
             {/* 即時戰場戰術情報橫條 (全寬展開，徹底解決彈窗遮蔽卡牌與邊界截斷問題) */}

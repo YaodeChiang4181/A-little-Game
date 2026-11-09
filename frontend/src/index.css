@@ -132,26 +132,79 @@ html, body {
 
   .deck-info-box {
     position: absolute; 
-    top: 20px; 
+    top: 15px; 
     left: 50%; 
     transform: translateX(-50%);
-    background: rgba(15, 23, 42, 0.85); 
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    padding: 8px 20px;
+    background: rgba(15, 23, 42, 0.95); 
+    border: 2px solid #334155;
+    padding: 6px 16px;
     display: flex; 
     align-items: center; 
-    gap: 15px;
-    font-size: 13px; 
-    color: #ccc;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-    border-radius: 30px; 
+    gap: 10px;
+    font-size: 12px; 
+    color: #e2e8f0;
+    box-shadow: 3px 3px 0px #000;
+    border-radius: 0px !important; 
     white-space: nowrap; 
     z-index: 10;
+    max-width: calc(100vw - 320px);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .deck-info-box::-webkit-scrollbar {
+    display: none;
   }
   .deck-info-title {
     color: var(--color-gold); 
     font-weight: bold; 
-    margin-right: 5px;
+    margin-right: 4px;
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+  .roster-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .roster-name {
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+  .roster-tier-chip.conflict {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(234, 179, 8, 0.14);
+    border: 1px dashed #facc15;
+    padding: 2px 8px;
+    border-radius: 0px !important;
+    flex-shrink: 0;
+  }
+  .roster-level-tag {
+    color: #facc15;
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+  }
+  .roster-pair-entry {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .roster-slash {
+    color: #64748b;
+    font-size: 11px;
+    margin: 0 1px;
+  }
+  .roster-name.conflict-name {
+    color: #fef08a;
+    font-weight: bold;
   }
 }
 
@@ -232,7 +285,7 @@ html, body {
     background: rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.15);
     padding: 3px 8px;
-    border-radius: 20px;
+    border-radius: 0px !important;
     flex: 1;
     justify-content: center;
   }
@@ -241,12 +294,19 @@ html, body {
   }
 
   .mobile-roster-item {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 2px;
     font-size: 10px;
+    font-family: var(--font-pixel);
     color: #cbd5e1;
     white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .mobile-roster-item.conflict-tier {
+    background: rgba(234, 179, 8, 0.16);
+    border: 1px dashed #facc15;
+    padding: 1px 5px;
   }
 
   .mobile-huds-row {
@@ -622,7 +682,8 @@ html, body {
   background: #1e293b; color: #fff; border: 2px solid #fff;
   padding: 6px 10px; font-family: var(--font-pixel);
   cursor: pointer; z-index: 100;
-  border-radius: 4px;
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0px #000;
 }
 .help-btn:hover { background: #334155; }
 
@@ -631,7 +692,7 @@ html, body {
   position: absolute;
   top: 15px;
   left: 15px;
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(15, 23, 42, 0.9);
   color: var(--color-gold);
   border: 2px solid var(--color-gold);
   padding: 6px 14px;
@@ -639,8 +700,8 @@ html, body {
   font-size: 13px;
   cursor: pointer;
   z-index: 100;
-  border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0px #000;
 }
 .compendium-btn:hover {
   background: #334155;
@@ -651,7 +712,7 @@ html, body {
   position: absolute;
   top: 15px;
   right: 15px;
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(15, 23, 42, 0.9);
   color: var(--color-cyan);
   border: 2px solid var(--color-cyan);
   padding: 6px 14px;
@@ -659,8 +720,8 @@ html, body {
   font-size: 13px;
   cursor: pointer;
   z-index: 100;
-  border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0px #000;
 }
 .settings-btn:hover {
   background: #334155;
@@ -706,22 +767,23 @@ html, body {
   background: #334155;
 }
 
-/* 金幣計數晶片 (電腦版首頁頂部中央) */
+/* 金幣計數晶片 (電腦版右上角佈局，徹底避開中央對陣名冊) */
 .gold-badge-chip {
   position: absolute;
   top: 15px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(15, 23, 42, 0.9);
+  right: 98px;
+  left: auto;
+  transform: none;
+  background: rgba(15, 23, 42, 0.92);
   color: #ffcc00;
   border: 2px solid #ffcc00;
-  padding: 6px 16px;
+  padding: 6px 14px;
   font-family: var(--font-pixel);
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   z-index: 100;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  border-radius: 0px !important;
+  box-shadow: 2px 2px 0px #000;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -729,7 +791,11 @@ html, body {
 }
 .gold-badge-chip:hover {
   background: #334155;
-  transform: translateX(-50%) translateY(-2px);
+  transform: translateY(-2px);
+}
+/* 對局中：右上角為 [ ☰ ] 選單按鈕 (寬度約44px)，金幣移至 right: 68px 緊鄰其左側 */
+.gold-badge-chip.in-battle {
+  right: 68px;
 }
 
 /* ================= 角色特性與戰場環境全新 UI 樣式 ================= */

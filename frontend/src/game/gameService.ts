@@ -41,9 +41,9 @@ export function initGameSession(): GameSession {
   const enemyHand = drawHand(HAND_DRAW_SIZE, enemyPool);
   const currentTerrains = drawRandomTerrains();
 
-  // 合併並計算本局登場角色池（唯一值）
+  // 合併並計算本局登場角色池（唯一值）並按 Lv.1~6 階級升冪排序
   const poolIds = new Set([...playerHand.map(c => c.id), ...enemyHand.map(c => c.id)]);
-  const roundPool = allPool.filter(c => poolIds.has(c.id));
+  const roundPool = allPool.filter(c => poolIds.has(c.id)).sort((a, b) => a.level - b.level);
 
   return {
     gameId: `game_${Date.now()}`,
@@ -101,7 +101,7 @@ export function resolveTurn(
     const nextTerrains = drawRandomTerrains();
 
     const poolIds = new Set([...nextPlayerHand.map(c => c.id), ...nextEnemyHand.map(c => c.id)]);
-    const nextRoundPool = allPool.filter(c => poolIds.has(c.id));
+    const nextRoundPool = allPool.filter(c => poolIds.has(c.id)).sort((a, b) => a.level - b.level);
 
     nextSession = {
       gameId: session.gameId,
@@ -127,3 +127,30 @@ export function resolveTurn(
     nextSession
   };
 }
+
+export interface RosterTierGroup {
+  level: number;
+  characters: Character[];
+}
+
+/**
+ * 將登場角色池依據 Lv.1~6 階級分組
+ * 當同一等級存在 2 位以上不同角色（如小兵與盜賊）時，供對陣名冊進行對位與並列展示
+ */
+export function groupRosterByTier(pool: Character[]): RosterTierGroup[] {
+  const map = new Map<number, Character[]>();
+  for (const c of pool) {
+    const list = map.get(c.level) || [];
+    list.push(c);
+    map.set(c.level, list);
+  }
+  const result: RosterTierGroup[] = [];
+  for (let lvl = 1; lvl <= 6; lvl++) {
+    const list = map.get(lvl);
+    if (list && list.length > 0) {
+      result.push({ level: lvl, characters: list });
+    }
+  }
+  return result;
+}
+

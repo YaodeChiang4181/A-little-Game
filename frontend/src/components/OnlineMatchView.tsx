@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Character, Terrain, SingleBattleRecord, RoundResolutionResult } from '../game/types';
-import { drawHand, HAND_DRAW_SIZE } from '../game/gameService';
+import { drawHand, HAND_DRAW_SIZE, groupRosterByTier } from '../game/gameService';
 import { getActivePlayerDeck } from '../game/registry/characters';
 import { drawRandomTerrains } from '../game/registry/terrains';
 import { addGold } from '../game/economy/wallet';
@@ -87,7 +87,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
     const terrains = drawRandomTerrains();
 
     const poolIds = new Set([...hostHand.map(c => c.id), ...guestHand.map(c => c.id)]);
-    const pool = allPool.filter(c => poolIds.has(c.id));
+    const pool = allPool.filter(c => poolIds.has(c.id)).sort((a, b) => a.level - b.level);
 
     const hostIsOdd = targetRound % 2 !== 0;
     const hRole: 'ODD' | 'EVEN' = hostIsOdd ? 'ODD' : 'EVEN';
@@ -181,7 +181,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
         setMyDeployment([null, null, null]);
         setOpponentDeployment(null);
         setCurrentTerrains(msg.terrains);
-        setRoundPool(msg.roundPool);
+        setRoundPool([...msg.roundPool].sort((a, b) => a.level - b.level));
         setMyReady(false);
         setOpponentReady(false);
         setIsResolving(false);
@@ -604,15 +604,32 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
 
       {/* ============ 中央 戰鬥舞台 ============ */}
       <div className="main-stage" style={{ marginTop: '36px' }}>
-        {/* 對陣名冊 */}
+        {/* 對陣名冊 (依等級聚合與同階對位展示) */}
         <div className="deck-info-box desktop-only">
           <span className="deck-info-title">[ ROUND {roundNumber} 名冊 ]</span>
-          {roundPool.map(char => (
-            <span key={char.id} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={16} />
-              <span style={{ fontSize: '11px' }}>{char.name}</span>
-            </span>
-          ))}
+          {groupRosterByTier(roundPool).map(group => {
+            if (group.characters.length === 1) {
+              const char = group.characters[0];
+              return (
+                <span key={char.id} className="roster-item single" title={`${char.name} (LV.${char.level})`}>
+                  <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={15} />
+                  <span className="roster-name">{char.name}</span>
+                </span>
+              );
+            }
+            return (
+              <div key={`tier_${group.level}`} className="roster-tier-chip conflict" title={`同階棋手對陣 (LV.${group.level})`}>
+                <span className="roster-level-tag">LV.{group.level}:</span>
+                {group.characters.map((char, idx) => (
+                  <span key={char.id} className="roster-pair-entry">
+                    {idx > 0 && <span className="roster-slash">/</span>}
+                    <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={14} />
+                    <span className="roster-name conflict-name">{char.name}</span>
+                  </span>
+                ))}
+              </div>
+            );
+          })}
         </div>
 
         {/* 對手出兵就緒狀態提示條 */}
@@ -633,22 +650,29 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
         </div>
 
         {/* 即時情報橫條 */}
-        {inspectedTerrainIndex !== null && currentTerrains[inspectedTerrainIndex] && (
-          <div
-            className="terrain-stage-intel-bar"
-            onClick={() => setInspectedTerrainIndex(null)}
-          >
-            <span style={{ color: currentTerrains[inspectedTerrainIndex].color, fontWeight: 'bold' }}>
-              [ {currentTerrains[inspectedTerrainIndex].name} · 倍率 x{currentTerrains[inspectedTerrainIndex].weight} ]
-            </span>
-            <span style={{ color: '#cbd5e1' }}>
-              {currentTerrains[inspectedTerrainIndex].description}
-            </span>
-            <span style={{ marginLeft: 'auto', color: '#64748b', fontSize: '10px' }}>
-              [ 點擊收起 ]
-            </span>
-          </div>
-        )}
+        {inspectedTerrainIndex !== null && (() => {
+          const activeTerrains = (isResolving && pendingResult?.battles)
+            ? pendingResult.battles.map(bt => bt.terrain)
+            : currentTerrains;
+          const targetTerrain = activeTerrains[inspectedTerrainIndex];
+          if (!targetTerrain) return null;
+          return (
+            <div
+              className="terrain-stage-intel-bar"
+              onClick={() => setInspectedTerrainIndex(null)}
+            >
+              <span style={{ color: targetTerrain.color, fontWeight: 'bold' }}>
+                [ {targetTerrain.name} · 倍率 x{targetTerrain.weight} ]
+              </span>
+              <span style={{ color: '#cbd5e1' }}>
+                {targetTerrain.description}
+              </span>
+              <span style={{ marginLeft: 'auto', color: '#64748b', fontSize: '10px' }}>
+                [ 點擊收起 ]
+              </span>
+            </div>
+          );
+        })()}
 
         {/* 三大動態戰場佈署區 */}
         <div className="battlefield">
@@ -656,14 +680,16 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
             const b = battleLogs[i];
             const isClashing = resolveStep === i;
             const hasDealt = dealStep > i || resolveStep >= 0;
-            const terrain = currentTerrains[i] || {
+            // 優先使用當前交鋒真實戰場，保證雙人連機對戰之橫幅與算式倍率 100% 絕對一致
+            const activeBattle = b || pendingResult?.battles[i];
+            const terrain = (isResolving && activeBattle) ? activeBattle.terrain : (currentTerrains[i] || {
               id: 'unknown',
               name: `戰場 ${i + 1}`,
               weight: i + 1,
               icon: 'arena',
               color: '#555',
               description: ''
-            };
+            });
 
             // 在 Host 視角：b.player_char 是我方，b.enemy_char 是對手
             // 在 Guest 視角：b.enemy_char 是我方，b.player_char 是對手
