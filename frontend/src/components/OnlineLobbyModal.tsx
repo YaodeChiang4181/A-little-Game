@@ -348,12 +348,13 @@ export const OnlineLobbyModal: React.FC<OnlineLobbyModalProps> = ({
             </div>
 
             <button
-              className="btn engage"
+              className="btn"
               style={{
                 width: '100%',
                 padding: '12px 0',
                 fontSize: '16px',
-                background: '#dc2626'
+                background: '#dc2626',
+                animation: 'none'
               }}
               onClick={handleJoinRoom}
               disabled={inputCode.length !== 6 || status === 'connecting'}
