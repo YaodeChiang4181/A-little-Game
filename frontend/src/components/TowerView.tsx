@@ -121,15 +121,15 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
             setState(nextTowerState);
             setFloorRounds(1);
 
-            // 結算試煉突破金幣
+            // 結算突破金幣
             const floorGold = 40 + state.currentFloor * 20;
-            addGold(floorGold, `奇偶試煉 第 ${state.currentFloor} 層突破`);
+            addGold(floorGold, `一命通關 第 ${state.currentFloor} 層突破`);
             if (nextTowerState.status === 'victory') {
-              addGold(100, '奇偶試煉 登頂通關賞金');
+              addGold(100, '一命通關 登頂通關賞金');
             }
             setTimeout(() => soundManager.playSfx('coin'), 600);
           } else if (newPlayerHp <= 0) {
-            // 玩家陣亡 (試煉失敗)
+            // 玩家陣亡 (挑戰失敗)
             soundManager.playSfx('defeat');
             const defeatState = resolveFloorDefeat({
               ...state,
@@ -137,7 +137,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
               floorDamageTaken: newFloorDamage
             });
             setState(defeatState);
-            addGold(25, '奇偶試煉 探險慰問金');
+            addGold(25, '一命通關 奮戰慰問金');
             setTimeout(() => soundManager.playSfx('coin'), 600);
           } else {
             // 自動過渡至該層下一回合 (換邊)

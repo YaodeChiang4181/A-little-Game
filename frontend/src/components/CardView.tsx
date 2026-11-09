@@ -122,15 +122,28 @@ export const CardView: React.FC<CardViewProps> = ({
         )}
       </div>
 
-      {/* 特性懸浮說明 Tooltip (零 Emoji，精簡公式) */}
-      {showTooltip && hovered && character.trait && (
+      {/* 角色詳細懸浮說明 Tooltip (零 Emoji，精簡公式) */}
+      {showTooltip && hovered && (
         <div className="card-trait-tooltip" onClick={e => e.stopPropagation()}>
-          <div style={{ color: '#ffcc00', fontWeight: 'bold', marginBottom: '3px', fontSize: '12px', letterSpacing: '0.5px' }}>
-            {character.name} · 【{character.trait.badge}】
-          </div>
-          <div style={{ fontSize: '11px', color: '#e2e8f0', lineHeight: '1.5', letterSpacing: '0.2px' }}>
-            {character.trait.description}
-          </div>
+          {character.trait ? (
+            <>
+              <div style={{ color: '#ffcc00', fontWeight: 'bold', marginBottom: '3px', fontSize: '12px', letterSpacing: '0.5px' }}>
+                {character.name} · 【{character.trait.badge}】
+              </div>
+              <div style={{ fontSize: '11px', color: '#e2e8f0', lineHeight: '1.5', letterSpacing: '0.2px' }}>
+                {character.trait.description}
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ color: '#94a3b8', fontWeight: 'bold', marginBottom: '3px', fontSize: '12px', letterSpacing: '0.5px' }}>
+                {character.name} · 【常規棋子】
+              </div>
+              <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: '1.5', letterSpacing: '0.2px' }}>
+                標準點數棋子 (LV.{character.level})，專注於正面點數對抗與奇偶陣營博弈，無特殊異能。
+              </div>
+            </>
+          )}
           {character.lore && (
             <div
               className="card-trait-lore"

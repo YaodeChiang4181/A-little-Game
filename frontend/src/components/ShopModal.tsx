@@ -97,9 +97,10 @@ export const ShopModal: React.FC<ShopModalProps> = ({
               style={{
                 color: '#ffcc00',
                 fontWeight: 'bold',
-                fontSize: '16px',
-                fontFamily: 'monospace',
-                letterSpacing: '1px'
+                fontSize: '15px',
+                fontFamily: 'var(--font-pixel)',
+                letterSpacing: '1px',
+                whiteSpace: 'nowrap'
               }}
             >
               {wallet.gold.toLocaleString()} G

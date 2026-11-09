@@ -46,7 +46,7 @@ export function generateTowerScorecard(state: TowerRunState): Promise<string> {
     ctx.fillStyle = '#ffcc00';
     ctx.font = 'bold 15px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('[ 氣勢連鎖 · 奇偶試煉戰報 ]', canvas.width / 2, 45);
+    ctx.fillText('[ 氣勢連鎖 · 一命通關戰報 ]', canvas.width / 2, 45);
 
     ctx.fillStyle = '#94a3b8';
     ctx.font = '11px monospace';

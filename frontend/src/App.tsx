@@ -66,6 +66,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [showDeckBuilder, setShowDeckBuilder] = useState(false);
+  const [allowCustomUpload, setAllowCustomUpload] = useState(false);
   const [inspectedTerrainIndex, setInspectedTerrainIndex] = useState<number | null>(null);
 
   // 永久錢包與結算金幣
@@ -425,16 +426,7 @@ export default function App() {
         [ 圖鑑 ]
       </button>
 
-      <button
-        className="deck-builder-btn desktop-only"
-        onClick={() => {
-          soundManager.playSfx('click');
-          setShowDeckBuilder(true);
-        }}
-      >
-        [ 軍備 ]
-      </button>
-
+      {/* 頂部中央：個人錢包金幣 (點擊亦可快速開啟商城) */}
       <div
         className="gold-badge-chip desktop-only"
         onClick={() => {
@@ -446,16 +438,6 @@ export default function App() {
         <PixelCoinIcon size={14} />
         <span>{wallet.gold.toLocaleString()} G</span>
       </div>
-
-      <button
-        className="shop-btn desktop-only"
-        onClick={() => {
-          soundManager.playSfx('click');
-          setShowShop(true);
-        }}
-      >
-        [ 商店 ]
-      </button>
 
       {/* 電腦版設定按鈕 (僅在 idle 首頁右上角顯示，與左上角圖鑑對稱) */}
       {gameState === 'idle' && (
@@ -488,7 +470,7 @@ export default function App() {
 
       {/* ============ 手機版專屬頂部導覽與 HUD 狀態列 (Docked Top Header) ============ */}
       <header className="mobile-header-bar mobile-only">
-        {/* 第一列：快捷操作與本局登場名冊 */}
+        {/* 第一列：快捷操作與本局登場名冊 (極簡對稱：左上圖鑑、右上設定/選單) */}
         <div className="mobile-nav-row">
           <button
             className="mobile-btn"
@@ -500,51 +482,38 @@ export default function App() {
             [ 圖鑑 ]
           </button>
 
-          <button
-            className="mobile-btn"
-            style={{ borderColor: '#a855f7', color: '#c084fc' }}
-            onClick={() => {
-              soundManager.playSfx('click');
-              setShowDeckBuilder(true);
-            }}
-          >
-            [ 軍備 ]
-          </button>
+          {/* 首頁 idle 時中央展示金幣，對局中展示本局登場名冊 */}
+          {gameState === 'idle' ? (
+            <div
+              className="gold-badge-chip"
+              style={{
+                position: 'static',
+                transform: 'none',
+                fontSize: '11px',
+                padding: '4px 10px',
+                fontFamily: 'var(--font-pixel)',
+                letterSpacing: '0.5px'
+              }}
+              onClick={() => {
+                soundManager.playSfx('click');
+                setShowShop(true);
+              }}
+            >
+              <PixelCoinIcon size={12} />
+              <span>{wallet.gold.toLocaleString()} G</span>
+            </div>
+          ) : (
+            <div className="mobile-deck-roster">
+              {session?.roundPool.map(char => (
+                <span key={char.id} className="mobile-roster-item" title={`${char.name} (LV.${char.level})`}>
+                  <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={13} />
+                  <span>{char.name}</span>
+                </span>
+              ))}
+            </div>
+          )}
 
-          <div
-            className="gold-badge-chip"
-            style={{ fontSize: '11px', padding: '3px 6px' }}
-            onClick={() => {
-              soundManager.playSfx('click');
-              setShowShop(true);
-            }}
-          >
-            <PixelCoinIcon size={12} />
-            <span>{wallet.gold} G</span>
-          </div>
-
-          <button
-            className="mobile-btn"
-            style={{ borderColor: '#facc15', color: '#fef08a' }}
-            onClick={() => {
-              soundManager.playSfx('click');
-              setShowShop(true);
-            }}
-          >
-            [ 商店 ]
-          </button>
-
-          {/* 手機版精簡名冊晶片 */}
-          <div className="mobile-deck-roster">
-            {session?.roundPool.map(char => (
-              <span key={char.id} className="mobile-roster-item" title={`${char.name} (LV.${char.level})`}>
-                <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={13} />
-                <span>{char.name}</span>
-              </span>
-            ))}
-          </div>
-
-          {/* 手機版：首頁顯示 [ 設定 ]，對局中則顯示 [ 選單 ] */}
+          {/* 首頁顯示 [ 設定 ]，對局中則顯示 [ 選單 ] */}
           {gameState === 'idle' ? (
             <button
               className="mobile-btn"
@@ -652,8 +621,26 @@ export default function App() {
         </div>
       )}
 
-      {/* 系統設定模態彈窗 */}
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {/* 系統設定模態彈窗 (兼具軍需商城與陣容軍備列表入口) */}
+      {showSettings && (
+        <SettingsModal
+          onClose={() => setShowSettings(false)}
+          onOpenShop={() => {
+            setShowSettings(false);
+            setShowShop(true);
+          }}
+          onOpenDeckBuilder={() => {
+            setShowSettings(false);
+            setAllowCustomUpload(false);
+            setShowDeckBuilder(true);
+          }}
+          onOpenCustomUpload={() => {
+            setShowSettings(false);
+            setAllowCustomUpload(true);
+            setShowDeckBuilder(true);
+          }}
+        />
+      )}
 
       {/* 圖鑑百科模態彈窗 */}
       {showCompendium && <CompendiumModal onClose={() => setShowCompendium(false)} />}
@@ -664,11 +651,12 @@ export default function App() {
         onClose={() => setShowShop(false)}
         onOpenDeckBuilder={() => {
           setShowShop(false);
+          setAllowCustomUpload(false);
           setShowDeckBuilder(true);
         }}
       />
 
-      {/* 軍備庫陣容編排與立繪上傳彈窗 */}
+      {/* 軍備庫陣容編排彈窗 */}
       <DeckBuilderModal
         isOpen={showDeckBuilder}
         onClose={() => setShowDeckBuilder(false)}
@@ -676,6 +664,7 @@ export default function App() {
           setShowDeckBuilder(false);
           setShowShop(true);
         }}
+        allowCustomUpload={allowCustomUpload}
       />
 
       {/* 雲端連機大廳模態彈窗 */}
@@ -803,10 +792,11 @@ export default function App() {
               [ 4選3手牌管理 · 角色專屬特性 · 動態環境戰場 ]
             </div>
 
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap', maxWidth: '640px', margin: '0 auto' }}>
+            {/* 4 顆核心模式按鈕 (2x2 對稱排版，無重複干擾) */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(130px, 190px))', gap: '14px', justifyContent: 'center', maxWidth: '420px', margin: '0 auto' }}>
               <button
                 className="btn"
-                style={{ background: '#0f766e', fontSize: 'clamp(13px, 3.2vw, 16px)', padding: '10px 18px' }}
+                style={{ background: '#0f766e', fontSize: 'clamp(13px, 3.2vw, 16px)', padding: '12px 14px' }}
                 onClick={() => startGame(true)}
               >
                 新手指南
@@ -814,7 +804,7 @@ export default function App() {
 
               <button
                 className="btn"
-                style={{ background: '#dc2626', fontSize: 'clamp(13px, 3.2vw, 16px)', padding: '10px 18px' }}
+                style={{ background: '#dc2626', fontSize: 'clamp(13px, 3.2vw, 16px)', padding: '12px 14px' }}
                 onClick={() => startGame(false)}
               >
                 經典單局
@@ -826,7 +816,7 @@ export default function App() {
                   background: '#0284c7',
                   border: '2px solid #38bdf8',
                   fontSize: 'clamp(13px, 3.2vw, 16px)',
-                  padding: '10px 18px'
+                  padding: '12px 14px'
                 }}
                 onClick={() => {
                   soundManager.playSfx('click');
@@ -837,55 +827,27 @@ export default function App() {
               </button>
 
               <button
-                className="btn engage"
+                className="btn"
                 style={{
+                  background: '#1e3a8a',
+                  border: '2px solid #3b82f6',
                   fontSize: 'clamp(13px, 3.2vw, 16px)',
-                  padding: '10px 20px',
+                  padding: '10px 14px',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: '2px'
+                  justifyContent: 'center',
+                  gap: '2px',
+                  animation: 'none'
                 }}
                 onClick={startTowerRun}
               >
-                <span>奇偶試煉 (刷塔)</span>
+                <span>一命通關</span>
                 {highScore > 0 && (
                   <span style={{ fontSize: '10px', color: '#ffcc00', fontFamily: 'monospace' }}>
                     [ 最佳: {highScore.toLocaleString()} PTS ]
                   </span>
                 )}
-              </button>
-
-              <button
-                className="btn"
-                style={{
-                  background: '#7c3aed',
-                  border: '2px solid #a855f7',
-                  fontSize: 'clamp(13px, 3.2vw, 16px)',
-                  padding: '10px 18px'
-                }}
-                onClick={() => {
-                  soundManager.playSfx('click');
-                  setShowDeckBuilder(true);
-                }}
-              >
-                陣容軍備
-              </button>
-
-              <button
-                className="btn"
-                style={{
-                  background: '#ca8a04',
-                  border: '2px solid #facc15',
-                  fontSize: 'clamp(13px, 3.2vw, 16px)',
-                  padding: '10px 18px'
-                }}
-                onClick={() => {
-                  soundManager.playSfx('click');
-                  setShowShop(true);
-                }}
-              >
-                軍需商店
               </button>
             </div>
           </div>

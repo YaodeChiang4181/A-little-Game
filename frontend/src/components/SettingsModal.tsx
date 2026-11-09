@@ -3,9 +3,17 @@ import { soundManager, BGM_TRACKS, AudioSettings } from '../game/soundManager';
 
 interface SettingsModalProps {
   onClose: () => void;
+  onOpenShop?: () => void;
+  onOpenDeckBuilder?: () => void;
+  onOpenCustomUpload?: () => void;
 }
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({
+  onClose,
+  onOpenShop,
+  onOpenDeckBuilder,
+  onOpenCustomUpload
+}) => {
   const [settings, setSettings] = useState<AudioSettings>(soundManager.getSettings());
 
   useEffect(() => {
@@ -83,6 +91,96 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
             關閉
           </button>
         </div>
+
+        {/* ================= 軍備與商城系統導覽 (可展開列表) ================= */}
+        {(onOpenShop || onOpenDeckBuilder) && (
+          <div style={{ marginBottom: '20px', background: 'rgba(30, 41, 59, 0.7)', border: '2px solid #3b82f6', borderRadius: '4px', padding: '16px', boxShadow: '2px 2px 0px #000' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <div style={{ fontWeight: 'bold', fontSize: '15px', color: '#ffcc00', letterSpacing: '0.5px' }}>
+                [ 軍需商城與出征軍備 ]
+              </div>
+              <span style={{ fontSize: '10px', background: '#1e3a8a', color: '#93c5fd', padding: '2px 6px', borderRadius: '2px' }}>
+                戰備配置
+              </span>
+            </div>
+            <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '12px' }}>
+              招募獨具異能的特職西洋棋手，自由裝備 1~6 階出征卡組
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              {onOpenShop && (
+                <button
+                  className="btn"
+                  style={{
+                    background: '#ca8a04',
+                    border: '2px solid #facc15',
+                    padding: '8px 10px',
+                    fontSize: '12px',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px'
+                  }}
+                  onClick={() => {
+                    soundManager.playSfx('click');
+                    onClose();
+                    onOpenShop();
+                  }}
+                >
+                  <span>[ 軍需商城 ]</span>
+                </button>
+              )}
+
+              {onOpenDeckBuilder && (
+                <button
+                  className="btn"
+                  style={{
+                    background: '#7c3aed',
+                    border: '2px solid #a855f7',
+                    padding: '8px 10px',
+                    fontSize: '12px',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px'
+                  }}
+                  onClick={() => {
+                    soundManager.playSfx('click');
+                    onClose();
+                    onOpenDeckBuilder();
+                  }}
+                >
+                  <span>[ 陣容軍備 ]</span>
+                </button>
+              )}
+            </div>
+
+            {/* 開發者個人立繪換裝入口 */}
+            {onOpenCustomUpload && (
+              <div style={{ marginTop: '10px', borderTop: '1px dashed #475569', paddingTop: '8px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#64748b',
+                    fontSize: '10px',
+                    cursor: 'pointer',
+                    textDecoration: 'underline'
+                  }}
+                  onClick={() => {
+                    soundManager.playSfx('click');
+                    onClose();
+                    onOpenCustomUpload();
+                  }}
+                >
+                  * 個人專用：管理自訂像素立繪 →
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ================= 背景音樂 (BGM) 區域 ================= */}
         <div style={{ marginBottom: '24px', background: 'rgba(30, 41, 59, 0.6)', border: '1px solid #475569', borderRadius: '4px', padding: '16px' }}>

@@ -209,6 +209,20 @@ html, body {
     color: #f8fafc;
   }
 
+  .mobile-header-bar .gold-badge-chip {
+    position: static;
+    top: auto;
+    left: auto;
+    transform: none;
+    padding: 3px 10px;
+    font-size: 11px;
+    box-shadow: 1px 1px 0 #000;
+  }
+  .mobile-header-bar .gold-badge-chip:hover {
+    transform: none;
+    background: #334155;
+  }
+
   .mobile-deck-roster {
     display: flex;
     align-items: center;

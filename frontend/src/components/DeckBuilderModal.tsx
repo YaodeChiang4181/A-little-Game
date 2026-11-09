@@ -20,12 +20,14 @@ interface DeckBuilderModalProps {
   isOpen?: boolean;
   onClose: () => void;
   onOpenShop?: () => void;
+  allowCustomUpload?: boolean;
 }
 
 export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
   isOpen = true,
   onClose,
-  onOpenShop
+  onOpenShop,
+  allowCustomUpload = false
 }) => {
   if (!isOpen) return null;
   const [wallet, setWallet] = useState(getWallet());
@@ -106,7 +108,7 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
               [ 軍備庫 · 出征陣容編成 ]
             </h2>
             <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px' }}>
-              為 Lv.1 至 Lv.6 槽位挑選出戰棋子，支援自由上傳本地像素圖片換裝
+              為 Lv.1 至 Lv.6 槽位挑選出戰棋子，同階特職自由替換，配置個人專屬出征卡組
             </div>
           </div>
 
@@ -219,7 +221,7 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
                           <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>
                             LV.{candidate.level}
                           </span>
-                          {candidate.trait && (
+                          {candidate.trait ? (
                             <span
                               style={{
                                 fontSize: '10px',
@@ -232,11 +234,24 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
                             >
                               【{candidate.trait.badge}】
                             </span>
+                          ) : (
+                            <span
+                              style={{
+                                fontSize: '10px',
+                                background: '#334155',
+                                color: '#94a3b8',
+                                fontWeight: 'bold',
+                                padding: '1px 6px',
+                                borderRadius: '2px'
+                              }}
+                            >
+                              【常規】
+                            </span>
                           )}
                         </div>
 
                         <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.4', marginBottom: '4px' }}>
-                          {candidate.trait?.description}
+                          {candidate.trait ? candidate.trait.description : '[ 常規棋子 ] 純數字基礎戰力，專注於正面點數與奇偶賽局策略。'}
                         </div>
 
                         <div style={{ fontSize: '10px', color: '#64748b' }}>
@@ -273,37 +288,41 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
                             </button>
                           )}
 
-                          {/* 本機上傳圖片替換立繪 */}
-                          <button
-                            className="btn"
-                            style={{
-                              padding: '5px 0',
-                              fontSize: '11px',
-                              background: '#334155',
-                              borderColor: '#64748b'
-                            }}
-                            onClick={() => triggerUpload(candidate)}
-                          >
-                            {hasCustomAvatar ? '[ 更換自訂立繪 ]' : '[ 上傳像素立繪 ]'}
-                          </button>
+                          {/* 僅個人/開發者模式下才顯示立繪上傳 */}
+                          {allowCustomUpload && (
+                            <>
+                              <button
+                                className="btn"
+                                style={{
+                                  padding: '5px 0',
+                                  fontSize: '11px',
+                                  background: '#334155',
+                                  borderColor: '#64748b'
+                                }}
+                                onClick={() => triggerUpload(candidate)}
+                              >
+                                {hasCustomAvatar ? '[ 更換自訂立繪 ]' : '[ 上傳像素立繪 ]'}
+                              </button>
 
-                          {hasCustomAvatar && (
-                            <button
-                              className="btn"
-                              style={{
-                                padding: '3px 0',
-                                fontSize: '10px',
-                                background: 'transparent',
-                                borderColor: '#ef4444',
-                                color: '#f87171'
-                              }}
-                              onClick={() => {
-                                soundManager.playSfx('click');
-                                clearCustomCharacterAvatar(candidate.id);
-                              }}
-                            >
-                              [ 恢復官方像素 ]
-                            </button>
+                              {hasCustomAvatar && (
+                                <button
+                                  className="btn"
+                                  style={{
+                                    padding: '3px 0',
+                                    fontSize: '10px',
+                                    background: 'transparent',
+                                    borderColor: '#ef4444',
+                                    color: '#f87171'
+                                  }}
+                                  onClick={() => {
+                                    soundManager.playSfx('click');
+                                    clearCustomCharacterAvatar(candidate.id);
+                                  }}
+                                >
+                                  [ 恢復官方像素 ]
+                                </button>
+                              )}
+                            </>
                           )}
                         </>
                       ) : (

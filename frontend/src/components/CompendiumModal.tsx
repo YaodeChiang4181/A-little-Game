@@ -85,7 +85,7 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
                     <span style={{ fontSize: '10px', color: '#64748b', fontFamily: 'monospace' }}>
                       LV.{char.level}
                     </span>
-                    {char.trait && (
+                    {char.trait ? (
                       <span
                         style={{
                           fontSize: '10px',
@@ -98,11 +98,28 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
                       >
                         {char.trait.badge}
                       </span>
+                    ) : (
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          background: '#334155',
+                          color: '#94a3b8',
+                          padding: '1px 5px',
+                          borderRadius: '2px',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        常規
+                      </span>
                     )}
                   </div>
-                  {char.trait && (
+                  {char.trait ? (
                     <div style={{ fontSize: '12px', color: '#00ffcc', lineHeight: '1.6' }}>
                       【{char.trait.name}】{char.trait.description}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.6' }}>
+                      [ 常規兵種 ] 專注於正面點數對決與奇偶賽局策略，無特殊異能。
                     </div>
                   )}
                   {char.lore && (
