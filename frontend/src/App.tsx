@@ -52,6 +52,7 @@ export default function App() {
   const [dealStep, setDealStep] = useState(-1);       // 敵方飛牌動畫 (0, 1, 2, 3)
   const [resolveStep, setResolveStep] = useState(-1); // 逐格翻牌與結算動畫 (0, 1, 2, 3)
   const [pendingResult, setPendingResult] = useState<RoundResolutionResult | null>(null);
+  const [pendingNextSession, setPendingNextSession] = useState<GameSession | null>(null);
   const [battleLogs, setBattleLogs] = useState<SingleBattleRecord[]>([]);
 
   // 歷史戰況紀錄
@@ -129,6 +130,7 @@ export default function App() {
     setDealStep(-1);
     setResolveStep(-1);
     setPendingResult(null);
+    setPendingNextSession(null);
     setIsResolving(false);
     setEarnedGold(null);
 
@@ -210,10 +212,8 @@ export default function App() {
     setPendingResult(result);
     setBattleLogs([]);
 
-    // 更新下一回合 session 暫存
-    if (nextSession) {
-      setSession(nextSession);
-    }
+    // 暫存下一回合 session，待動畫與結算完全播畢後再過渡，避免當前戰場橫幅提前變異
+    setPendingNextSession(nextSession || null);
 
     // 啟動動畫序列：敵方卡片依序飛入戰場
     setDealStep(0);
@@ -297,11 +297,15 @@ export default function App() {
               setTimeout(() => soundManager.playSfx('coin'), 700);
             }
           } else {
-            // 自動過渡至下一回合
-            setDeployment([null, null, null]);
-            if (pendingResult.next_player_hand) {
+            // 自動過渡至下一回合：此時當前交鋒動畫全部播畢，正式套用下一回合的 session 與新戰場環境
+            if (pendingNextSession) {
+              setSession(pendingNextSession);
+              setHand(pendingNextSession.playerHand);
+              setPendingNextSession(null);
+            } else if (pendingResult.next_player_hand) {
               setHand(pendingResult.next_player_hand);
             }
+            setDeployment([null, null, null]);
           }
 
           setDealStep(-1);
@@ -867,22 +871,29 @@ export default function App() {
             </div>
 
             {/* 即時戰場戰術情報橫條 (全寬展開，徹底解決彈窗遮蔽卡牌與邊界截斷問題) */}
-            {inspectedTerrainIndex !== null && currentTerrains[inspectedTerrainIndex] && (
-              <div
-                className="terrain-stage-intel-bar"
-                onClick={() => setInspectedTerrainIndex(null)}
-              >
-                <span style={{ color: currentTerrains[inspectedTerrainIndex].color, fontWeight: 'bold' }}>
-                  [ {currentTerrains[inspectedTerrainIndex].name} · 倍率 x{currentTerrains[inspectedTerrainIndex].weight} ]
-                </span>
-                <span style={{ color: '#cbd5e1' }}>
-                  {currentTerrains[inspectedTerrainIndex].description}
-                </span>
-                <span style={{ marginLeft: 'auto', color: '#64748b', fontSize: '10px' }}>
-                  [ 點擊收起 ]
-                </span>
-              </div>
-            )}
+            {inspectedTerrainIndex !== null && (() => {
+              const activeTerrains = (isResolving && pendingResult?.battles)
+                ? pendingResult.battles.map(bt => bt.terrain)
+                : currentTerrains;
+              const targetTerrain = activeTerrains[inspectedTerrainIndex];
+              if (!targetTerrain) return null;
+              return (
+                <div
+                  className="terrain-stage-intel-bar"
+                  onClick={() => setInspectedTerrainIndex(null)}
+                >
+                  <span style={{ color: targetTerrain.color, fontWeight: 'bold' }}>
+                    [ {targetTerrain.name} · 倍率 x{targetTerrain.weight} ]
+                  </span>
+                  <span style={{ color: '#cbd5e1' }}>
+                    {targetTerrain.description}
+                  </span>
+                  <span style={{ marginLeft: 'auto', color: '#64748b', fontSize: '10px' }}>
+                    [ 點擊收起 ]
+                  </span>
+                </div>
+              );
+            })()}
 
             {/* 三大動態戰場佈署區 */}
             <div className="battlefield">
@@ -890,14 +901,16 @@ export default function App() {
                 const b = battleLogs[i];
                 const isClashing = resolveStep === i;
                 const hasDealt = dealStep > i || resolveStep >= 0;
-                const terrain = currentTerrains[i] || {
+                // 優先使用當前交鋒所綁定之真實戰場，保證橫幅、算式與倍率 100% 絕對一致
+                const activeBattle = b || pendingResult?.battles[i];
+                const terrain = (isResolving && activeBattle) ? activeBattle.terrain : (currentTerrains[i] || {
                   id: 'unknown',
                   name: `戰場 ${i + 1}`,
                   weight: i + 1,
                   icon: 'arena',
                   color: '#555',
                   description: ''
-                };
+                });
 
                 return (
                   <div key={i} className="field-slot">

@@ -13,7 +13,7 @@ import {
   applyCampfireTactics,
   generateFloorTerrains
 } from '../game/towerEngine';
-import { resolveTurn } from '../game/gameService';
+import { resolveTurn, GameSession } from '../game/gameService';
 import { Character, SingleBattleRecord, RoundResolutionResult } from '../game/types';
 import { TowerResultModal } from './TowerResultModal';
 import { addGold } from '../game/economy/wallet';
@@ -36,6 +36,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
   const [dealStep, setDealStep] = useState(-1);
   const [resolveStep, setResolveStep] = useState(-1);
   const [pendingResult, setPendingResult] = useState<RoundResolutionResult | null>(null);
+  const [pendingNextSession, setPendingNextSession] = useState<GameSession | null>(null);
   const [battleLogs, setBattleLogs] = useState<SingleBattleRecord[]>([]);
 
   // 當前回合數與承傷紀錄
@@ -140,17 +141,21 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
             addGold(25, '一命通關 奮戰慰問金');
             setTimeout(() => soundManager.playSfx('coin'), 600);
           } else {
-            // 自動過渡至該層下一回合 (換邊)
+            // 自動過渡至該層下一回合 (換邊與套用下一回合戰場)
             setState(prev => ({
               ...prev,
               playerHp: newPlayerHp,
-              floorDamageTaken: newFloorDamage
+              floorDamageTaken: newFloorDamage,
+              currentSession: pendingNextSession || prev.currentSession
             }));
-            setFloorRounds(prev => prev + 1);
-            setDeployment([null, null, null]);
-            if (pendingResult.next_player_hand) {
+            if (pendingNextSession) {
+              setHand(pendingNextSession.playerHand);
+              setPendingNextSession(null);
+            } else if (pendingResult.next_player_hand) {
               setHand(pendingResult.next_player_hand);
             }
+            setFloorRounds(prev => prev + 1);
+            setDeployment([null, null, null]);
           }
 
           setDealStep(-1);
@@ -224,10 +229,9 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
       if (currentFloorConfig.fixedTerrains || currentFloorConfig.isBoss) {
         nextSession.currentTerrains = generateFloorTerrains(currentFloorConfig);
       }
-      setState(prev => ({
-        ...prev,
-        currentSession: nextSession
-      }));
+      setPendingNextSession(nextSession);
+    } else {
+      setPendingNextSession(null);
     }
 
     setDealStep(0);
@@ -498,22 +502,29 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
             </div>
 
             {/* 即時戰場戰術情報橫條 (全寬展開，徹底解決彈窗遮蔽卡牌與邊界截斷問題) */}
-            {inspectedTerrainIndex !== null && currentTerrains[inspectedTerrainIndex] && (
-              <div
-                className="terrain-stage-intel-bar"
-                onClick={() => setInspectedTerrainIndex(null)}
-              >
-                <span style={{ color: currentTerrains[inspectedTerrainIndex].color, fontWeight: 'bold' }}>
-                  [ {currentTerrains[inspectedTerrainIndex].name} · 倍率 x{currentTerrains[inspectedTerrainIndex].weight} ]
-                </span>
-                <span style={{ color: '#cbd5e1' }}>
-                  {currentTerrains[inspectedTerrainIndex].description}
-                </span>
-                <span style={{ marginLeft: 'auto', color: '#64748b', fontSize: '10px' }}>
-                  [ 點擊收起 ]
-                </span>
-              </div>
-            )}
+            {inspectedTerrainIndex !== null && (() => {
+              const activeTerrains = (isResolving && pendingResult?.battles)
+                ? pendingResult.battles.map(bt => bt.terrain)
+                : currentTerrains;
+              const targetTerrain = activeTerrains[inspectedTerrainIndex];
+              if (!targetTerrain) return null;
+              return (
+                <div
+                  className="terrain-stage-intel-bar"
+                  onClick={() => setInspectedTerrainIndex(null)}
+                >
+                  <span style={{ color: targetTerrain.color, fontWeight: 'bold' }}>
+                    [ {targetTerrain.name} · 倍率 x{targetTerrain.weight} ]
+                  </span>
+                  <span style={{ color: '#cbd5e1' }}>
+                    {targetTerrain.description}
+                  </span>
+                  <span style={{ marginLeft: 'auto', color: '#64748b', fontSize: '10px' }}>
+                    [ 點擊收起 ]
+                  </span>
+                </div>
+              );
+            })()}
 
             {/* 戰場交鋒區 (嚴格套用 .battlefield 與 .field-slot) */}
             <div className="battlefield">
@@ -521,14 +532,16 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
                 const b = battleLogs[i];
                 const isClashing = resolveStep === i;
                 const hasDealt = dealStep > i || resolveStep >= 0;
-                const terrain = currentTerrains[i] || {
+                // 優先使用當前交鋒所綁定之真實戰場，保證橫幅、算式與倍率 100% 絕對一致
+                const activeBattle = b || pendingResult?.battles[i];
+                const terrain = (isResolving && activeBattle) ? activeBattle.terrain : (currentTerrains[i] || {
                   id: 'unknown',
                   name: `戰場 ${i + 1}`,
                   weight: i + 1,
                   icon: 'arena',
                   color: '#555',
                   description: ''
-                };
+                });
 
                 return (
                   <div key={i} className="field-slot">
