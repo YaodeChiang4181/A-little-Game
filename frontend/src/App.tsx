@@ -430,47 +430,50 @@ export default function App() {
         [ 圖鑑 ]
       </button>
 
-      {/* 頂部右上角：個人錢包金幣 (點擊亦可快速開啟商城，避開中央名冊) */}
-      <div
-        className={`gold-badge-chip desktop-only ${gameState === 'playing' ? 'in-battle' : ''}`}
-        onClick={() => {
-          soundManager.playSfx('click');
-          setShowShop(true);
-        }}
-        title="點擊開啟軍需商城"
-      >
-        <PixelCoinIcon size={14} />
-        <span>{wallet.gold.toLocaleString()} G</span>
+      {/* ============ 電腦版右上角導覽控制區 (Flex 排版，保證清晰街機間距) ============ */}
+      <div className="desktop-top-right-nav desktop-only">
+        {/* 個人錢包金幣 (點擊亦可快速開啟商城) */}
+        <div
+          className="gold-badge-chip"
+          onClick={() => {
+            soundManager.playSfx('click');
+            setShowShop(true);
+          }}
+          title="點擊開啟軍需商城"
+        >
+          <PixelCoinIcon size={14} />
+          <span>{wallet.gold.toLocaleString()} G</span>
+        </div>
+
+        {/* 電腦版設定按鈕 (僅在 idle 首頁右上角顯示，與左上角圖鑑對稱) */}
+        {gameState === 'idle' && (
+          <button
+            className="settings-btn"
+            onClick={() => {
+              soundManager.playSfx('click');
+              setShowSettings(true);
+            }}
+          >
+            [ 設定 ]
+          </button>
+        )}
+
+        {/* 電腦版 Menu 選單按鈕 (僅在 playing 戰鬥中顯示為局內暫停與設定選單) */}
+        {gameState === 'playing' && !showTutorial && !showMenu && (
+          <button
+            className="help-btn"
+            onClick={() => {
+              soundManager.playSfx('click');
+              setShowMenu(true);
+            }}
+            style={{ display: 'flex', flexDirection: 'column', padding: '8px' }}
+          >
+            <div style={{ width: '24px', height: '4px', background: '#fff', margin: '2px 0' }} />
+            <div style={{ width: '24px', height: '4px', background: '#fff', margin: '2px 0' }} />
+            <div style={{ width: '24px', height: '4px', background: '#fff', margin: '2px 0' }} />
+          </button>
+        )}
       </div>
-
-      {/* 電腦版設定按鈕 (僅在 idle 首頁右上角顯示，與左上角圖鑑對稱) */}
-      {gameState === 'idle' && (
-        <button
-          className="settings-btn desktop-only"
-          onClick={() => {
-            soundManager.playSfx('click');
-            setShowSettings(true);
-          }}
-        >
-          [ 設定 ]
-        </button>
-      )}
-
-      {/* 電腦版 Menu 選單按鈕 (僅在 playing 戰鬥中顯示為局內暫停與設定選單) */}
-      {gameState === 'playing' && !showTutorial && !showMenu && (
-        <button
-          className="help-btn desktop-only"
-          onClick={() => {
-            soundManager.playSfx('click');
-            setShowMenu(true);
-          }}
-          style={{ display: 'flex', flexDirection: 'column', padding: '8px' }}
-        >
-          <div style={{ width: '24px', height: '4px', background: '#fff', margin: '2px 0' }} />
-          <div style={{ width: '24px', height: '4px', background: '#fff', margin: '2px 0' }} />
-          <div style={{ width: '24px', height: '4px', background: '#fff', margin: '2px 0' }} />
-        </button>
-      )}
 
       {/* ============ 手機版專屬頂部導覽與 HUD 狀態列 (Docked Top Header) ============ */}
       <header className="mobile-header-bar mobile-only">

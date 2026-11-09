@@ -767,13 +767,33 @@ html, body {
   background: #334155;
 }
 
-/* 金幣計數晶片 (電腦版右上角佈局，徹底避開中央對陣名冊) */
-.gold-badge-chip {
+/* ================= 電腦版頂部右上角控制區 (Flex 容器，具備 12px 舒適街機間距) ================= */
+.desktop-top-right-nav {
   position: absolute;
   top: 15px;
-  right: 98px;
+  right: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 100;
+}
+.desktop-top-right-nav .gold-badge-chip,
+.desktop-top-right-nav .settings-btn,
+.desktop-top-right-nav .help-btn {
+  position: static;
+  top: auto;
+  right: auto;
   left: auto;
   transform: none;
+}
+.desktop-top-right-nav .gold-badge-chip:hover,
+.desktop-top-right-nav .settings-btn:hover,
+.desktop-top-right-nav .help-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* 金幣計數晶片 */
+.gold-badge-chip {
   background: rgba(15, 23, 42, 0.92);
   color: #ffcc00;
   border: 2px solid #ffcc00;
@@ -792,10 +812,6 @@ html, body {
 .gold-badge-chip:hover {
   background: #334155;
   transform: translateY(-2px);
-}
-/* 對局中：右上角為 [ ☰ ] 選單按鈕 (寬度約44px)，金幣移至 right: 68px 緊鄰其左側 */
-.gold-badge-chip.in-battle {
-  right: 68px;
 }
 
 /* ================= 角色特性與戰場環境全新 UI 樣式 ================= */
