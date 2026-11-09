@@ -475,12 +475,16 @@ html, body {
 .card:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #000; }
 
 /* 角色卡片子元素適配 */
-.card-icon-container svg {
+.card-icon-container svg,
+.card-icon-container img {
   width: 28px;
   height: 28px;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 @media (min-width: 900px) {
-  .card-icon-container svg {
+  .card-icon-container svg,
+  .card-icon-container img {
     width: 36px;
     height: 36px;
   }
@@ -1550,9 +1554,12 @@ html, body {
   padding: 2px !important;
   margin: 0;
 }
-.candidate-thumb-card .card .card-icon-container svg {
+.candidate-thumb-card .card .card-icon-container svg,
+.candidate-thumb-card .card .card-icon-container img {
   width: 28px !important;
   height: 28px !important;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 .candidate-thumb-card .card-name-text {
   font-size: 11px !important;
@@ -1567,9 +1574,12 @@ html, body {
   padding: 2px !important;
   margin: 0;
 }
-.shop-thumb-card .card .card-icon-container svg {
+.shop-thumb-card .card .card-icon-container svg,
+.shop-thumb-card .card .card-icon-container img {
   width: 28px !important;
   height: 28px !important;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 .shop-thumb-card .card-name-text {
   font-size: 11px !important;
@@ -1609,9 +1619,12 @@ html, body {
     box-shadow: 1px 1px 0 #000 !important;
     padding: 1px !important;
   }
-  .deck-mini-card .card .card-icon-container svg {
+  .deck-mini-card .card .card-icon-container svg,
+  .deck-mini-card .card .card-icon-container img {
     width: 18px !important;
     height: 18px !important;
+    object-fit: contain;
+    image-rendering: pixelated;
   }
   .deck-mini-card .card-name-text {
     font-size: 8px !important;

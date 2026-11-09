@@ -50,7 +50,7 @@ export const INITIAL_CHARACTERS: Character[] = [
     id: 'bishop',
     name: '主教',
     level: 4,
-    avatar: { type: 'unicode', src: 'bishop' },
+    avatar: { type: 'image', src: '/avatars/bishop.gif' },
     themeColor: '#26a69a',
     lore: '掌握戰局節奏的先導者，正面戰力充裕。'
   },
@@ -95,7 +95,7 @@ export const SHOP_CHARACTERS: Character[] = [
     level: 1,
     price: 300,
     category: 'shop',
-    avatar: { type: 'unicode', src: 'rogue' },
+    avatar: { type: 'image', src: '/avatars/rogue.gif' },
     themeColor: '#10b981',
     lore: '穿行於陰影之中的奇襲者，專門截斷並奪取對手的氣勢。',
     trait: {

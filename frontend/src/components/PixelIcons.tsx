@@ -123,6 +123,23 @@ export const PixelPieceIcon: React.FC<{
   size?: number;
   color?: 'white' | 'black';
 }> = ({ type, size = 36, color = 'white' }) => {
+  if (type && (type.includes('/') || type.includes('.') || type.startsWith('data:'))) {
+    return (
+      <img
+        src={type}
+        alt=""
+        style={{
+          width: `${size}px`,
+          height: `${size}px`,
+          objectFit: 'contain',
+          imageRendering: 'pixelated',
+          display: 'inline-block',
+          verticalAlign: 'middle'
+        }}
+      />
+    );
+  }
+
   const isWhite = color === 'white';
   const mainColor = isWhite ? '#f8fafc' : '#1e293b';
   const shadeColor = isWhite ? '#cbd5e1' : '#0f172a';

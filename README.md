@@ -119,6 +119,10 @@ npm run dev
       * **全平台適配**：電腦版 `deck-info-box`、手機版頂部 `mobile-deck-roster` 及雲端連機 `OnlineMatchView` 全面同步支援同階對位展示。
     * **雲端連機大廳「加入對決」按鈕恆常穩定 (`OnlineLobbyModal.tsx`)**：
       * 移除「連線加入對決！」按鈕之無限呼吸縮放動畫（`animation: none`，移除 `engage` 類別），改為恆常穩定的硬派深紅像素按鈕，消除視覺干擾。
+    * **官方動態像素立繪全面支援（主教與盜賊 32x32 點陣逐格動畫）**：
+      * 將專案目錄下的 `主教動畫-32x32-7f.gif` 與 `盜賊動畫-32x32-8f.gif` 整合納入 `frontend/public/avatars/` 靜態資產庫。
+      * 於模組庫 (`characters.ts`) 將主教 (`bishop`) 與特職盜賊 (`rogue`) 的頭像立繪升級為動態 GIF 像素立繪。
+      * 升級 `PixelPieceIcon` 與 `CardView` 之圖片適配層，支援點陣硬邊縮放 (`image-rendering: pixelated`)，無論在卡牌、手牌、戰場出征槽、軍備庫、圖鑑還是對陣名冊中，皆能全自動流暢演繹 32x32 點陣逐格動畫。
     * **純化【無 Emoji】專業像素街機美學**：
       * 全域頂部按鈕（圖鑑、設定、選單、金幣、名冊晶片）全面移除圓角，統一採用 `border-radius: 0px !important` 純直角邊框搭配 `2px 2px 0px #000` 硬派像素黑曜岩陰影，嚴格禁止任何 Emoji 表情符號。
 
