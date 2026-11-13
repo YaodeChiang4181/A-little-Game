@@ -816,11 +816,20 @@ export default function App() {
               [ 4選3手牌管理 · 角色專屬特性 · 動態環境戰場 ]
             </div>
 
-            {/* 4 顆核心模式按鈕 (2x2 對稱排版，無重複干擾) */}
+            {/* 4 顆核心模式按鈕 (2x2 對稱排版，統一主題亮色像素邊框與高度) */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(130px, 190px))', gap: '14px', justifyContent: 'center', maxWidth: '420px', margin: '0 auto' }}>
               <button
                 className="btn"
-                style={{ background: '#0f766e', fontSize: 'clamp(13px, 3.2vw, 16px)', padding: '12px 14px' }}
+                style={{
+                  background: '#0f766e',
+                  border: '2px solid #2dd4bf',
+                  fontSize: 'clamp(13px, 3.2vw, 16px)',
+                  padding: '10px 14px',
+                  minHeight: '52px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
                 onClick={() => startGame(true)}
               >
                 新手指南
@@ -828,7 +837,16 @@ export default function App() {
 
               <button
                 className="btn"
-                style={{ background: '#dc2626', fontSize: 'clamp(13px, 3.2vw, 16px)', padding: '12px 14px' }}
+                style={{
+                  background: '#dc2626',
+                  border: '2px solid #f87171',
+                  fontSize: 'clamp(13px, 3.2vw, 16px)',
+                  padding: '10px 14px',
+                  minHeight: '52px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
                 onClick={() => startGame(false)}
               >
                 經典單局
@@ -840,7 +858,11 @@ export default function App() {
                   background: '#0284c7',
                   border: '2px solid #38bdf8',
                   fontSize: 'clamp(13px, 3.2vw, 16px)',
-                  padding: '12px 14px'
+                  padding: '10px 14px',
+                  minHeight: '52px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
                 onClick={() => {
                   soundManager.playSfx('click');
@@ -854,9 +876,10 @@ export default function App() {
                 className="btn"
                 style={{
                   background: '#1e3a8a',
-                  border: '2px solid #3b82f6',
+                  border: '2px solid #60a5fa',
                   fontSize: 'clamp(13px, 3.2vw, 16px)',
                   padding: '10px 14px',
+                  minHeight: '52px',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
