@@ -11,6 +11,9 @@ interface CardViewProps {
   isClashing?: boolean;
   isUnselectedHand?: boolean; // 4選3中尚未佈署的手牌
   isRevealed?: boolean; // 是否翻開揭示 (敵方暗牌/揭曉動畫)
+  isLiftingOff?: boolean; // L4 手牌起跳躍離動畫 (點選手牌跳出)
+  isDropIn?: boolean; // L1 戰場破空砸入彈跳動畫 (落入卡槽)
+  isRecalling?: boolean; // 戰場卡牌撤回躍出動畫 (回到手牌)
   onClick?: () => void;
   showTooltip?: boolean;
 }
@@ -23,6 +26,9 @@ export const CardView: React.FC<CardViewProps> = ({
   isClashing,
   isUnselectedHand,
   isRevealed = true,
+  isLiftingOff = false,
+  isDropIn = false,
+  isRecalling = false,
   onClick,
   showTooltip = true
 }) => {
@@ -66,9 +72,13 @@ export const CardView: React.FC<CardViewProps> = ({
   const isImg = customAvatar ? true : character.avatar.type === 'image';
   const avatarSrc = customAvatar || character.avatar.src;
 
+  const liftClass = isLiftingOff ? 'card-lift-off ' : '';
+  const dropClass = isDropIn ? 'card-drop-in ' : '';
+  const recallClass = isRecalling ? 'card-recall-out ' : '';
+
   return (
     <div
-      className={`card ${color}-piece ${animClass} ${isUnselectedHand ? 'unselected-hand-card' : ''}`}
+      className={`card ${color}-piece ${animClass}${liftClass}${dropClass}${recallClass}${isUnselectedHand ? 'unselected-hand-card' : ''}`.trim()}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}

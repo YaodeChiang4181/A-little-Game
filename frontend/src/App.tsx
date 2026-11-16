@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './index.css';
 import { Character, SingleBattleRecord, RoundResolutionResult } from './game/types';
 import { initGameSession, resolveTurn, GameSession, groupRosterByTier } from './game/gameService';
@@ -47,6 +47,17 @@ export default function App() {
   // 當前戰場 3 槽位的佈署
   const [deployment, setDeployment] = useState<(Character | null)[]>([null, null, null]);
 
+  // 連貫動效狀態 (L4 手牌起跳 ➔ L1 戰場砸入 ➔ L2 卡槽高光)
+  const [liftingHandIndex, setLiftingHandIndex] = useState<number | null>(null);
+  const [animatingSlot, setAnimatingSlot] = useState<number | null>(null);
+  const [recallingSlot, setRecallingSlot] = useState<number | null>(null);
+
+  // 防快速連擊與定時器嚴謹管理 (避免記憶體洩漏與競態錯位)
+  const isDeployingRef = useRef(false);
+  const deployTimerRef = useRef<number | null>(null);
+  const dropTimerRef = useRef<number | null>(null);
+  const recallTimerRef = useRef<number | null>(null);
+
   // 動畫與結算狀態
   const [isResolving, setIsResolving] = useState(false);
   const [dealStep, setDealStep] = useState(-1);       // 敵方飛牌動畫 (0, 1, 2, 3)
@@ -80,6 +91,34 @@ export default function App() {
     });
     return unsub;
   }, []);
+
+  // 卸載時安全回收連貫動效定時器 (防止記憶體洩漏與卸載更新)
+  useEffect(() => {
+    return () => {
+      if (deployTimerRef.current) window.clearTimeout(deployTimerRef.current);
+      if (dropTimerRef.current) window.clearTimeout(dropTimerRef.current);
+      if (recallTimerRef.current) window.clearTimeout(recallTimerRef.current);
+    };
+  }, []);
+
+  const clearDeployTimers = () => {
+    if (deployTimerRef.current) {
+      window.clearTimeout(deployTimerRef.current);
+      deployTimerRef.current = null;
+    }
+    if (dropTimerRef.current) {
+      window.clearTimeout(dropTimerRef.current);
+      dropTimerRef.current = null;
+    }
+    if (recallTimerRef.current) {
+      window.clearTimeout(recallTimerRef.current);
+      recallTimerRef.current = null;
+    }
+    isDeployingRef.current = false;
+    setLiftingHandIndex(null);
+    setAnimatingSlot(null);
+    setRecallingSlot(null);
+  };
 
   // 初次互動解鎖音訊上下文並啟動 BGM (若已啟用)
   useEffect(() => {
@@ -155,40 +194,73 @@ export default function App() {
 
   /**
    * 點選手牌：佈署進第一個空的戰場槽位
+   * L4 (手牌起跳 80ms) ➔ L1 (戰場砸入 200ms) ➔ L2 (卡槽高光 180ms 同步)
    */
   const handleCardClick = (card: Character, index: number) => {
-    if (isResolving) return;
+    if (isResolving || isDeployingRef.current) return;
     const emptySlot = deployment.findIndex(s => s === null);
     if (emptySlot !== -1) {
+      isDeployingRef.current = true;
       soundManager.ensureContext();
-      const newDeployment = [...deployment];
-      newDeployment[emptySlot] = card;
-      setDeployment(newDeployment);
 
-      const newHand = [...hand];
-      newHand.splice(index, 1);
-      setHand(newHand);
+      // Phase 1 L4：手牌起跳 (80ms 後真正從手牌移除並砸入槽位)
+      setLiftingHandIndex(index);
 
-      const count = newDeployment.filter(c => c !== null).length;
-      if (count === 3) {
-        soundManager.playSfx('deployReady');
-      } else {
-        soundManager.playSfx('cardDeploy');
-      }
+      deployTimerRef.current = window.setTimeout(() => {
+        // 實際資料異動：手牌移除、槽位放入
+        const newDeployment = [...deployment];
+        newDeployment[emptySlot] = card;
+        setDeployment(newDeployment);
+
+        const newHand = [...hand];
+        newHand.splice(index, 1);
+        setHand(newHand);
+
+        // Phase 2 L1：戰場砸入動畫 + L2 卡槽高光
+        setLiftingHandIndex(null);
+        setAnimatingSlot(emptySlot);
+
+        const count = newDeployment.filter(c => c !== null).length;
+        if (count === 3) {
+          soundManager.playSfx('deployReady');
+        } else {
+          soundManager.playSfx('cardDeploy');
+        }
+
+        // 200ms 後清除砸入動畫，解鎖點擊
+        dropTimerRef.current = window.setTimeout(() => {
+          setAnimatingSlot(null);
+          isDeployingRef.current = false;
+          dropTimerRef.current = null;
+        }, 200);
+
+        deployTimerRef.current = null;
+      }, 80);
     }
   };
 
   /**
    * 點選戰場槽位：撤回卡牌至手牌區
+   * 撤回時微躍消散 (card-recall-out 80ms)
    */
   const handleSlotClick = (card: Character | null, index: number) => {
-    if (isResolving || card === null) return;
+    if (isResolving || card === null || isDeployingRef.current) return;
+    isDeployingRef.current = true;
     soundManager.ensureContext();
     soundManager.playSfx('cardRecall');
-    setHand(prev => [...prev, card]);
-    const newDeployment = [...deployment];
-    newDeployment[index] = null;
-    setDeployment(newDeployment);
+
+    // 先播撤回動畫
+    setRecallingSlot(index);
+
+    recallTimerRef.current = window.setTimeout(() => {
+      setHand(prev => [...prev, card]);
+      const newDeployment = [...deployment];
+      newDeployment[index] = null;
+      setDeployment(newDeployment);
+      setRecallingSlot(null);
+      isDeployingRef.current = false;
+      recallTimerRef.current = null;
+    }, 80);
   };
 
   /**
@@ -197,6 +269,9 @@ export default function App() {
   const submitDeployment = () => {
     const deployedCount = deployment.filter(c => c !== null).length;
     if (deployedCount < 3 || !session || isResolving) return;
+
+    // 提交時清除任何殘留動畫狀態
+    clearDeployTimers();
 
     setInspectedTerrainIndex(null);
     soundManager.ensureContext();
@@ -777,6 +852,7 @@ export default function App() {
                       character={card}
                       color="white"
                       isUnselectedHand={isStandbyCard}
+                      isLiftingOff={liftingHandIndex === i}
                     />
                   </div>
                 );
@@ -1043,7 +1119,7 @@ export default function App() {
 
                     {/* 我方陣地 */}
                     <div
-                      className="slot-card-box"
+                      className={`slot-card-box${animatingSlot === i ? ' slot-lock-flash' : ''}`}
                       onClick={() => handleSlotClick(playerChar, i)}
                     >
                       <CardView
@@ -1052,6 +1128,8 @@ export default function App() {
                         isWinner={b?.winner === 'player'}
                         isLoser={b?.winner === 'enemy'}
                         isClashing={isClashing}
+                        isDropIn={animatingSlot === i}
+                        isRecalling={recallingSlot === i}
                       />
                     </div>
                   </div>
@@ -1124,6 +1202,7 @@ export default function App() {
                     character={card}
                     color="white"
                     isUnselectedHand={isStandbyCard}
+                    isLiftingOff={liftingHandIndex === i}
                   />
                 </div>
               );

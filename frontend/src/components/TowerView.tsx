@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CardView } from './CardView';
 import { TerrainBanner } from './TerrainBanner';
 import { PixelHeart } from './PixelIcons';
@@ -30,6 +30,15 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
   // 當前戰場 3 槽位佈署
   const [deployment, setDeployment] = useState<(Character | null)[]>([null, null, null]);
   const [hand, setHand] = useState<Character[]>([]);
+
+  // 連貫動效狀態 (L4 ➔ L1 ➔ L2)
+  const [liftingHandIndex, setLiftingHandIndex] = useState<number | null>(null);
+  const [animatingSlot, setAnimatingSlot] = useState<number | null>(null);
+  const [recallingSlot, setRecallingSlot] = useState<number | null>(null);
+  const isDeployingRef = useRef(false);
+  const deployTimerRef = useRef<number | null>(null);
+  const dropTimerRef = useRef<number | null>(null);
+  const recallTimerRef = useRef<number | null>(null);
 
   // 動畫與結算狀態
   const [isResolving, setIsResolving] = useState(false);
@@ -172,44 +181,79 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
     }
   }, [resolveStep, pendingResult]);
 
-  // 手牌操作：點選手牌佈署至第一個空槽位
+  // 手牌操作：點選手牌佈署至第一個空槽位 (L4 ➔ L1 連貫動效)
   const handleCardClick = (card: Character, index: number) => {
-    if (isResolving) return;
+    if (isResolving || isDeployingRef.current) return;
     const emptySlot = deployment.findIndex(s => s === null);
     if (emptySlot !== -1) {
+      isDeployingRef.current = true;
       soundManager.ensureContext();
-      const newDeployment = [...deployment];
-      newDeployment[emptySlot] = card;
-      setDeployment(newDeployment);
 
-      const newHand = [...hand];
-      newHand.splice(index, 1);
-      setHand(newHand);
+      setLiftingHandIndex(index);
 
-      const count = newDeployment.filter(c => c !== null).length;
-      if (count === 3) {
-        soundManager.playSfx('deployReady');
-      } else {
-        soundManager.playSfx('cardDeploy');
-      }
+      deployTimerRef.current = window.setTimeout(() => {
+        const newDeployment = [...deployment];
+        newDeployment[emptySlot] = card;
+        setDeployment(newDeployment);
+
+        const newHand = [...hand];
+        newHand.splice(index, 1);
+        setHand(newHand);
+
+        setLiftingHandIndex(null);
+        setAnimatingSlot(emptySlot);
+
+        const count = newDeployment.filter(c => c !== null).length;
+        if (count === 3) {
+          soundManager.playSfx('deployReady');
+        } else {
+          soundManager.playSfx('cardDeploy');
+        }
+
+        dropTimerRef.current = window.setTimeout(() => {
+          setAnimatingSlot(null);
+          isDeployingRef.current = false;
+          dropTimerRef.current = null;
+        }, 200);
+
+        deployTimerRef.current = null;
+      }, 80);
     }
   };
 
-  // 槽位操作：點選已佈署槽位撤回手牌
+  // 槽位操作：點選已佈署槽位撤回手牌 (card-recall-out 80ms)
   const handleSlotClick = (card: Character | null, index: number) => {
-    if (isResolving || card === null) return;
+    if (isResolving || card === null || isDeployingRef.current) return;
+    isDeployingRef.current = true;
     soundManager.ensureContext();
     soundManager.playSfx('cardRecall');
-    setHand(prev => [...prev, card]);
-    const newDeployment = [...deployment];
-    newDeployment[index] = null;
-    setDeployment(newDeployment);
+
+    setRecallingSlot(index);
+
+    recallTimerRef.current = window.setTimeout(() => {
+      setHand(prev => [...prev, card]);
+      const newDeployment = [...deployment];
+      newDeployment[index] = null;
+      setDeployment(newDeployment);
+      setRecallingSlot(null);
+      isDeployingRef.current = false;
+      recallTimerRef.current = null;
+    }, 80);
   };
 
   // 提交佈署開始決鬥
   const submitDeployment = () => {
     const deployedCount = deployment.filter(c => c !== null).length;
     if (deployedCount < 3 || !state.currentSession || isResolving) return;
+
+    // 提交時清除殘留動畫定時器
+    if (deployTimerRef.current) { window.clearTimeout(deployTimerRef.current); deployTimerRef.current = null; }
+    if (dropTimerRef.current) { window.clearTimeout(dropTimerRef.current); dropTimerRef.current = null; }
+    if (recallTimerRef.current) { window.clearTimeout(recallTimerRef.current); recallTimerRef.current = null; }
+    isDeployingRef.current = false;
+    setLiftingHandIndex(null);
+    setAnimatingSlot(null);
+    setRecallingSlot(null);
 
     setInspectedTerrainIndex(null);
     soundManager.ensureContext();
@@ -468,6 +512,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
                       character={card}
                       color="white"
                       isUnselectedHand={isDeployReady}
+                      isLiftingOff={liftingHandIndex === i}
                     />
                   </div>
                 ))}
@@ -612,7 +657,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
 
                     {/* 玩家卡槽 */}
                     <div
-                      className="slot-card-box"
+                      className={`slot-card-box${animatingSlot === i ? ' slot-lock-flash' : ''}`}
                       onClick={() => handleSlotClick(playerChar, i)}
                     >
                       {playerChar ? (
@@ -622,6 +667,8 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
                           isWinner={b?.winner === 'player'}
                           isLoser={b?.winner === 'enemy'}
                           isClashing={isClashing}
+                          isDropIn={animatingSlot === i}
+                          isRecalling={recallingSlot === i}
                         />
                       ) : (
                         <div
@@ -721,6 +768,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
                     character={card}
                     color="white"
                     isUnselectedHand={isDeployReady}
+                    isLiftingOff={liftingHandIndex === i}
                   />
                 </div>
               ))}

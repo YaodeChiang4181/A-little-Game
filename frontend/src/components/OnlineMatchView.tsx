@@ -47,6 +47,15 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
   const [pendingResult, setPendingResult] = useState<RoundResolutionResult | null>(null);
   const [battleLogs, setBattleLogs] = useState<SingleBattleRecord[]>([]);
 
+  // 連貫動效狀態 (L4 ➔ L1 ➔ L2)
+  const [liftingHandIndex, setLiftingHandIndex] = useState<number | null>(null);
+  const [animatingSlot, setAnimatingSlot] = useState<number | null>(null);
+  const [recallingSlot, setRecallingSlot] = useState<number | null>(null);
+  const isDeployingRef2 = useRef(false);
+  const deployTimerRef2 = useRef<number | null>(null);
+  const dropTimerRef2 = useRef<number | null>(null);
+  const recallTimerRef2 = useRef<number | null>(null);
+
   // 狀態與歷史
   const [gameOver, setGameOver] = useState<boolean>(false);
   const [winner, setWinner] = useState<'me' | 'opponent' | null>(null);
@@ -279,38 +288,64 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
    * 點選手牌：佈署進戰場
    */
   const handleCardClick = (card: Character, index: number) => {
-    if (isResolving || myReady) return;
+    if (isResolving || myReady || isDeployingRef2.current) return;
     const emptySlot = myDeployment.findIndex(s => s === null);
     if (emptySlot !== -1) {
+      isDeployingRef2.current = true;
       soundManager.ensureContext();
-      const newDeployment = [...myDeployment];
-      newDeployment[emptySlot] = card;
-      setMyDeployment(newDeployment);
 
-      const newHand = [...myHand];
-      newHand.splice(index, 1);
-      setMyHand(newHand);
+      setLiftingHandIndex(index);
 
-      const count = newDeployment.filter(c => c !== null).length;
-      if (count === 3) {
-        soundManager.playSfx('deployReady');
-      } else {
-        soundManager.playSfx('cardDeploy');
-      }
+      deployTimerRef2.current = window.setTimeout(() => {
+        const newDeployment = [...myDeployment];
+        newDeployment[emptySlot] = card;
+        setMyDeployment(newDeployment);
+
+        const newHand = [...myHand];
+        newHand.splice(index, 1);
+        setMyHand(newHand);
+
+        setLiftingHandIndex(null);
+        setAnimatingSlot(emptySlot);
+
+        const count = newDeployment.filter(c => c !== null).length;
+        if (count === 3) {
+          soundManager.playSfx('deployReady');
+        } else {
+          soundManager.playSfx('cardDeploy');
+        }
+
+        dropTimerRef2.current = window.setTimeout(() => {
+          setAnimatingSlot(null);
+          isDeployingRef2.current = false;
+          dropTimerRef2.current = null;
+        }, 200);
+
+        deployTimerRef2.current = null;
+      }, 80);
     }
   };
 
   /**
-   * 點選戰場槽位：撤回卡牌
+   * 點選戰場槽位：撤回卡牌 (card-recall-out 80ms)
    */
   const handleSlotClick = (card: Character | null, index: number) => {
-    if (isResolving || card === null || myReady) return;
+    if (isResolving || card === null || myReady || isDeployingRef2.current) return;
+    isDeployingRef2.current = true;
     soundManager.ensureContext();
     soundManager.playSfx('cardRecall');
-    setMyHand(prev => [...prev, card]);
-    const newDeployment = [...myDeployment];
-    newDeployment[index] = null;
-    setMyDeployment(newDeployment);
+
+    setRecallingSlot(index);
+
+    recallTimerRef2.current = window.setTimeout(() => {
+      setMyHand(prev => [...prev, card]);
+      const newDeployment = [...myDeployment];
+      newDeployment[index] = null;
+      setMyDeployment(newDeployment);
+      setRecallingSlot(null);
+      isDeployingRef2.current = false;
+      recallTimerRef2.current = null;
+    }, 80);
   };
 
   /**
@@ -319,6 +354,15 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
   const submitDeployment = () => {
     const deployed = myDeployment.filter(c => c !== null) as Character[];
     if (deployed.length < 3 || isResolving || myReady) return;
+
+    // 提交時清除殘留動畫定時器
+    if (deployTimerRef2.current) { window.clearTimeout(deployTimerRef2.current); deployTimerRef2.current = null; }
+    if (dropTimerRef2.current) { window.clearTimeout(dropTimerRef2.current); dropTimerRef2.current = null; }
+    if (recallTimerRef2.current) { window.clearTimeout(recallTimerRef2.current); recallTimerRef2.current = null; }
+    isDeployingRef2.current = false;
+    setLiftingHandIndex(null);
+    setAnimatingSlot(null);
+    setRecallingSlot(null);
 
     soundManager.ensureContext();
     soundManager.playSfx('startClash');
@@ -576,6 +620,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
                 character={card}
                 color="white"
                 isUnselectedHand={isDeployReady}
+                isLiftingOff={liftingHandIndex === i}
               />
             </div>
           ))}
@@ -770,7 +815,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
 
                 {/* 我方陣地 */}
                 <div
-                  className="slot-card-box"
+                  className={`slot-card-box${animatingSlot === i ? ' slot-lock-flash' : ''}`}
                   onClick={() => handleSlotClick(playerChar, i)}
                 >
                   <CardView
@@ -779,6 +824,8 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
                     isWinner={isMyWin}
                     isLoser={isOpWin}
                     isClashing={isClashing}
+                    isDropIn={animatingSlot === i}
+                    isRecalling={recallingSlot === i}
                   />
                 </div>
               </div>
@@ -841,6 +888,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
                 character={card}
                 color="white"
                 isUnselectedHand={isDeployReady}
+                isLiftingOff={liftingHandIndex === i}
               />
             </div>
           ))}
