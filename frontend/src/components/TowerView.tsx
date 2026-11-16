@@ -221,7 +221,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
     }
   };
 
-  // 槽位操作：點選已佈署槽位撤回手牌 (card-recall-out 80ms)
+  // 槽位操作：點選已佈署槽位撤回手牌 (card-recall-out 0.3s)
   const handleSlotClick = (card: Character | null, index: number) => {
     if (isResolving || card === null || isDeployingRef.current) return;
     isDeployingRef.current = true;

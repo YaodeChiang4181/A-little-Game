@@ -115,11 +115,11 @@ npm run dev
     * **物理高度矩陣統一**：四顆按鈕統一宣告 `minHeight: 52px` 與 Flex 居中，徹底根治因副標題有無產生的上下高低落差。
   * **L4 → L1 連貫入場動畫系統 (Pixel Deploy Animation Chain)**：
     * **CardView 動畫 Props 擴充** (`src/components/CardView.tsx`)：新增 `isLiftingOff?: boolean`（手牌起跳躍離）、`isDropIn?: boolean`（戰場破空砸入）、`isRecalling?: boolean`（撤回微躍消散）三個可選屬性，並組合進主容器 className。
-    * **L4 手牌起跳 `card-lift-off` (80ms)**：點擊手牌後，卡牌即刻向上躍離並淡出（`translateY(-16px)` + `steps(4, end)` 階梯動畫），強化街機「拔刀出鞘」手感。
-    * **L1 戰場破空砸入 `card-drop-in` (200ms)**：手牌躍離 80ms 後，槽位接收卡牌同步觸發由上往下破空落地 (`translateY(-24px)` ➔ `0`) + 觸底 Squash & Stretch 垂直壓縮彈跳，配合 `cubic-bezier(0.175, 0.885, 0.32, 1.275)` 實現硬派爆發彈性。
-    * **L2 卡槽鎖定高光 `slot-lock-flash` (180ms)**：卡牌觸底同步，`.slot-card-box` 外框觸發青金直角像素高光向外擴散，強化戰備鎖定感。
-    * **逆向撤回動效 `card-recall-out` (80ms)**：點擊槽位撤回時，槽內卡牌微躍向上並淡出消散再回到手牌區，與入場形成對稱手感。
-    * **互斥鎖防快速連擊** (`App.tsx`、`TowerView.tsx`、`OnlineMatchView.tsx`)：引入 `isDeployingRef` (`useRef(false)`) 互斥機制，在 80ms 動畫過渡期間阻斷二次點擊，防止競態條件與扣牌錯位。
+    * **L4 手牌起跳 `card-lift-off` (0.3s)**：點擊手牌後，卡牌即刻向上躍離並淡出（`translateY(-16px)` + `steps(4, end)` 階梯動畫），強化街機「拔刀出鞘」手感。
+    * **L1 戰場破空砸入 `card-drop-in` (200ms)**：手牌躍離 0.3s 後，槽位接收卡牌同步觸發由上往下破空落地 (`translateY(-24px)` ➔ `0`) + 觸底 Squash & Stretch 垂直壓縮彈跳，配合 `cubic-bezier(0.175, 0.885, 0.32, 1.275)` 實現硬派爆發彈性。
+    * **L2 卡槽鎖定高光 `slot-lock-flash` (10.3s)**：卡牌觸底同步，`.slot-card-box` 外框觸發青金直角像素高光向外擴散，強化戰備鎖定感。
+    * **逆向撤回動效 `card-recall-out` (0.3s)**：點擊槽位撤回時，槽內卡牌微躍向上並淡出消散再回到手牌區，與入場形成對稱手感。
+    * **互斥鎖防快速連擊** (`App.tsx`、`TowerView.tsx`、`OnlineMatchView.tsx`)：引入 `isDeployingRef` (`useRef(false)`) 互斥機制，在 0.3s 動畫過渡期間阻斷二次點擊，防止競態條件與扣牌錯位。
     * **定時器嚴謹清理**：所有 `setTimeout` 均以 `useRef<number | null>` 管理，並在 `useEffect` return 與提交出兵時安全回收，防止記憶體洩漏與卸載後更新警告。
     * **全模式覆蓋**：三大遊戲模式（經典單局 `App.tsx`、奇偶試煉 `TowerView.tsx`、雲端連機 `OnlineMatchView.tsx`）全面同步。
 

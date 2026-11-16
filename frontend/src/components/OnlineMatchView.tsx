@@ -327,7 +327,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
   };
 
   /**
-   * 點選戰場槽位：撤回卡牌 (card-recall-out 80ms)
+   * 點選戰場槽位：撤回卡牌 (card-recall-out 0.3s)
    */
   const handleSlotClick = (card: Character | null, index: number) => {
     if (isResolving || card === null || myReady || isDeployingRef2.current) return;
@@ -640,10 +640,10 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
           {isResolving
             ? '決鬥交鋒中...'
             : myReady
-            ? '已就緒 · 等待對手...'
-            : isDeployReady
-            ? '出征決鬥！'
-            : `佈署兵力 (${deployedCount}/3)`}
+              ? '已就緒 · 等待對手...'
+              : isDeployReady
+                ? '出征決鬥！'
+                : `佈署兵力 (${deployedCount}/3)`}
         </button>
       </div>
 
@@ -902,10 +902,10 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
           {isResolving
             ? '決鬥交鋒中...'
             : myReady
-            ? '已出征 · 等待對手...'
-            : isDeployReady
-            ? '出征決鬥！'
-            : `佈署兵力 (${deployedCount}/3)`}
+              ? '已出征 · 等待對手...'
+              : isDeployReady
+                ? '出征決鬥！'
+                : `佈署兵力 (${deployedCount}/3)`}
         </button>
       </div>
 

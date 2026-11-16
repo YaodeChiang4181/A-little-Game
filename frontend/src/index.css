@@ -10,12 +10,13 @@
   --font-pixel: 'DotGothic16', 'Microsoft JhengHei', 'PingFang TC', monospace, sans-serif;
 }
 
-* { 
-  box-sizing: border-box; 
+* {
+  box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100vw;
@@ -34,13 +35,16 @@ html, body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: rgba(30, 41, 59, 0.5);
 }
+
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.4);
 }
@@ -62,6 +66,7 @@ html, body {
   .mobile-only {
     display: none !important;
   }
+
   .desktop-only {
     display: flex !important;
   }
@@ -71,6 +76,7 @@ html, body {
   .desktop-only {
     display: none !important;
   }
+
   .mobile-only {
     display: flex !important;
   }
@@ -106,10 +112,19 @@ html, body {
     gap: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
   }
-  .player-hud { margin-top: 45px; }
-  .enemy-hud { margin-top: 45px; }
+
+  .player-hud {
+    margin-top: 45px;
+  }
+
+  .enemy-hud {
+    margin-top: 45px;
+  }
+
   .tower-panel .player-hud,
-  .tower-panel .enemy-hud { margin-top: 0 !important; }
+  .tower-panel .enemy-hud {
+    margin-top: 0 !important;
+  }
 
   .hand-section {
     display: flex;
@@ -117,7 +132,8 @@ html, body {
     gap: 10px;
   }
 
-  .hand-container, .enemy-hand-container {
+  .hand-container,
+  .enemy-hand-container {
     display: flex;
     gap: 10px;
     padding: 10px 8px;
@@ -127,42 +143,51 @@ html, body {
     justify-content: center;
     min-height: unset;
   }
-  .hand-container { background: rgba(0, 0, 0, 0.5); }
-  .enemy-hand-container { background: rgba(0, 0, 0, 0.3); }
+
+  .hand-container {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .enemy-hand-container {
+    background: rgba(0, 0, 0, 0.3);
+  }
 
   .deck-info-box {
-    position: absolute; 
-    top: 15px; 
-    left: 50%; 
+    position: absolute;
+    top: 15px;
+    left: 50%;
     transform: translateX(-50%);
-    background: rgba(15, 23, 42, 0.95); 
+    background: rgba(15, 23, 42, 0.95);
     border: 2px solid #334155;
     padding: 6px 16px;
-    display: flex; 
-    align-items: center; 
+    display: flex;
+    align-items: center;
     gap: 10px;
-    font-size: 12px; 
+    font-size: 12px;
     color: #e2e8f0;
     box-shadow: 3px 3px 0px #000;
-    border-radius: 0px !important; 
-    white-space: nowrap; 
+    border-radius: 0px !important;
+    white-space: nowrap;
     z-index: 10;
     max-width: calc(100vw - 320px);
     overflow-x: auto;
     scrollbar-width: none;
   }
+
   .deck-info-box::-webkit-scrollbar {
     display: none;
   }
+
   .deck-info-title {
-    color: var(--color-gold); 
-    font-weight: bold; 
+    color: var(--color-gold);
+    font-weight: bold;
     margin-right: 4px;
     font-family: var(--font-pixel);
     font-size: 11px;
     letter-spacing: 1px;
     flex-shrink: 0;
   }
+
   .roster-item {
     display: inline-flex;
     align-items: center;
@@ -171,10 +196,12 @@ html, body {
     font-size: 11px;
     flex-shrink: 0;
   }
+
   .roster-name {
     font-size: 11px;
     letter-spacing: 0.5px;
   }
+
   .roster-tier-chip.conflict {
     display: inline-flex;
     align-items: center;
@@ -185,6 +212,7 @@ html, body {
     border-radius: 0px !important;
     flex-shrink: 0;
   }
+
   .roster-level-tag {
     color: #facc15;
     font-family: var(--font-pixel);
@@ -192,16 +220,19 @@ html, body {
     font-weight: bold;
     letter-spacing: 0.5px;
   }
+
   .roster-pair-entry {
     display: inline-flex;
     align-items: center;
     gap: 3px;
   }
+
   .roster-slash {
     color: #64748b;
     font-size: 11px;
     margin: 0 1px;
   }
+
   .roster-name.conflict-name {
     color: #fef08a;
     font-weight: bold;
@@ -254,9 +285,11 @@ html, body {
     justify-content: center;
     transition: background 0.15s;
   }
+
   .mobile-btn:active {
     transform: translate(1px, 1px);
   }
+
   .mobile-btn.menu-btn {
     border-color: #94a3b8;
     color: #f8fafc;
@@ -271,6 +304,7 @@ html, body {
     font-size: 11px;
     box-shadow: 1px 1px 0 #000;
   }
+
   .mobile-header-bar .gold-badge-chip:hover {
     transform: none;
     background: #334155;
@@ -289,6 +323,7 @@ html, body {
     flex: 1;
     justify-content: center;
   }
+
   .mobile-deck-roster::-webkit-scrollbar {
     display: none;
   }
@@ -303,6 +338,7 @@ html, body {
     white-space: nowrap;
     flex-shrink: 0;
   }
+
   .mobile-roster-item.conflict-tier {
     background: rgba(234, 179, 8, 0.16);
     border: 1px dashed #facc15;
@@ -326,15 +362,18 @@ html, body {
     gap: 6px;
     font-size: 11px;
   }
+
   .mobile-hud.player {
     color: var(--color-cyan);
     font-weight: bold;
   }
+
   .mobile-hud.enemy {
     color: var(--color-accent);
     font-weight: bold;
     flex-direction: row-reverse;
   }
+
   .mobile-hud-vs {
     font-size: 11px;
     color: var(--color-gold);
@@ -431,6 +470,7 @@ html, body {
   justify-content: center;
   height: 88px;
 }
+
 @media (min-width: 900px) {
   .slot-card-box {
     height: 130px;
@@ -438,9 +478,23 @@ html, body {
 }
 
 /* 三大場地顏色僅套用於空卡槽 */
-.field-slot:nth-child(1) .card.empty { background-color: rgba(26,51,32,0.8); border: 2px dashed #2d5c38; box-shadow: inset 0 0 10px #0a140c; }
-.field-slot:nth-child(2) .card.empty { background-color: rgba(61,43,31,0.8); border: 2px dashed #704f38; box-shadow: inset 0 0 10px #1c130d; }
-.field-slot:nth-child(3) .card.empty { background-color: rgba(74,21,21,0.8); border: 2px dashed #8c2a2a; box-shadow: inset 0 0 10px #240a0a; }
+.field-slot:nth-child(1) .card.empty {
+  background-color: rgba(26, 51, 32, 0.8);
+  border: 2px dashed #2d5c38;
+  box-shadow: inset 0 0 10px #0a140c;
+}
+
+.field-slot:nth-child(2) .card.empty {
+  background-color: rgba(61, 43, 31, 0.8);
+  border: 2px dashed #704f38;
+  box-shadow: inset 0 0 10px #1c130d;
+}
+
+.field-slot:nth-child(3) .card.empty {
+  background-color: rgba(74, 21, 21, 0.8);
+  border: 2px dashed #8c2a2a;
+  box-shadow: inset 0 0 10px #240a0a;
+}
 
 /* 卡牌樣式 */
 .card {
@@ -457,7 +511,7 @@ html, body {
   background-color: white;
   border-radius: 4px;
   padding: 2px;
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
 
 @media (min-width: 900px) {
@@ -469,10 +523,28 @@ html, body {
   }
 }
 
-.card.white-piece { background-color: #f8fafc; color: #1e293b; }
-.card.black-piece { background-color: #1e293b; color: #f8fafc; border-color: #000; }
-.card.empty { background-color: rgba(0,0,0,0.3); border: 2px dashed rgba(255,255,255,0.3); box-shadow: none; cursor: default; }
-.card:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #000; }
+.card.white-piece {
+  background-color: #f8fafc;
+  color: #1e293b;
+}
+
+.card.black-piece {
+  background-color: #1e293b;
+  color: #f8fafc;
+  border-color: #000;
+}
+
+.card.empty {
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  box-shadow: none;
+  cursor: default;
+}
+
+.card:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #000;
+}
 
 /* 角色卡片子元素適配 */
 .card-icon-container svg,
@@ -482,7 +554,9 @@ html, body {
   object-fit: contain;
   image-rendering: pixelated;
 }
+
 @media (min-width: 900px) {
+
   .card-icon-container svg,
   .card-icon-container img {
     width: 36px;
@@ -497,6 +571,7 @@ html, body {
   line-height: 1.1;
   text-align: center;
 }
+
 @media (min-width: 900px) {
   .card-name-text {
     font-size: 13px;
@@ -513,6 +588,7 @@ html, body {
   align-items: center;
   min-height: 26px;
 }
+
 @media (min-width: 900px) {
   .clash-center-box {
     min-height: 36px;
@@ -541,9 +617,9 @@ html, body {
 }
 
 @media (min-width: 900px) {
-  .equation-tooltip { 
-    font-size: 14px; 
-    padding: 10px 14px; 
+  .equation-tooltip {
+    font-size: 14px;
+    padding: 10px 14px;
     gap: 4px;
   }
 }
@@ -579,53 +655,134 @@ html, body {
   max-width: 0;
   opacity: 0;
 }
-.type-1 { animation: typing 0.8s steps(30, end) forwards, blink-caret 0.5s step-end infinite; animation-delay: 0.4s; }
-.type-2 { animation: typing 0.8s steps(30, end) forwards, blink-caret 0.5s step-end infinite; animation-delay: 1.3s; }
-@keyframes typing { from { max-width: 0; opacity: 1; } to { max-width: 600px; opacity: 1; } }
-@keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: orange } }
+
+.type-1 {
+  animation: typing 0.8s steps(30, end) forwards, blink-caret 0.5s step-end infinite;
+  animation-delay: 0.4s;
+}
+
+.type-2 {
+  animation: typing 0.8s steps(30, end) forwards, blink-caret 0.5s step-end infinite;
+  animation-delay: 1.3s;
+}
+
+@keyframes typing {
+  from {
+    max-width: 0;
+    opacity: 1;
+  }
+
+  to {
+    max-width: 600px;
+    opacity: 1;
+  }
+}
+
+@keyframes blink-caret {
+
+  from,
+  to {
+    border-color: transparent
+  }
+
+  50% {
+    border-color: orange
+  }
+}
 
 /* 飛入與交鋒動畫 */
 @keyframes flyInFromRight {
-  0% { transform: translate(300px, -150px) scale(0.5) rotate(180deg); opacity: 0; }
-  100% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+  0% {
+    transform: translate(300px, -150px) scale(0.5) rotate(180deg);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
 }
-.fly-in { animation: flyInFromRight 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+.fly-in {
+  animation: flyInFromRight 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
 
 @keyframes flipReveal {
-  0% { transform: rotateY(90deg); }
-  100% { transform: rotateY(0deg); }
+  0% {
+    transform: rotateY(90deg);
+  }
+
+  100% {
+    transform: rotateY(0deg);
+  }
 }
-.flip-reveal { animation: flipReveal 0.35s ease-out forwards; }
 
-.clash-winner { animation: popWinner 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; animation-delay: 2.2s; }
-.clash-loser { animation: fadeLoser 0.5s ease forwards; animation-delay: 2.2s; }
+.flip-reveal {
+  animation: flipReveal 0.35s ease-out forwards;
+}
 
-.resolved-winner { transform: scale(1.08) translateY(-6px); box-shadow: 0px 0px 12px #ffcc00; }
-.resolved-loser { transform: scale(0.92); opacity: 0.35; filter: grayscale(1); }
+.clash-winner {
+  animation: popWinner 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation-delay: 2.2s;
+}
+
+.clash-loser {
+  animation: fadeLoser 0.5s ease forwards;
+  animation-delay: 2.2s;
+}
+
+.resolved-winner {
+  transform: scale(1.08) translateY(-6px);
+  box-shadow: 0px 0px 12px #ffcc00;
+}
+
+.resolved-loser {
+  transform: scale(0.92);
+  opacity: 0.35;
+  filter: grayscale(1);
+}
 
 @keyframes popWinner {
-  0% { transform: scale(1); }
-  100% { transform: scale(1.08) translateY(-6px); box-shadow: 0px 0px 12px #ffcc00; }
+  0% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1.08) translateY(-6px);
+    box-shadow: 0px 0px 12px #ffcc00;
+  }
 }
+
 @keyframes fadeLoser {
-  0% { transform: scale(1); opacity: 1; filter: grayscale(0); }
-  100% { transform: scale(0.92); opacity: 0.35; filter: grayscale(1); }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: grayscale(0);
+  }
+
+  100% {
+    transform: scale(0.92);
+    opacity: 0.35;
+    filter: grayscale(1);
+  }
 }
 
 /* ================= 8-Bit 像素手牌到戰場 L4~L1 連貫佈署動畫 ================= */
 
-/* L4: 手牌起跳躍離 (Spring Lift-off) - 80ms 短促躍起微亮淡出 */
+/* L4: 手牌起跳躍離 (Spring Lift-off) - 0.3s 短促躍起微亮淡出 */
 @keyframes pixelCardLiftOff {
   0% {
     transform: translateY(0) scale(1);
     opacity: 1;
     filter: brightness(1);
   }
+
   50% {
     transform: translateY(-8px) scale(1.05);
     opacity: 0.9;
     filter: brightness(1.2);
   }
+
   100% {
     transform: translateY(-16px) scale(0.95);
     opacity: 0;
@@ -646,15 +803,21 @@ html, body {
     transform: translateY(-24px) scale(1.08);
     opacity: 0.3;
   }
+
   55% {
-    transform: translateY(0px) scale(0.92, 1.08); /* 觸底垂直拉伸 */
+    transform: translateY(0px) scale(0.92, 1.08);
+    /* 觸底垂直拉伸 */
     opacity: 1;
   }
+
   75% {
-    transform: translateY(2px) scale(1.08, 0.92); /* 落地擠壓 Squash */
+    transform: translateY(2px) scale(1.08, 0.92);
+    /* 落地擠壓 Squash */
   }
+
   100% {
-    transform: translateY(0px) scale(1, 1);       /* 恢復常態直角 */
+    transform: translateY(0px) scale(1, 1);
+    /* 恢復常態直角 */
   }
 }
 
@@ -664,12 +827,13 @@ html, body {
   z-index: 10;
 }
 
-/* L2: 卡槽鎖定像素高光 (Slot Lock Flash) - 180ms 青金直角外框擴散 */
+/* L2: 卡槽鎖定像素高光 (Slot Lock Flash) - 10.3s 青金直角外框擴散 */
 @keyframes slotLockFlash {
   0% {
     outline: 3px solid var(--color-cyan);
     box-shadow: inset 0 0 12px rgba(0, 255, 204, 0.4);
   }
+
   100% {
     outline: 0px solid transparent;
     box-shadow: inset 0 0 0px transparent;
@@ -686,10 +850,12 @@ html, body {
     transform: translateY(0) scale(1);
     opacity: 1;
   }
+
   50% {
     transform: translateY(-8px) scale(1.04);
     opacity: 0.8;
   }
+
   100% {
     transform: translateY(-16px) scale(0.9);
     opacity: 0;
@@ -703,83 +869,153 @@ html, body {
 }
 
 /* 生命值心槽 */
-.hp-bar { display: flex; align-items: center; }
+.hp-bar {
+  display: flex;
+  align-items: center;
+}
 
 /* 按鈕樣式 */
 .btn {
-  font-family: var(--font-pixel); 
+  font-family: var(--font-pixel);
   font-size: 18px;
-  padding: 12px 24px; 
-  background-color: #0f766e; 
+  padding: 12px 24px;
+  background-color: #0f766e;
   color: white;
-  border: 3px solid #000; 
-  cursor: pointer; 
+  border: 3px solid #000;
+  cursor: pointer;
   box-shadow: 3px 3px 0px #000;
-  transition: transform 0.1s; 
+  transition: transform 0.3s;
   pointer-events: auto;
 }
-.btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #000; }
-.btn:disabled { background-color: #475569; color: #94a3b8; cursor: not-allowed; }
-.btn.engage { background-color: #dc2626; animation: pulse 1.5s infinite; }
 
-@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+.btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #000;
+}
+
+.btn:disabled {
+  background-color: #475569;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.btn.engage {
+  background-color: #dc2626;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.03);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
 
 /* 遮罩通用 (彈窗、歷史、教學) */
 .overlay {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.85); display: flex; flex-direction: column;
-  justify-content: center; align-items: center; z-index: 60; pointer-events: auto;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 60;
+  pointer-events: auto;
   padding: 15px;
 }
 
 /* 玩法教學遮罩 */
 .tutorial-overlay {
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  display: flex; flex-direction: column;
-  justify-content: center; align-items: center;
-  z-index: 1000; pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  pointer-events: auto;
   padding: 15px;
 }
 
 .tutorial-box {
   background: rgba(15, 23, 42, 0.95);
   border: 4px solid #fff;
-  width: 92%; max-width: 480px; min-height: 280px;
+  width: 92%;
+  max-width: 480px;
+  min-height: 280px;
   padding: 24px 18px;
   position: relative;
-  box-shadow: 6px 6px 0 rgba(0,0,0,0.5);
-  display: flex; flex-direction: column;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
   justify-content: space-between;
 }
 
 .tutorial-content {
   flex: 1;
-  display: flex; flex-direction: column;
-  justify-content: center; align-items: center;
-  text-align: center; font-size: 16px; line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.5;
   gap: 12px;
 }
 
 .tutorial-dots {
-  display: flex; justify-content: center; gap: 8px; margin-top: 15px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 15px;
 }
+
 .dot {
-  width: 10px; height: 10px; background: #475569; border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  background: #475569;
+  border-radius: 50%;
 }
-.dot.active { background: #ffcc00; }
+
+.dot.active {
+  background: #ffcc00;
+}
 
 .help-btn {
-  position: absolute; top: 15px; right: 15px;
-  background: #1e293b; color: #fff; border: 2px solid #fff;
-  padding: 6px 10px; font-family: var(--font-pixel);
-  cursor: pointer; z-index: 100;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #1e293b;
+  color: #fff;
+  border: 2px solid #fff;
+  padding: 6px 10px;
+  font-family: var(--font-pixel);
+  cursor: pointer;
+  z-index: 100;
   border-radius: 0px !important;
   box-shadow: 2px 2px 0px #000;
 }
-.help-btn:hover { background: #334155; }
+
+.help-btn:hover {
+  background: #334155;
+}
 
 /* 圖鑑按鈕 (電腦版) */
 .compendium-btn {
@@ -797,6 +1033,7 @@ html, body {
   border-radius: 0px !important;
   box-shadow: 2px 2px 0px #000;
 }
+
 .compendium-btn:hover {
   background: #334155;
 }
@@ -817,6 +1054,7 @@ html, body {
   border-radius: 0px !important;
   box-shadow: 2px 2px 0px #000;
 }
+
 .settings-btn:hover {
   background: #334155;
 }
@@ -835,8 +1073,9 @@ html, body {
   cursor: pointer;
   z-index: 100;
   border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
+
 .deck-builder-btn:hover {
   background: #334155;
 }
@@ -855,8 +1094,9 @@ html, body {
   cursor: pointer;
   z-index: 100;
   border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
+
 .shop-btn:hover {
   background: #334155;
 }
@@ -871,6 +1111,7 @@ html, body {
   gap: 12px;
   z-index: 100;
 }
+
 .desktop-top-right-nav .gold-badge-chip,
 .desktop-top-right-nav .settings-btn,
 .desktop-top-right-nav .help-btn {
@@ -880,6 +1121,7 @@ html, body {
   left: auto;
   transform: none;
 }
+
 .desktop-top-right-nav .gold-badge-chip:hover,
 .desktop-top-right-nav .settings-btn:hover,
 .desktop-top-right-nav .help-btn:hover {
@@ -901,8 +1143,9 @@ html, body {
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: transform 0.1s, background-color 0.15s;
+  transition: transform 0.3s, background-color 0.15s;
 }
+
 .gold-badge-chip:hover {
   background: #334155;
   transform: translateY(-2px);
@@ -933,8 +1176,15 @@ html, body {
 }
 
 @keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .terrain-stage-intel-bar:hover {
@@ -974,11 +1224,13 @@ html, body {
   right: auto;
   transform: none;
 }
+
 .field-slot:nth-child(2) .card-trait-tooltip {
   left: 50%;
   right: auto;
   transform: translateX(-50%);
 }
+
 .field-slot:nth-child(3) .card-trait-tooltip {
   left: auto;
   right: 0;
@@ -990,6 +1242,7 @@ html, body {
   top: calc(100% + 6px);
   bottom: auto;
 }
+
 /* 戰場中下方我方陣地：Tooltip 朝中央向上開展 */
 .field-slot .slot-card-box:last-of-type .card-trait-tooltip {
   bottom: calc(100% + 6px);
@@ -998,37 +1251,42 @@ html, body {
 
 /* 2. 電腦版手牌區 (Hand Container in Side Panel) */
 /* 手牌第 1 排 (第 1、2 張)：向下開展，徹底避免覆蓋上方 HUD、玩家血量與圖鑑按鈕 */
-.hand-container > div:nth-child(1) .card-trait-tooltip,
-.hand-container > div:nth-child(2) .card-trait-tooltip {
+.hand-container>div:nth-child(1) .card-trait-tooltip,
+.hand-container>div:nth-child(2) .card-trait-tooltip {
   top: calc(100% + 6px);
   bottom: auto;
 }
+
 /* 手牌第 2 排 (第 3、4 張)：向上開展，覆蓋於前排卡牌上方，不觸及頂部 HUD */
-.hand-container > div:nth-child(3) .card-trait-tooltip,
-.hand-container > div:nth-child(4) .card-trait-tooltip {
+.hand-container>div:nth-child(3) .card-trait-tooltip,
+.hand-container>div:nth-child(4) .card-trait-tooltip {
   bottom: calc(100% + 6px);
   top: auto;
 }
+
 /* 手牌左側欄位：靠左展開 */
-.hand-container > div:nth-child(odd) .card-trait-tooltip {
+.hand-container>div:nth-child(odd) .card-trait-tooltip {
   left: 0;
   right: auto;
   transform: none;
 }
+
 /* 手牌右側欄位：靠右展開 */
-.hand-container > div:nth-child(even) .card-trait-tooltip {
+.hand-container>div:nth-child(even) .card-trait-tooltip {
   left: auto;
   right: 0;
   transform: none;
 }
+
 /* 當手牌僅剩 3 張且第 3 張置中時，讓其 Tooltip 居中防超出邊界 */
-.hand-container > div:nth-child(3):last-child .card-trait-tooltip {
+.hand-container>div:nth-child(3):last-child .card-trait-tooltip {
   left: 50%;
   right: auto;
   transform: translateX(-50%);
 }
+
 /* 當手牌僅剩 1 張且置中時，讓其 Tooltip 居中防超出邊界 */
-.hand-container > div:only-child .card-trait-tooltip {
+.hand-container>div:only-child .card-trait-tooltip {
   left: 50%;
   right: auto;
   transform: translateX(-50%);
@@ -1039,17 +1297,20 @@ html, body {
   bottom: calc(100% + 6px);
   top: auto;
 }
-.mobile-hand-container > div:first-child .card-trait-tooltip {
+
+.mobile-hand-container>div:first-child .card-trait-tooltip {
   left: 0;
   right: auto;
   transform: none;
 }
-.mobile-hand-container > div:last-child .card-trait-tooltip {
+
+.mobile-hand-container>div:last-child .card-trait-tooltip {
   left: auto;
   right: 0;
   transform: none;
 }
-.mobile-hand-container > div:not(:first-child):not(:last-child) .card-trait-tooltip {
+
+.mobile-hand-container>div:not(:first-child):not(:last-child) .card-trait-tooltip {
   left: 50%;
   right: auto;
   transform: translateX(-50%);
@@ -1067,10 +1328,12 @@ html, body {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
   white-space: nowrap;
 }
+
 .terrain-banner:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
 }
+
 .terrain-banner.selected {
   outline: 2px solid var(--color-gold);
   border-color: var(--color-gold) !important;
@@ -1104,11 +1367,13 @@ html, body {
   left: 0;
   transform: none;
 }
+
 .terrain-tooltip.slot-1,
 .field-slot:nth-child(2) .terrain-tooltip {
   left: 50%;
   transform: translateX(-50%);
 }
+
 .terrain-tooltip.slot-2,
 .field-slot:nth-child(3) .terrain-tooltip {
   left: auto;
@@ -1122,6 +1387,7 @@ html, body {
   border-style: dashed !important;
   opacity: 0.85;
 }
+
 .unselected-hand-card::after {
   content: '備用';
   position: absolute;
@@ -1150,8 +1416,15 @@ html, body {
 }
 
 @keyframes popBadge {
-  0% { transform: scale(0.6); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* ================= 街機式硬派戰果結算牌 (Arcade Score Tally Ledger) ================= */
@@ -1181,7 +1454,7 @@ html, body {
   overflow-y: auto;
   overflow-x: hidden;
   background-color: #0b0f19;
-  background-image: 
+  background-image:
     linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
   background-size: 8px 8px;
@@ -1208,14 +1481,17 @@ html, body {
 .arcade-tally-window::-webkit-scrollbar {
   width: 6px;
 }
+
 .arcade-tally-window::-webkit-scrollbar-track {
   background: #060911;
   border-left: 1px solid #1e293b;
 }
+
 .arcade-tally-window::-webkit-scrollbar-thumb {
   background: #334155;
   border-radius: 0 !important;
 }
+
 .arcade-tally-window::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
@@ -1425,7 +1701,7 @@ html, body {
   cursor: pointer;
   box-shadow: 3px 3px 0 #000;
   border-radius: 0 !important;
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .arcade-poster-btn:active {
@@ -1495,10 +1771,13 @@ html, body {
 
 /* ================= 雲端連線雷達波紋動畫 ================= */
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.4;
     transform: scale(0.85);
@@ -1572,10 +1851,12 @@ html, body {
   transition: all 0.15s;
   box-sizing: border-box;
 }
+
 .deck-slot-item:hover {
   border-color: #64748b;
   background: rgba(30, 41, 59, 0.8);
 }
+
 .deck-slot-item.selected {
   border-color: var(--color-cyan) !important;
   background: rgba(0, 255, 204, 0.12) !important;
@@ -1604,6 +1885,7 @@ html, body {
   margin-bottom: 10px;
   box-sizing: border-box;
 }
+
 .candidate-item-card.equipped {
   border-color: var(--color-cyan);
   background: rgba(0, 255, 204, 0.06);
@@ -1627,10 +1909,12 @@ html, body {
   cursor: pointer;
   margin: 0 auto;
 }
+
 .deck-mini-card .card .card-icon-container svg {
   width: 26px !important;
   height: 26px !important;
 }
+
 .deck-mini-card .card-name-text {
   font-size: 10px !important;
   line-height: 1.1;
@@ -1644,6 +1928,7 @@ html, body {
   padding: 2px !important;
   margin: 0;
 }
+
 .candidate-thumb-card .card .card-icon-container svg,
 .candidate-thumb-card .card .card-icon-container img {
   width: 28px !important;
@@ -1651,6 +1936,7 @@ html, body {
   object-fit: contain;
   image-rendering: pixelated;
 }
+
 .candidate-thumb-card .card-name-text {
   font-size: 11px !important;
 }
@@ -1664,6 +1950,7 @@ html, body {
   padding: 2px !important;
   margin: 0;
 }
+
 .shop-thumb-card .card .card-icon-container svg,
 .shop-thumb-card .card .card-icon-container img {
   width: 28px !important;
@@ -1671,6 +1958,7 @@ html, body {
   object-fit: contain;
   image-rendering: pixelated;
 }
+
 .shop-thumb-card .card-name-text {
   font-size: 11px !important;
 }
@@ -1709,6 +1997,7 @@ html, body {
     box-shadow: 1px 1px 0 #000 !important;
     padding: 1px !important;
   }
+
   .deck-mini-card .card .card-icon-container svg,
   .deck-mini-card .card .card-icon-container img {
     width: 18px !important;
@@ -1716,6 +2005,7 @@ html, body {
     object-fit: contain;
     image-rendering: pixelated;
   }
+
   .deck-mini-card .card-name-text {
     font-size: 8px !important;
     white-space: nowrap;
@@ -1748,13 +2038,10 @@ html, body {
     flex-direction: row;
     flex-wrap: wrap;
   }
+
   .candidate-actions button,
   .candidate-actions div {
     flex: 1;
     min-width: 90px;
   }
 }
-
-
-
-

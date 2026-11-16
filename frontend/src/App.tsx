@@ -203,7 +203,7 @@ export default function App() {
       isDeployingRef.current = true;
       soundManager.ensureContext();
 
-      // Phase 1 L4：手牌起跳 (80ms 後真正從手牌移除並砸入槽位)
+      // Phase 1 L4：手牌起跳 (0.3s 後真正從手牌移除並砸入槽位)
       setLiftingHandIndex(index);
 
       deployTimerRef.current = window.setTimeout(() => {
@@ -241,7 +241,7 @@ export default function App() {
 
   /**
    * 點選戰場槽位：撤回卡牌至手牌區
-   * 撤回時微躍消散 (card-recall-out 80ms)
+   * 撤回時微躍消散 (card-recall-out 0.3s)
    */
   const handleSlotClick = (card: Character | null, index: number) => {
     if (isResolving || card === null || isDeployingRef.current) return;
@@ -873,8 +873,8 @@ export default function App() {
               {isResolving
                 ? '決鬥交鋒中...'
                 : isDeployReady
-                ? '出征決鬥！'
-                : `佈署兵力 (${deployedCount}/3)`}
+                  ? '出征決鬥！'
+                  : `佈署兵力 (${deployedCount}/3)`}
             </button>
           </div>
         )}
@@ -1222,8 +1222,8 @@ export default function App() {
             {isResolving
               ? '決鬥交鋒中...'
               : isDeployReady
-              ? '出征決鬥！'
-              : `佈署兵力 (${deployedCount}/3)`}
+                ? '出征決鬥！'
+                : `佈署兵力 (${deployedCount}/3)`}
           </button>
         </div>
       )}
