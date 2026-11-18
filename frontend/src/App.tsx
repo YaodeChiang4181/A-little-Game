@@ -897,7 +897,7 @@ export default function App() {
                           color="black"
                           isRevealed={isLaneResolved}
                           isClashing={isLaneCurrent}
-                          isViolatedConstraint={isLaneResolved ? pendingResult?.lanes[laneIdx].isEnemyViolatedConstraint : false}
+                          isViolatedConstraint={isLaneResolved ? (pendingResult?.lanes[laneIdx]?.isEnemyViolatedConstraint ?? false) : false}
                           effectiveLevel={isLaneResolved ? pendingResult?.lanes[laneIdx].enemyEffectiveLevel : undefined}
                         />
                       ) : (
@@ -1253,6 +1253,7 @@ export default function App() {
       )}
       {showOnlineLobby && (
         <OnlineLobbyModal
+          isOpen={showOnlineLobby}
           initialRoomCode={urlRoomCode}
           onClose={() => {
             setShowOnlineLobby(false);

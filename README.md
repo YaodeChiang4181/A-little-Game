@@ -239,6 +239,14 @@ npm run dev
     * **即時連線防護與生命週期管理**：內建雙向心跳 PING/PONG 延遲監控毫秒數展示、奇偶陣營多局自動輪換、勝負結算、一鍵「再戰一局 (Rematch)」雙向確認開局與對手中途斷線提示機制。
     * **Vercel TypeScript 嚴格編譯與 Vite 打包深度適配**：於 `tsconfig.json` 補齊 `allowSyntheticDefaultImports` 與 `esModuleInterop`，建立獨立宣告檔 `src/types/peerjs.d.ts`，並於 `vite.config.ts` 注入 `global: 'window'` 瀏覽器相容宣告；同時於 `networkManager.ts` 為 `peer.on` 回呼函式之 `id: string` 與 `conn: DataConnection` 參數補齊明確型別標註，根治 Vercel 嚴格模式 `TS7006: Parameter implicitly has an 'any' type` 與 `@types/peerjs` 廢棄存根警告。
 
+* **2026-11-18**：
+  * **三路奇偶戰術博弈重構與 Vercel 嚴格 TypeScript 編譯修復 (Strict Type Fixes)**：
+    * **全盤修復 Vercel CI/CD 建置錯誤**：針對 `tsc && vite build` 嚴格模式 (`strict: true`) 下的所有型別缺失進行修補。
+    * **App.tsx / OnlineLobbyModal**：修補 `OnlineLobbyModal` 缺失的 `isOpen` 屬性；修正 `isViolatedConstraint` 屬性布林值容錯與邊界判定。
+    * **DeckBuilderModal**：修復候選卡與槽位選擇中 `level` 可能為 `undefined` 的型別安全判定，全面採用 `base_level ?? level ?? 1`。
+    * **OnlineMatchView / TowerView**：修補 `pendingResult.battles`、`player_hp`、`enemy_hp` 可能為 `undefined` 的安全保護與防禦；修正 `resolveTurn` 姿態宣告參數相容；修補卡牌排列 `sort` 比較子之可選屬性型別安全。
+    * **types.ts / gameService.ts / towerEngine.ts**：在 `Terrain` 介面補齊相容鉤子函式（`modifyScore`、`onClashWin`）；移除無效的 `LC` 匯入；補齊 `towerEngine` 中 `GameSession` 缺失的戰局欄位（`playerAtk`, `enemyAtk`, `currentConstraint`, `roundHistory`）。
+
 * **2026-10-30**：
   * **戰場 Tooltip 碰撞穿透與跑板問題徹底根治**：
     * **全域戰術情報橫條架構（Stage-Level Intel Bar）**：徹底捨棄原先從戰場橫幅下墜覆蓋敵方卡片的懸浮彈窗設計，改採於戰場正上方展示的全寬即時戰術情報橫條（`.terrain-stage-intel-bar`）。玩家點選任意戰場橫幅時，該橫幅點亮金光標籤，上方即時推播場地倍率與特殊異能說明，**卡牌 100% 完整裸露可見，絕不發生覆蓋敵方暗牌/明牌之遮擋偏誤**，且點擊任意處或出征時自動收起。

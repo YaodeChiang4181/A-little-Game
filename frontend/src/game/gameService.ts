@@ -1,6 +1,6 @@
 import { Card, Stance, LaneConstraint, RoundResolutionResult } from './types';
 import { createStandardDeck } from './registry/characters';
-import { drawRandomLaneConstraint, LaneConstraint as LC } from './registry/laneConstraints';
+import { drawRandomLaneConstraint } from './registry/laneConstraints';
 import { resolveRound, RoundHistoryEntry } from './engine';
 import { chooseAiDeploymentAndStance } from './aiAgent';
 

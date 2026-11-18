@@ -153,6 +153,8 @@ export type Terrain = {
   description: string;
   isSilenceSanctuary?: boolean;
   disableMomentum?: boolean;
+  modifyScore?: (score: number, effA: number, effB: number) => number;
+  onClashWin?: (winner: 'player' | 'enemy' | 'tie', diff: number) => { bonusScore?: number; log?: string };
 };
 export type SingleBattleRecord = {
   battlefield: number;

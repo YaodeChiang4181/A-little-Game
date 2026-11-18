@@ -8,6 +8,7 @@ export interface TerrainBannerProps {
   multiplier?: number;             // 1 或 2
   constraint?: LaneConstraint;     // 中路禁令
   isSelected?: boolean;
+  index?: number;
   onSelect?: () => void;
 }
 

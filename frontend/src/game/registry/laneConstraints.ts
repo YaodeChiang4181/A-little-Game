@@ -86,3 +86,4 @@ export function drawRandomLaneConstraint(): LaneConstraint {
 export function getLaneConstraint(id: string): LaneConstraint {
   return LANE_CONSTRAINTS.find(c => c.id === id) || DEFAULT_CONSTRAINT;
 }
+

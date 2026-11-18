@@ -147,7 +147,8 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
                     key={char.id}
                     onClick={() => {
                       soundManager.playSfx('click');
-                      setSelectedLevel(char.level);
+                      const lvl = char.base_level ?? char.level ?? 1;
+                      setSelectedLevel(lvl);
                     }}
                     className={`deck-slot-item ${isSelected ? 'selected' : ''}`}
                   >
@@ -197,7 +198,8 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {availableCandidates.map(candidate => {
                 const isUnlocked = wallet.unlockedCharacterIds.includes(candidate.id);
-                const isEquipped = wallet.activeDeck[candidate.level] === candidate.id;
+                const candLevel = candidate.base_level ?? candidate.level ?? 1;
+                const isEquipped = wallet.activeDeck[candLevel] === candidate.id;
                 const hasCustomAvatar = Boolean(getCustomCharacterAvatar(candidate.id));
 
                 return (

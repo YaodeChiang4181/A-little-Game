@@ -87,7 +87,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
 
   // 第二階段動畫：逐格翻牌結算
   useEffect(() => {
-    if (resolveStep >= 0 && resolveStep < 3 && pendingResult) {
+    if (resolveStep >= 0 && resolveStep < 3 && pendingResult && pendingResult.battles) {
       const currentBattle = pendingResult.battles[resolveStep];
       soundManager.playSfx('cardReveal');
       if (currentBattle.traits_triggered && currentBattle.traits_triggered.length > 0) {
@@ -116,11 +116,11 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
         const newPlayerHp = Math.max(0, state.playerHp - damageToPlayer);
         const newFloorDamage = state.floorDamageTaken + damageToPlayer;
 
-        setDisplayEnemyHp(pendingResult.enemy_hp);
+        setDisplayEnemyHp(pendingResult.enemy_hp ?? 0);
 
         const nextRoundTimer = setTimeout(() => {
           // 檢查是否敵方陣亡 (通關本層)
-          if (pendingResult.enemy_hp <= 0) {
+          if ((pendingResult.enemy_hp ?? 0) <= 0) {
             soundManager.playSfx('victory');
             const updatedState: TowerRunState = {
               ...state,
@@ -262,7 +262,8 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
 
     const { result, nextSession } = resolveTurn(
       state.currentSession,
-      deployment as Character[]
+      deployment as Character[],
+      'ODD'
     );
 
     setPendingResult(result);
@@ -578,7 +579,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
                 const isClashing = resolveStep === i;
                 const hasDealt = dealStep > i || resolveStep >= 0;
                 // 優先使用當前交鋒所綁定之真實戰場，保證橫幅、算式與倍率 100% 絕對一致
-                const activeBattle = b || pendingResult?.battles[i];
+                const activeBattle = b || pendingResult?.battles?.[i];
                 const terrain = (isResolving && activeBattle) ? activeBattle.terrain : (currentTerrains[i] || {
                   id: 'unknown',
                   name: `戰場 ${i + 1}`,

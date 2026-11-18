@@ -7,6 +7,7 @@ import { Character, Terrain } from './types';
 import { getAllCharacters, getActivePlayerDeck, INITIAL_CHARACTERS } from './registry/characters';
 import { TERRAIN_POOL, drawRandomTerrains } from './registry/terrains';
 import { GameSession, drawHand, HAND_DRAW_SIZE } from './gameService';
+import { drawRandomLaneConstraint } from './registry/laneConstraints';
 
 export interface TowerFloorConfig {
   floor: number;
@@ -171,13 +172,19 @@ export function startFloorBattle(state: TowerRunState): TowerRunState {
   const currentTerrains = generateFloorTerrains(config);
 
   const poolIds = new Set([...playerHand.map(c => c.id), ...enemyHand.map(c => c.id)]);
-  const roundPool = allPool.filter(c => poolIds.has(c.id)).sort((a, b) => a.level - b.level);
+  const roundPool = allPool.filter(c => poolIds.has(c.id)).sort((a, b) => (a.base_level ?? a.level ?? 0) - (b.base_level ?? b.level ?? 0));
 
   const session: GameSession = {
     gameId: `${state.runId}_f${state.currentFloor}`,
     roundNumber: 1,
     playerHp: state.playerHp,
     enemyHp: config.enemyHp,
+    playerAtk: 1,
+    enemyAtk: 1,
+    playerDeck: [],
+    enemyDeck: [],
+    currentConstraint: drawRandomLaneConstraint(),
+    roundHistory: [],
     playerRole: 'ODD',
     enemyRole: 'EVEN',
     playerHand,

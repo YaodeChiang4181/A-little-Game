@@ -96,7 +96,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
     const terrains = drawRandomTerrains();
 
     const poolIds = new Set([...hostHand.map(c => c.id), ...guestHand.map(c => c.id)]);
-    const pool = allPool.filter(c => poolIds.has(c.id)).sort((a, b) => a.level - b.level);
+    const pool = allPool.filter(c => poolIds.has(c.id)).sort((a, b) => (a.base_level ?? a.level ?? 0) - (b.base_level ?? b.level ?? 0));
 
     const hostIsOdd = targetRound % 2 !== 0;
     const hRole: 'ODD' | 'EVEN' = hostIsOdd ? 'ODD' : 'EVEN';
@@ -190,7 +190,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
         setMyDeployment([null, null, null]);
         setOpponentDeployment(null);
         setCurrentTerrains(msg.terrains);
-        setRoundPool([...msg.roundPool].sort((a, b) => a.level - b.level));
+        setRoundPool([...msg.roundPool].sort((a, b) => (a.base_level ?? a.level ?? 0) - (b.base_level ?? b.level ?? 0)));
         setMyReady(false);
         setOpponentReady(false);
         setIsResolving(false);
@@ -412,7 +412,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
 
   // 第二階段動畫：逐格翻牌、特效文字與算式展示
   useEffect(() => {
-    if (resolveStep >= 0 && resolveStep < 3 && pendingResult) {
+    if (resolveStep >= 0 && resolveStep < 3 && pendingResult && pendingResult.battles) {
       const currentBattle = pendingResult.battles[resolveStep];
       soundManager.playSfx('cardReveal');
       if (currentBattle.traits_triggered && currentBattle.traits_triggered.length > 0) {
@@ -438,8 +438,8 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
 
         // 在 Host 視角：player_hp 是房主，enemy_hp 是挑戰者
         // 在 Guest 視角：enemy_hp 是挑戰者，player_hp 是房主
-        const newHostHp = pendingResult.player_hp;
-        const newGuestHp = pendingResult.enemy_hp;
+        const newHostHp = pendingResult.player_hp ?? 0;
+        const newGuestHp = pendingResult.enemy_hp ?? 0;
 
         const myNewHp = isHost ? newHostHp : newGuestHp;
         const opNewHp = isHost ? newGuestHp : newHostHp;
@@ -726,7 +726,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
             const isClashing = resolveStep === i;
             const hasDealt = dealStep > i || resolveStep >= 0;
             // 優先使用當前交鋒真實戰場，保證雙人連機對戰之橫幅與算式倍率 100% 絕對一致
-            const activeBattle = b || pendingResult?.battles[i];
+            const activeBattle = b || pendingResult?.battles?.[i];
             const terrain = (isResolving && activeBattle) ? activeBattle.terrain : (currentTerrains[i] || {
               id: 'unknown',
               name: `戰場 ${i + 1}`,
