@@ -2069,3 +2069,120 @@ body {
   border: 1px solid #000;
   z-index: 10;
 }
+
+/*補主畫面按鈕格式*/
+/* ================= 遊戲開始畫面 (Start Screen) ================= */
+.start-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 80px);
+  padding: 80px 20px 40px;
+  text-align: center;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.start-screen .title {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #fbbf24;
+  text-shadow: 3px 3px 0 #000, -1px -1px 0 #000;
+  letter-spacing: 3px;
+  margin-bottom: 10px;
+}
+
+.start-screen .subtitle {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  letter-spacing: 2px;
+  margin-bottom: 36px;
+}
+
+/* 模式選擇網格 (2x2 卡片排列) */
+.mode-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .mode-selection-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mode-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  padding: 18px 20px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 2px solid #475569;
+  box-shadow: 4px 4px 0 #000;
+  color: #f8fafc;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.1s, border-color 0.15s, background 0.15s;
+}
+
+.mode-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #000;
+  background: rgba(30, 41, 59, 0.95);
+}
+
+.mode-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #000;
+}
+
+.mode-btn-title {
+  font-size: 1.05rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.mode-btn-desc {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+/* 四種模式專屬邊框與標題點綴色 */
+.mode-tutorial {
+  border-color: #38bdf8;
+}
+
+.mode-tutorial .mode-btn-title {
+  color: #38bdf8;
+}
+
+.mode-single {
+  border-color: #fbbf24;
+}
+
+.mode-single .mode-btn-title {
+  color: #fbbf24;
+}
+
+.mode-online {
+  border-color: #a855f7;
+}
+
+.mode-online .mode-btn-title {
+  color: #c084fc;
+}
+
+.mode-roguelike {
+  border-color: #f43f5e;
+}
+
+.mode-roguelike .mode-btn-title {
+  color: #fb7185;
+}
