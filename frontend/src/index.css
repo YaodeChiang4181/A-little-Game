@@ -2071,118 +2071,138 @@ body {
 }
 
 /*補主畫面按鈕格式*/
-/* ================= 遊戲開始畫面 (Start Screen) ================= */
+/* ================= 遊戲開始畫面 (硬派 16-bit 像素風) ================= */
 .start-screen {
+  font-family: var(--font-pixel), monospace;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - 80px);
-  padding: 80px 20px 40px;
+  padding: 72px 20px 40px;
   text-align: center;
   width: 100%;
-  max-width: 720px;
+  max-width: 760px;
   margin: 0 auto;
 }
 
 .start-screen .title {
-  font-size: 2.2rem;
+  font-size: 2.3rem;
   font-weight: 900;
   color: #fbbf24;
-  text-shadow: 3px 3px 0 #000, -1px -1px 0 #000;
-  letter-spacing: 3px;
-  margin-bottom: 10px;
+  /* 像素階梯感純黑描邊與硬陰影 */
+  text-shadow:
+    4px 4px 0 #000,
+    -2px -2px 0 #000,
+    2px -2px 0 #000,
+    -2px 2px 0 #000;
+  letter-spacing: 4px;
+  margin-bottom: 12px;
 }
 
 .start-screen .subtitle {
-  font-size: 0.9rem;
-  color: #94a3b8;
+  display: inline-block;
+  padding: 6px 16px;
+  background-color: #090d16;
+  border: 2px solid #334155;
+  box-shadow: 3px 3px 0 #000;
+  font-size: 0.85rem;
+  color: #cbd5e1;
   letter-spacing: 2px;
   margin-bottom: 36px;
 }
 
-/* 模式選擇網格 (2x2 卡片排列) */
+/* 模式選擇網格 (2x2 像素面板) */
 .mode-selection-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 20px;
   width: 100%;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .mode-selection-grid {
     grid-template-columns: 1fr;
   }
 }
 
+/* 復古街機按鈕基底 (對齊 .btn 的黑框與硬陰影風格) */
 .mode-btn {
+  font-family: var(--font-pixel), monospace;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: 8px;
-  padding: 18px 20px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 2px solid #475569;
-  box-shadow: 4px 4px 0 #000;
+  gap: 10px;
+  padding: 20px 22px;
+  background-color: #0f172a;
+  /* 外層 3px 實心純黑框 + 內層 3px 亮色邊框，營造像素面板立體感 */
+  border: 3px solid #000;
+  box-shadow:
+    inset 0 0 0 3px var(--accent-color, #64748b),
+    5px 5px 0 #000;
   color: #f8fafc;
   cursor: pointer;
   text-align: left;
-  transition: transform 0.1s, border-color 0.15s, background 0.15s;
 }
 
 .mode-btn:hover {
+  background-color: #1e293b;
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 #000;
-  background: rgba(30, 41, 59, 0.95);
+  box-shadow:
+    inset 0 0 0 3px var(--accent-color, #94a3b8),
+    7px 7px 0 #000;
 }
 
 .mode-btn:active {
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0 #000;
+  transform: translate(3px, 3px);
+  box-shadow:
+    inset 0 0 0 3px var(--accent-color, #64748b),
+    2px 2px 0 #000;
 }
 
 .mode-btn-title {
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-weight: bold;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
+  color: var(--accent-color, #f8fafc);
+  text-shadow: 2px 2px 0 #000;
 }
 
 .mode-btn-desc {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: #94a3b8;
-  line-height: 1.4;
+  letter-spacing: 1px;
+  line-height: 1.5;
 }
 
-/* 四種模式專屬邊框與標題點綴色 */
+/* 四種模式專屬色票 (透過 CSS 變數統一控制內框與標題色) */
 .mode-tutorial {
-  border-color: #38bdf8;
-}
-
-.mode-tutorial .mode-btn-title {
-  color: #38bdf8;
+  --accent-color: #38bdf8;
+  /* 戰術藍 */
 }
 
 .mode-single {
-  border-color: #fbbf24;
-}
-
-.mode-single .mode-btn-title {
-  color: #fbbf24;
+  --accent-color: #fbbf24;
+  /* 榮耀金 */
 }
 
 .mode-online {
-  border-color: #a855f7;
+  --accent-color: #c084fc;
+  /* 虛空紫 */
 }
 
-.mode-online .mode-btn-title {
-  color: #c084fc;
+.mode-roguelike,
+.mode-gauntlet,
+.mode-survival,
+.mode-trial {
+  --accent-color: #fb7185;
+  /* 試煉紅 */
 }
 
-.mode-roguelike {
-  border-color: #f43f5e;
-}
-
-.mode-roguelike .mode-btn-title {
-  color: #fb7185;
+.mode-tower,
+.mode-selection-grid .mode-btn:last-child {
+  --accent-color: #fb7185;
+  /* 試煉紅 */
 }
