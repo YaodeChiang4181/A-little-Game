@@ -28,9 +28,9 @@ export const TERRAIN_POOL: Terrain[] = [
     description: '[ 生死搏殺 ] 此格勝者帶給下一格的氣勢加成躍升為 +2。',
     onClashWin: (winner) => {
       if (winner !== 'tie') {
-        return { momentumBonus: 2, text: '[ 擂台 ARENA ] 勝者氣勢加乘 +2！' };
+        return { bonusScore: 2, text: '[ 擂台 ARENA ] 勝者氣勢加乘 +2！' };
       }
-      return null;
+      return {};
     }
   },
 
@@ -76,8 +76,8 @@ export const TERRAIN_POOL: Terrain[] = [
     icon: 'storm_cliff',
     color: '#fbc02d',
     description: '[ 狂雷轟鳴 ] 若此格戰鬥差值 ≥ 2，額外計入 +2 分。',
-    modifyScore: (score, ctx) => {
-      return ctx.diff >= 2 ? score + 2 : score;
+    modifyScore: (score, diff) => {
+      return diff >= 2 ? score + 2 : score;
     }
   }
 ];

@@ -867,7 +867,7 @@ export default function App() {
                 const mult = MULTIPLIERS[laneIdx];
                 const pCard = deployment[laneIdx];
                 const laneRecord = laneLogs[laneIdx];
-                const isLaneResolved = resolveStep > laneIdx && laneRecord;
+                const isLaneResolved = Boolean(resolveStep > laneIdx && laneRecord);
                 const isLaneCurrent = resolveStep === laneIdx;
                 const isViolated = Boolean(pCard && laneIdx === 1 && currentConstraint && !currentConstraint.check(pCard));
 
@@ -895,7 +895,7 @@ export default function App() {
                         <CardView
                           character={pendingResult ? pendingResult.lanes[laneIdx].enemyCard : null}
                           color="black"
-                          isRevealed={isLaneResolved}
+                          isRevealed={Boolean(isLaneResolved)}
                           isClashing={isLaneCurrent}
                           isViolatedConstraint={isLaneResolved ? (pendingResult?.lanes[laneIdx]?.isEnemyViolatedConstraint ?? false) : false}
                           effectiveLevel={isLaneResolved ? pendingResult?.lanes[laneIdx].enemyEffectiveLevel : undefined}
