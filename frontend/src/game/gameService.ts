@@ -1,16 +1,16 @@
-import { Character, Terrain, RoundResolutionResult } from './types';
-import { getAllCharacters, getActivePlayerDeck, INITIAL_CHARACTERS } from './registry/characters';
-import { drawRandomTerrains } from './registry/terrains';
-import { resolveRound } from './engine';
-import { chooseBestDeployment } from './aiAgent';
+import { Card, Stance, LaneConstraint, RoundResolutionResult } from './types';
+import { createStandardDeck } from './registry/characters';
+import { drawRandomLaneConstraint, LaneConstraint as LC } from './registry/laneConstraints';
+import { resolveRound, RoundHistoryEntry } from './engine';
+import { chooseAiDeploymentAndStance } from './aiAgent';
 
-export const HAND_DRAW_SIZE = 4;
+export const HAND_DRAW_SIZE = 3;
 export const DEPLOY_SIZE = 3;
 
 /**
- * 從指定角色池隨機抽取 N 張不重複的手牌
+ * 從指定角色池隨機抽取 N 張手牌
  */
-export function drawHand(count: number = HAND_DRAW_SIZE, pool: Character[] = getAllCharacters()): Character[] {
+export function drawHand(count: number = HAND_DRAW_SIZE, pool: Card[] = []): Card[] {
   const shuffled = [...pool].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, count);
 }
@@ -20,42 +20,50 @@ export interface GameSession {
   roundNumber: number;
   playerHp: number;
   enemyHp: number;
-  playerRole: 'ODD' | 'EVEN';
-  enemyRole: 'EVEN' | 'ODD';
-  playerHand: Character[];
-  enemyHand: Character[];
-  currentTerrains: Terrain[];
-  roundPool: Character[];
+  playerAtk: number;
+  enemyAtk: number;
+  playerDeck: Card[];           // 牌庫剩餘卡牌
+  enemyDeck: Card[];            // 敵方牌庫剩餘卡牌
+  playerHand: Card[];           // 本回合手牌 (固定 3 張)
+  enemyHand: Card[];            // 敵方手牌 (固定 3 張)
+  currentConstraint: LaneConstraint;
+  roundHistory: RoundHistoryEntry[];
+  // 相容舊介面屬性
+  playerRole?: 'ODD' | 'EVEN';
+  enemyRole?: 'EVEN' | 'ODD';
+  currentTerrains?: any[];
+  roundPool?: Card[];
 }
 
 /**
- * 啟動新對局（純客戶端，秒開秒玩，零後端等待）
- * 玩家手牌依據當前軍備庫出征牌組抽取
+ * 啟動新對局 (三路奇偶戰術博弈規格)
+ * 雙方各自配置 15 張牌庫，每回合發 3 張牌（必全出）
  */
 export function initGameSession(): GameSession {
-  const playerPool = getActivePlayerDeck();
-  const enemyPool = [...INITIAL_CHARACTERS];
-  const allPool = getAllCharacters();
+  const fullPlayerDeck = createStandardDeck('player');
+  const fullEnemyDeck = createStandardDeck('enemy');
 
-  const playerHand = drawHand(HAND_DRAW_SIZE, playerPool);
-  const enemyHand = drawHand(HAND_DRAW_SIZE, enemyPool);
-  const currentTerrains = drawRandomTerrains();
+  const playerHand = fullPlayerDeck.slice(0, 3);
+  const playerDeck = fullPlayerDeck.slice(3);
 
-  // 合併並計算本局登場角色池（唯一值）並按 Lv.1~6 階級升冪排序
-  const poolIds = new Set([...playerHand.map(c => c.id), ...enemyHand.map(c => c.id)]);
-  const roundPool = allPool.filter(c => poolIds.has(c.id)).sort((a, b) => a.level - b.level);
+  const enemyHand = fullEnemyDeck.slice(0, 3);
+  const enemyDeck = fullEnemyDeck.slice(3);
+
+  const currentConstraint = drawRandomLaneConstraint();
 
   return {
     gameId: `game_${Date.now()}`,
     roundNumber: 1,
     playerHp: 3,
     enemyHp: 3,
-    playerRole: 'ODD',
-    enemyRole: 'EVEN',
+    playerAtk: 1,
+    enemyAtk: 1,
+    playerDeck,
+    enemyDeck,
     playerHand,
     enemyHand,
-    currentTerrains,
-    roundPool
+    currentConstraint,
+    roundHistory: []
   };
 }
 
@@ -64,88 +72,97 @@ export function initGameSession(): GameSession {
  */
 export function resolveTurn(
   session: GameSession,
-  playerDeployment: Character[]
+  playerDeployment: Card[],
+  playerStance: Stance
 ): {
   result: RoundResolutionResult;
-  enemyDeployment: Character[];
+  enemyDeployment: Card[];
+  enemyStance: Stance;
   nextSession?: GameSession;
 } {
-  // 1. AI 根據手牌與戰場環境，選出 4 選 3 的最佳出牌策略
-  const enemyDeployment = chooseBestDeployment(
+  // 1. AI 決策：三路排位與姿態宣告
+  const aiDecision = chooseAiDeploymentAndStance(
     session.enemyHand,
-    session.currentTerrains,
+    session.currentConstraint,
     session.roundNumber,
+    session.enemyHp,
     session.playerHp,
-    session.enemyHp
+    session.enemyAtk,
+    session.playerAtk
   );
 
-  // 2. 核心引擎結算此局交鋒
+  // 2. 核心引擎執行 Phase 1 ~ 5
   const result = resolveRound(
     playerDeployment,
-    enemyDeployment,
-    session.currentTerrains,
+    aiDecision.deployment,
+    playerStance,
+    aiDecision.stance,
+    session.currentConstraint,
     session.roundNumber,
     session.playerHp,
-    session.enemyHp
+    session.enemyHp,
+    session.playerAtk,
+    session.enemyAtk,
+    session.roundHistory
   );
 
   let nextSession: GameSession | undefined = undefined;
 
-  // 3. 若遊戲尚未結束，為雙方抽取下一回合 4 張手牌與新戰場環境
-  if (!result.game_over) {
-    const allPool = getAllCharacters();
-    const playerPool = getActivePlayerDeck();
-    const enemyPool = [...INITIAL_CHARACTERS];
-    const nextPlayerHand = drawHand(HAND_DRAW_SIZE, playerPool);
-    const nextEnemyHand = drawHand(HAND_DRAW_SIZE, enemyPool);
-    const nextTerrains = drawRandomTerrains();
+  // 3. 若未結束且回合 < 5，推進回合並發牌
+  if (!result.gameOver && session.roundNumber < 5) {
+    const nextPlayerHand = session.playerDeck.slice(0, 3);
+    const nextPlayerDeck = session.playerDeck.slice(3);
 
-    const poolIds = new Set([...nextPlayerHand.map(c => c.id), ...nextEnemyHand.map(c => c.id)]);
-    const nextRoundPool = allPool.filter(c => poolIds.has(c.id)).sort((a, b) => a.level - b.level);
+    const nextEnemyHand = session.enemyDeck.slice(0, 3);
+    const nextEnemyDeck = session.enemyDeck.slice(3);
+
+    const nextConstraint = drawRandomLaneConstraint();
+
+    const currentHistoryEntry: RoundHistoryEntry = {
+      round: session.roundNumber,
+      playerTotalScore: result.playerTotalScore,
+      enemyTotalScore: result.enemyTotalScore
+    };
 
     nextSession = {
       gameId: session.gameId,
       roundNumber: session.roundNumber + 1,
-      playerHp: result.player_hp,
-      enemyHp: result.enemy_hp,
-      playerRole: result.player_role,
-      enemyRole: result.enemy_role,
+      playerHp: result.playerHpAfter,
+      enemyHp: result.enemyHpAfter,
+      playerAtk: result.playerAtkAfter,
+      enemyAtk: result.enemyAtkAfter,
+      playerDeck: nextPlayerDeck,
+      enemyDeck: nextEnemyDeck,
       playerHand: nextPlayerHand,
       enemyHand: nextEnemyHand,
-      currentTerrains: nextTerrains,
-      roundPool: nextRoundPool
+      currentConstraint: nextConstraint,
+      roundHistory: [...session.roundHistory, currentHistoryEntry]
     };
-
-    result.next_player_hand = nextPlayerHand;
-    result.next_round_pool = nextRoundPool;
-    result.next_terrains = nextTerrains;
   }
 
   return {
     result,
-    enemyDeployment,
+    enemyDeployment: aiDecision.deployment,
+    enemyStance: aiDecision.stance,
     nextSession
   };
 }
 
 export interface RosterTierGroup {
   level: number;
-  characters: Character[];
+  characters: Card[];
 }
 
-/**
- * 將登場角色池依據 Lv.1~6 階級分組
- * 當同一等級存在 2 位以上不同角色（如小兵與盜賊）時，供對陣名冊進行對位與並列展示
- */
-export function groupRosterByTier(pool: Character[]): RosterTierGroup[] {
-  const map = new Map<number, Character[]>();
+export function groupRosterByTier(pool: Card[]): RosterTierGroup[] {
+  const map = new Map<number, Card[]>();
   for (const c of pool) {
-    const list = map.get(c.level) || [];
+    const lvl = c.base_level || c.level || 1;
+    const list = map.get(lvl) || [];
     list.push(c);
-    map.set(c.level, list);
+    map.set(lvl, list);
   }
   const result: RosterTierGroup[] = [];
-  for (let lvl = 1; lvl <= 6; lvl++) {
+  for (let lvl = 1; lvl <= 4; lvl++) {
     const list = map.get(lvl);
     if (list && list.length > 0) {
       result.push({ level: lvl, characters: list });
@@ -153,4 +170,3 @@ export function groupRosterByTier(pool: Character[]): RosterTierGroup[] {
   }
   return result;
 }
-

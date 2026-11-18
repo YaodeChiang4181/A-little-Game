@@ -48,13 +48,13 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
   const activeDeckChars: Character[] = [1, 2, 3, 4, 5, 6].map(lv => {
     const charId = wallet.activeDeck[lv];
     const found = ALL_CHARACTERS.find(c => c.id === charId);
-    return found || ALL_CHARACTERS.find(c => c.level === lv)!;
+    return found || ALL_CHARACTERS.find(c => (c.base_level || c.level) === lv) || ALL_CHARACTERS[0];
   });
 
   const handleEquip = (char: Character) => {
     soundManager.ensureContext();
     soundManager.playSfx('cardDeploy');
-    setActiveDeckSlot(char.level, char.id);
+    setActiveDeckSlot((char.base_level || char.level || 1), char.id);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

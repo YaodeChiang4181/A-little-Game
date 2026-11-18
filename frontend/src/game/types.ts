@@ -1,107 +1,171 @@
-export type TraitTrigger = 
-  | 'BEFORE_CLASH'   // 交鋒前：修改點數、消除或修改氣勢加成
-  | 'DETERMINE_WIN'  // 判定勝負時：覆寫勝負邏輯（如以弱勝強）
-  | 'AFTER_CLASH'    // 結算差值時：鎖定差值、調整奇偶數
-  | 'ON_MOMENTUM';   // 傳遞氣勢時：調整給下一格的氣勢加成 (+1 變 +2 等)
+/**
+ * 三路奇偶博弈卡牌 (3-Lane Parity Tactical Card Game)
+ * 核心型別定義 - 嚴格 TypeScript 規格
+ */
 
-export interface ClashContext {
-  playerChar: Character;
-  enemyChar: Character;
-  playerBaseVal: number;
-  enemyBaseVal: number;
-  playerBuff: number;
-  enemyBuff: number;
-  playerEff: number;
-  enemyEff: number;
-  terrain: Terrain;
+// 戰術姿態宣告
+export type Stance = 'ODD' | 'EVEN';
+
+// 特性觸發時機
+export type TraitTrigger = 'ON_REVEAL' | 'PASSIVE' | 'ON_LOSE';
+
+// 特性執行上下文
+export interface TraitContext {
+  card: Card;
+  laneIndex: number;            // 0, 1, 2
+  multiplier: number;           // 1 或 2
+  isPlayer: boolean;
+  myCards: (Card | null)[];
+  oppCards: (Card | null)[];
+  myStance: Stance;
+  oppStance: Stance | null;
+  isLaneConstraintViolated: boolean;
   roundNumber: number;
-  isPlayerOdd: boolean;
-  winner: 'player' | 'enemy' | 'tie';
-  diff: number;
-  score: number;
-  isSilenced: boolean; // 該戰場是否封印特性
 }
 
-export interface ClashModification {
-  bonusEff?: number;               // 增加自身有效點數
-  enemyEffModifier?: number;        // 減少或調整對手有效點數
-  overrideWinner?: 'player' | 'enemy' | 'tie'; // 直接指定勝者
-  overrideDiff?: number;            // 覆寫兩者差值（如主塔鎖定為 1）
-  overrideScore?: number;           // 直接覆寫最終積分
-  overrideMomentum?: number;        // 覆寫勝者給予下一格的氣勢
-  cancelOpponentMomentum?: boolean; // 消除對手上一格獲得的氣勢
-  popupText?: string;               // 觸發時浮動顯示的像素文字特效
+// 特性數值修正
+export interface TraitModification {
+  bonusEffectiveLevel?: number;          // 增減自身有效等級
+  enemyEffectiveLevelModifier?: number;  // 增減對手有效等級
+  popupText?: string;                    // 像素浮動效果文字
 }
 
-export interface CharacterTrait {
+// 卡牌特性定義
+export interface CardTrait {
   id: string;
-  name: string;             // 特性名稱，如「以弱勝強」
-  badge: string;            // 簡短標籤，如「逆襲」
-  description: string;      // 完整效果說明
+  name: string;             // 特性名稱，如「暗影奇襲」
+  badge: string;            // 2~3 字簡稱，如「奇襲」
   trigger: TraitTrigger;
-  execute: (context: ClashContext, isPlayer: boolean) => ClashModification | null;
+  description: string;      // 特性說明
+  execute: (ctx: TraitContext) => TraitModification | null;
 }
 
-export interface Character {
-  id: string;               // 唯一 ID，如 'pawn', 'knight'
-  name: string;             // 顯示名稱，如「小兵」
-  level: number;            // 基礎等級/點數 (1~6 或自訂)
-  price?: number;           // 商城招募金幣售價 (0 或未定義表示預設已擁有)
-  category?: 'classic' | 'shop' | 'custom'; // 角色類別
+// 卡牌實體
+export interface Card {
+  id: string;
+  name: string;             // 顯示名稱，如「暗影斥候」
+  base_level: 1 | 2 | 3 | 4; // 基礎等級 (1~4)
+  has_trait: boolean;       // 是否有特性
+  trait?: CardTrait;        // 專屬特性
   avatar: {
     type: 'unicode' | 'image';
-    src: string;            // 代號如 'pawn' 或圖片路徑 '/characters/xxx.png'
+    src: string;            // 圖示識別碼或圖片路徑
   };
-  themeColor?: string;      // 專屬主題色彩
-  lore?: string;            // 角色背景故事
-  trait?: CharacterTrait;   // 專屬角色特性
+  themeColor?: string;      // 主題配色
+  lore?: string;            // 典故介紹
+  // 向後相容或擴充屬性
+  level?: number;           // 等同於 base_level，便於部分通用組件存取
+  price?: number;
+  category?: 'classic' | 'shop' | 'custom';
 }
 
-export interface Terrain {
+// 中路戰場進場限制 (Lane Constraint)
+export interface LaneConstraint {
+  id: string;
+  name: string;             // 如「奇數通行令」
+  badge: string;            // 簡稱標籤
+  description: string;      // 完整規則說明
+  color: string;
+  check: (card: Card) => boolean; // 回傳 true 為合規；false 為違規 (有效等級視為 0)
+}
+
+// 戰場單路結構
+export interface LaneDefinition {
+  index: 0 | 1 | 2;
+  name: string;
+  multiplier: 1 | 2 | 1;
+  constraint?: LaneConstraint;
+}
+
+// 單格戰況紀錄
+export interface SingleLaneRecord {
+  laneIndex: number;
+  multiplier: number;
+  playerCard: Card;
+  enemyCard: Card;
+  playerRawLevel: number;
+  enemyRawLevel: number;
+  playerEffectiveLevel: number;
+  enemyEffectiveLevel: number;
+  playerScore: number;       // playerEffectiveLevel * multiplier
+  enemyScore: number;        // enemyEffectiveLevel * multiplier
+  isPlayerViolatedConstraint: boolean;
+  isEnemyViolatedConstraint: boolean;
+  traitsTriggered: {
+    side: 'player' | 'enemy' | 'lane';
+    text: string;
+    traitName: string;
+  }[];
+}
+
+// 單回合完整結算結果
+export interface RoundResolutionResult {
+  roundNumber: number;
+  laneConstraint: LaneConstraint;
+  lanes: SingleLaneRecord[];
+  playerStance: Stance;
+  enemyStance: Stance;
+  playerTotalScore: number;
+  enemyTotalScore: number;
+  winner: 'player' | 'enemy' | 'tie';
+  
+  // 數值前後變化
+  playerAtkBefore: number;
+  enemyAtkBefore: number;
+  playerAtkAfter: number;
+  enemyAtkAfter: number;
+  playerHpBefore: number;
+  enemyHpBefore: number;
+  playerHpAfter: number;
+  enemyHpAfter: number;
+  
+  // 執行的姿態行為文字摘要
+  winnerActionText: string;
+  
+  // 終局判定
+  gameOver: boolean;
+  gameWinner: 'player' | 'enemy' | 'draw' | null;
+  winReason?: 'HP_DEPLETED' | 'ROUND_LIMIT_HP' | 'ROUND_LIMIT_R5_SCORE' | 'ROUND_LIMIT_TOTAL_SCORE' | 'DRAW';
+  winReasonText?: string;
+
+  // 向後相容欄位 (供過渡動畫使用)
+  battles?: SingleBattleRecord[];
+  damage_to?: 'player' | 'enemy';
+  player_role?: 'ODD' | 'EVEN';
+  enemy_role?: 'EVEN' | 'ODD';
+  total_score?: number;
+  player_hp?: number;
+  enemy_hp?: number;
+  game_over?: boolean;
+  next_player_hand?: Card[];
+  next_round_pool?: Card[];
+  next_terrains?: Terrain[];
+}
+
+// 相容舊型別別名
+export type Character = Card;
+export type Terrain = {
   id: string;
   name: string;
-  weight: number;           // 預設乘數倍率 (1, 2, 3...)
-  icon: string;             // 標誌標識，如 'swamp', 'arena', 'palace'
-  description: string;      // 環境規則說明
-  color: string;            // 邊框與背景標籤顏色
-  isSilenceSanctuary?: boolean; // 是否封印所有特性
-  disableMomentum?: boolean;    // 是否禁止使用氣勢加成
-  modifyDiff?: (diff: number, ctx: ClashContext) => number;
-  modifyScore?: (score: number, ctx: ClashContext) => number;
-  onClashWin?: (winner: 'player' | 'enemy' | 'tie') => { momentumBonus?: number; text?: string } | null;
-}
-
-export interface SingleBattleRecord {
+  weight: number;
+  icon: string;
+  color: string;
+  description: string;
+  isSilenceSanctuary?: boolean;
+  disableMomentum?: boolean;
+};
+export type SingleBattleRecord = {
   battlefield: number;
   terrain: Terrain;
   player_card: number;
   enemy_card: number;
-  player_char: Character;
-  enemy_char: Character;
+  player_char: Card;
+  enemy_char: Card;
   player_eff: number;
   enemy_eff: number;
   winner: 'player' | 'enemy' | 'tie';
   diff: number;
   score: number;
   weight: number;
-  traits_triggered: {
-    side: 'player' | 'enemy' | 'terrain';
-    text: string;
-    traitName: string;
-  }[];
-}
-
-export interface RoundResolutionResult {
-  battles: SingleBattleRecord[];
-  total_score: number;
-  damage_to: 'player' | 'enemy';
-  player_role: 'ODD' | 'EVEN';
-  enemy_role: 'EVEN' | 'ODD';
-  player_hp: number;
-  enemy_hp: number;
-  game_over: boolean;
-  winner: 'player' | 'enemy' | null;
-  next_player_hand?: Character[];
-  next_round_pool?: Character[];
-  next_terrains?: Terrain[];
-}
+  traits_triggered: { side: 'player' | 'enemy' | 'terrain'; text: string; traitName: string }[];
+};

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { getAllCharacters } from '../game/registry/characters';
-import { TERRAIN_POOL } from '../game/registry/terrains';
+import { LANE_CONSTRAINTS } from '../game/registry/laneConstraints';
 import { PixelPieceIcon, PixelTerrainSigil } from './PixelIcons';
 
 interface CompendiumModalProps {
@@ -8,7 +8,7 @@ interface CompendiumModalProps {
 }
 
 export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => {
-  const [tab, setTab] = useState<'characters' | 'terrains'>('characters');
+  const [tab, setTab] = useState<'characters' | 'constraints'>('characters');
   const characters = getAllCharacters();
 
   return (
@@ -39,7 +39,7 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
             }}
             onClick={() => setTab('characters')}
           >
-            [ 角色名錄 ] ({characters.length})
+            [ 戰術牌庫 ] ({characters.length}張)
           </button>
           <button
             className="btn"
@@ -47,11 +47,11 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
               flex: 1,
               padding: '8px',
               fontSize: '13px',
-              background: tab === 'terrains' ? '#0369a1' : '#1e293b'
+              background: tab === 'constraints' ? '#0369a1' : '#1e293b'
             }}
-            onClick={() => setTab('terrains')}
+            onClick={() => setTab('constraints')}
           >
-            [ 戰場環境 ] ({TERRAIN_POOL.length})
+            [ 中路禁令 ] ({LANE_CONSTRAINTS.length}種)
           </button>
         </div>
 
@@ -59,7 +59,7 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
         {tab === 'characters' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>
-              * 點陣西洋棋核心規格：善用特性可在劣勢下逆襲或精準操控奇偶總分。
+              * 15 張對稱牌庫：LV.1~2 具備戰術特性，LV.3~4 為高戰力白板。每回合發 3 張必全出。
             </div>
             {characters.map(char => (
               <div
@@ -67,7 +67,7 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
                 style={{
                   background: 'rgba(15, 23, 42, 0.7)',
                   border: `2px solid ${char.themeColor || '#475569'}`,
-                  borderRadius: '4px',
+                  borderRadius: '0px',
                   padding: '10px 14px',
                   display: 'flex',
                   alignItems: 'center',
@@ -75,7 +75,15 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
                 }}
               >
                 <div style={{ minWidth: '40px', display: 'flex', justifyContent: 'center' }}>
-                  <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={36} />
+                  {char.avatar.type === 'image' ? (
+                    <img
+                      src={char.avatar.src}
+                      alt={char.name}
+                      style={{ imageRendering: 'pixelated', maxWidth: '36px', maxHeight: '36px', objectFit: 'contain' }}
+                    />
+                  ) : (
+                    <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={36} />
+                  )}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
@@ -83,7 +91,7 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
                       {char.name}
                     </span>
                     <span style={{ fontSize: '10px', color: '#64748b', fontFamily: 'monospace' }}>
-                      LV.{char.level}
+                      LV.{char.base_level || char.level}
                     </span>
                     {char.trait ? (
                       <span
@@ -92,7 +100,7 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
                           background: '#ffcc00',
                           color: '#000',
                           padding: '1px 5px',
-                          borderRadius: '2px',
+                          borderRadius: '0px',
                           fontWeight: 'bold'
                         }}
                       >
@@ -105,7 +113,7 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
                           background: '#334155',
                           color: '#94a3b8',
                           padding: '1px 5px',
-                          borderRadius: '2px',
+                          borderRadius: '0px',
                           fontWeight: 'bold'
                         }}
                       >
@@ -119,7 +127,7 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
                     </div>
                   ) : (
                     <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.6' }}>
-                      [ 常規兵種 ] 專注於正面點數對決與奇偶賽局策略，無特殊異能。
+                      [ 常規兵種 ] 專注於正面點數對決與排位博弈，無特殊異能。
                     </div>
                   )}
                   {char.lore && (
@@ -142,19 +150,19 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
           </div>
         )}
 
-        {/* 戰場分頁 */}
-        {tab === 'terrains' && (
+        {/* 禁令分頁 */}
+        {tab === 'constraints' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>
-              * 動態環境每回合隨機輪換，直接影響氣勢傳遞、倍率計算與特性發動。
+              * 中路 (Lane 1) 享有 ×2 戰力倍率，但每回合受不同禁令限制。違規放置之卡牌戰力視為 0。
             </div>
-            {TERRAIN_POOL.map(terrain => (
+            {LANE_CONSTRAINTS.map(c => (
               <div
-                key={terrain.id}
+                key={c.id}
                 style={{
                   background: 'rgba(15, 23, 42, 0.7)',
-                  border: `2px solid ${terrain.color}`,
-                  borderRadius: '4px',
+                  border: `2px solid ${c.color}`,
+                  borderRadius: '0px',
                   padding: '10px 14px',
                   display: 'flex',
                   alignItems: 'center',
@@ -162,29 +170,29 @@ export const CompendiumModal: React.FC<CompendiumModalProps> = ({ onClose }) => 
                 }}
               >
                 <div style={{ minWidth: '36px', display: 'flex', justifyContent: 'center' }}>
-                  <PixelTerrainSigil terrainId={terrain.icon || terrain.id} color={terrain.color} size={24} />
+                  <PixelTerrainSigil terrainId="arena" color={c.color} size={24} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', letterSpacing: '1px' }}>
-                      {terrain.name}
+                      {c.name}
                     </span>
                     <span
                       style={{
                         fontSize: '10px',
-                        background: terrain.color,
-                        color: '#fff',
+                        background: c.color,
+                        color: '#000',
                         padding: '1px 6px',
-                        borderRadius: '2px',
+                        borderRadius: '0px',
                         fontWeight: 'bold',
                         fontFamily: 'monospace'
                       }}
                     >
-                      x{terrain.weight}
+                      {c.badge}
                     </span>
                   </div>
                   <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.6' }}>
-                    {terrain.description}
+                    {c.description}
                   </div>
                 </div>
               </div>

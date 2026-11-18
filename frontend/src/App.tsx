@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import './index.css';
-import { Character, SingleBattleRecord, RoundResolutionResult } from './game/types';
-import { initGameSession, resolveTurn, GameSession, groupRosterByTier } from './game/gameService';
+import { Card, Stance, SingleLaneRecord, RoundResolutionResult } from './game/types';
+import { initGameSession, resolveTurn, GameSession } from './game/gameService';
+import { calculateProjectedScore, MULTIPLIERS } from './game/engine';
 import { CardView } from './components/CardView';
 import { TerrainBanner } from './components/TerrainBanner';
 import { CompendiumModal } from './components/CompendiumModal';
@@ -9,7 +10,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { TowerView } from './components/TowerView';
 import { OnlineLobbyModal } from './components/OnlineLobbyModal';
 import { OnlineMatchView } from './components/OnlineMatchView';
-import { PixelHeart, PixelPieceIcon, PixelCoinIcon } from './components/PixelIcons';
+import { PixelHeart, PixelCoinIcon } from './components/PixelIcons';
 import { soundManager } from './game/soundManager';
 import { createTowerRun, TowerRunState, getTowerHighScore } from './game/towerEngine';
 import { ShopModal } from './components/ShopModal';
@@ -42,17 +43,21 @@ export default function App() {
     }
   }, []);
 
-  // 當前手牌（4選3：手上持有牌庫抽出的卡牌）
-  const [hand, setHand] = useState<Character[]>([]);
-  // 當前戰場 3 槽位的佈署
-  const [deployment, setDeployment] = useState<(Character | null)[]>([null, null, null]);
+  // 當前手牌（固定 3 張，必全出）
+  const [hand, setHand] = useState<Card[]>([]);
+  // 當前戰場 3 槽位的佈署 [Lane 0, Lane 1, Lane 2]
+  const [deployment, setDeployment] = useState<(Card | null)[]>([null, null, null]);
+  // 玩家戰術姿態宣告 (預設 ODD 蓄力充能)
+  const [playerStance, setPlayerStance] = useState<Stance>('ODD');
+  // 敵方已揭露之戰術姿態
+  const [enemyRevealedStance, setEnemyRevealedStance] = useState<Stance | null>(null);
 
   // 連貫動效狀態 (L4 手牌起跳 ➔ L1 戰場砸入 ➔ L2 卡槽高光)
   const [liftingHandIndex, setLiftingHandIndex] = useState<number | null>(null);
   const [animatingSlot, setAnimatingSlot] = useState<number | null>(null);
   const [recallingSlot, setRecallingSlot] = useState<number | null>(null);
 
-  // 防快速連擊與定時器嚴謹管理 (避免記憶體洩漏與競態錯位)
+  // 防快速連擊與定時器嚴謹管理
   const isDeployingRef = useRef(false);
   const deployTimerRef = useRef<number | null>(null);
   const dropTimerRef = useRef<number | null>(null);
@@ -60,14 +65,14 @@ export default function App() {
 
   // 動畫與結算狀態
   const [isResolving, setIsResolving] = useState(false);
-  const [dealStep, setDealStep] = useState(-1);       // 敵方飛牌動畫 (0, 1, 2, 3)
+  const [dealStep, setDealStep] = useState(-1);       // 敵方出兵動畫 (0, 1, 2, 3)
   const [resolveStep, setResolveStep] = useState(-1); // 逐格翻牌與結算動畫 (0, 1, 2, 3)
   const [pendingResult, setPendingResult] = useState<RoundResolutionResult | null>(null);
   const [pendingNextSession, setPendingNextSession] = useState<GameSession | null>(null);
-  const [battleLogs, setBattleLogs] = useState<SingleBattleRecord[]>([]);
+  const [laneLogs, setLaneLogs] = useState<SingleLaneRecord[]>([]);
 
   // 歷史戰況紀錄
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<RoundResolutionResult[]>([]);
   const [showHistory, setShowHistory] = useState(false);
 
   // 模態彈窗控制
@@ -79,7 +84,7 @@ export default function App() {
   const [showShop, setShowShop] = useState(false);
   const [showDeckBuilder, setShowDeckBuilder] = useState(false);
   const [allowCustomUpload, setAllowCustomUpload] = useState(false);
-  const [inspectedTerrainIndex, setInspectedTerrainIndex] = useState<number | null>(null);
+  const [inspectedLaneIndex, setInspectedLaneIndex] = useState<number | null>(null);
 
   // 永久錢包與結算金幣
   const [wallet, setWallet] = useState<PlayerWallet>(getWallet());
@@ -92,7 +97,7 @@ export default function App() {
     return unsub;
   }, []);
 
-  // 卸載時安全回收連貫動效定時器 (防止記憶體洩漏與卸載更新)
+  // 卸載時安全回收連貫動效定時器
   useEffect(() => {
     return () => {
       if (deployTimerRef.current) window.clearTimeout(deployTimerRef.current);
@@ -120,7 +125,7 @@ export default function App() {
     setRecallingSlot(null);
   };
 
-  // 初次互動解鎖音訊上下文並啟動 BGM (若已啟用)
+  // 初次互動解鎖音訊上下文
   useEffect(() => {
     const handleFirstInteraction = () => {
       soundManager.ensureContext().then(() => {
@@ -142,72 +147,53 @@ export default function App() {
     };
   }, []);
 
-  // 勝負與血量展示（基於 session 或過渡狀態）
+  // 勝負與數值展示
   const [displayPlayerHp, setDisplayPlayerHp] = useState(3);
   const [displayEnemyHp, setDisplayEnemyHp] = useState(3);
-  const [winner, setWinner] = useState<'player' | 'enemy' | null>(null);
+  const [displayPlayerAtk, setDisplayPlayerAtk] = useState(1);
+  const [displayEnemyAtk, setDisplayEnemyAtk] = useState(1);
+  const [winner, setWinner] = useState<'player' | 'enemy' | 'draw' | null>(null);
 
   /**
-   * 啟動全新對局（純客戶端秒開，無伺服器延遲）
+   * 啟動全新對局 (三路奇偶戰術博弈)
    */
-  const startGame = (showHelp: boolean = false) => {
-    soundManager.ensureContext().then(() => {
-      soundManager.startBgm();
-      soundManager.playSfx('click');
-    });
+  const startNewGame = () => {
+    soundManager.ensureContext();
+    soundManager.playSfx('click');
     const newSession = initGameSession();
     setSession(newSession);
     setHand(newSession.playerHand);
     setDeployment([null, null, null]);
-    setDisplayPlayerHp(newSession.playerHp);
-    setDisplayEnemyHp(newSession.enemyHp);
-    setGameState('playing');
-    setBattleLogs([]);
-    setHistory([]);
+    setPlayerStance('ODD');
+    setEnemyRevealedStance(null);
+    setDisplayPlayerHp(3);
+    setDisplayEnemyHp(3);
+    setDisplayPlayerAtk(1);
+    setDisplayEnemyAtk(1);
     setWinner(null);
-    setShowHistory(false);
+    setHistory([]);
+    setPendingResult(null);
+    setLaneLogs([]);
+    setIsResolving(false);
     setDealStep(-1);
     setResolveStep(-1);
-    setPendingResult(null);
-    setPendingNextSession(null);
-    setIsResolving(false);
     setEarnedGold(null);
-
-    if (showHelp) {
-      setShowTutorial(true);
-      setTutorialStep(0);
-    }
+    setGameState('playing');
   };
 
   /**
-   * 啟動奇偶試煉 (獨立刷塔模式窗口)
+   * 點選手牌：指派至戰場空位
    */
-  const startTowerRun = () => {
-    soundManager.ensureContext().then(() => {
-      soundManager.startBgm();
-      soundManager.playSfx('click');
-    });
-    const newTower = createTowerRun();
-    setTowerState(newTower);
-    setGameState('tower');
-  };
-
-  /**
-   * 點選手牌：佈署進第一個空的戰場槽位
-   * L4 (手牌起跳 80ms) ➔ L1 (戰場砸入 200ms) ➔ L2 (卡槽高光 180ms 同步)
-   */
-  const handleCardClick = (card: Character, index: number) => {
+  const handleHandCardClick = (card: Card, index: number) => {
     if (isResolving || isDeployingRef.current) return;
     const emptySlot = deployment.findIndex(s => s === null);
     if (emptySlot !== -1) {
       isDeployingRef.current = true;
       soundManager.ensureContext();
 
-      // Phase 1 L4：手牌起跳 (0.3s 後真正從手牌移除並砸入槽位)
       setLiftingHandIndex(index);
 
       deployTimerRef.current = window.setTimeout(() => {
-        // 實際資料異動：手牌移除、槽位放入
         const newDeployment = [...deployment];
         newDeployment[emptySlot] = card;
         setDeployment(newDeployment);
@@ -216,7 +202,6 @@ export default function App() {
         newHand.splice(index, 1);
         setHand(newHand);
 
-        // Phase 2 L1：戰場砸入動畫 + L2 卡槽高光
         setLiftingHandIndex(null);
         setAnimatingSlot(emptySlot);
 
@@ -227,7 +212,6 @@ export default function App() {
           soundManager.playSfx('cardDeploy');
         }
 
-        // 200ms 後清除砸入動畫，解鎖點擊
         dropTimerRef.current = window.setTimeout(() => {
           setAnimatingSlot(null);
           isDeployingRef.current = false;
@@ -241,15 +225,13 @@ export default function App() {
 
   /**
    * 點選戰場槽位：撤回卡牌至手牌區
-   * 撤回時微躍消散 (card-recall-out 0.3s)
    */
-  const handleSlotClick = (card: Character | null, index: number) => {
+  const handleSlotClick = (card: Card | null, index: number) => {
     if (isResolving || card === null || isDeployingRef.current) return;
     isDeployingRef.current = true;
     soundManager.ensureContext();
     soundManager.playSfx('cardRecall');
 
-    // 先播撤回動畫
     setRecallingSlot(index);
 
     recallTimerRef.current = window.setTimeout(() => {
@@ -264,134 +246,145 @@ export default function App() {
   };
 
   /**
-   * 提交佈署並觸發對決
+   * 提交佈署並觸發三路對決
    */
   const submitDeployment = () => {
     const deployedCount = deployment.filter(c => c !== null).length;
     if (deployedCount < 3 || !session || isResolving) return;
 
-    // 提交時清除任何殘留動畫狀態
     clearDeployTimers();
-
-    setInspectedTerrainIndex(null);
+    setInspectedLaneIndex(null);
     soundManager.ensureContext();
     soundManager.playSfx('startClash');
     setIsResolving(true);
 
-    // 本地純前端引擎即時結算（0ms 延遲，包含特性鉤子與 AI 24 種模擬）
-    const { result, nextSession } = resolveTurn(
+    // 本地純前端引擎即時結算
+    const { result, enemyStance, nextSession } = resolveTurn(
       session,
-      deployment as Character[]
+      deployment as Card[],
+      playerStance
     );
 
     setPendingResult(result);
-    setBattleLogs([]);
-
-    // 暫存下一回合 session，待動畫與結算完全播畢後再過渡，避免當前戰場橫幅提前變異
+    setEnemyRevealedStance(enemyStance);
+    setLaneLogs([]);
     setPendingNextSession(nextSession || null);
 
-    // 啟動動畫序列：敵方卡片依序飛入戰場
+    // 啟動動畫序列：敵方 3 張卡依序就位
     setDealStep(0);
   };
 
-  // 第一階段動畫：敵方卡片依序飛入戰場
+  // 第一階段動畫：敵方卡片依序飛入就位
   useEffect(() => {
     if (dealStep >= 0 && dealStep < 3) {
       soundManager.playSfx('enemyDeal');
       const timer = setTimeout(() => {
         setDealStep(prev => prev + 1);
-      }, 300);
+      }, 250);
       return () => clearTimeout(timer);
     } else if (dealStep === 3) {
       const timer = setTimeout(() => {
-        setResolveStep(0); // 飛入完畢，進入翻牌結算階段
-      }, 450);
+        setResolveStep(0); // 飛入完畢，進入逐路翻牌結算階段
+      }, 350);
       return () => clearTimeout(timer);
     }
   }, [dealStep]);
 
-  // 第二階段動畫：逐格翻牌、特效文字與算式展示
+  // 第二階段動畫：逐路翻牌、特性結算、姿態執行
   useEffect(() => {
     if (resolveStep >= 0 && resolveStep < 3 && pendingResult) {
-      const currentBattle = pendingResult.battles[resolveStep];
+      const currentLane = pendingResult.lanes[resolveStep];
       soundManager.playSfx('cardReveal');
-      if (currentBattle.traits_triggered && currentBattle.traits_triggered.length > 0) {
+
+      if (currentLane.traitsTriggered && currentLane.traitsTriggered.length > 0) {
         setTimeout(() => {
           soundManager.playSfx('traitTrigger');
-        }, 400);
+        }, 300);
       }
-      setBattleLogs(prev => {
+
+      setLaneLogs(prev => {
         const newLogs = [...prev];
-        newLogs[resolveStep] = currentBattle;
+        newLogs[resolveStep] = currentLane;
         return newLogs;
       });
 
       const timer = setTimeout(() => {
         setResolveStep(prev => prev + 1);
-      }, 3600); // 保留時間讓玩家觀賞打字機算式與特性觸發
+      }, 1800);
 
       return () => clearTimeout(timer);
     } else if (resolveStep === 3 && pendingResult) {
-      // 3 個戰場全部結算完畢，結算總傷害與更新血量
+      // 三路結算完畢，執行 Phase 4 勝者姿態動作
       const endTimer = setTimeout(() => {
-        soundManager.playSfx('hitDamage');
-        setDisplayPlayerHp(pendingResult.player_hp);
-        setDisplayEnemyHp(pendingResult.enemy_hp);
+        // 更新數值
+        setDisplayPlayerHp(pendingResult.playerHpAfter);
+        setDisplayEnemyHp(pendingResult.enemyHpAfter);
+        setDisplayPlayerAtk(pendingResult.playerAtkAfter);
+        setDisplayEnemyAtk(pendingResult.enemyAtkAfter);
+
+        if (pendingResult.winner === 'player') {
+          if (pendingResult.playerStance === 'ODD') {
+            soundManager.playSfx('victory'); // 蓄力音效
+          } else {
+            soundManager.playSfx('hitDamage'); // 突擊打擊音效
+          }
+        } else if (pendingResult.winner === 'enemy') {
+          if (pendingResult.enemyStance === 'ODD') {
+            soundManager.playSfx('traitTrigger');
+          } else {
+            soundManager.playSfx('hitDamage');
+          }
+        }
 
         // 存入戰況歷史
-        setHistory(prev => [
-          ...prev,
-          {
-            round: prev.length + 1,
-            battles: pendingResult.battles,
-            total_score: pendingResult.total_score,
-            damage_to: pendingResult.damage_to,
-            player_role: session?.playerRole,
-            enemy_role: session?.enemyRole
-          }
-        ]);
+        setHistory(prev => [...prev, pendingResult]);
 
         const nextRoundTimer = setTimeout(() => {
-          if (pendingResult.game_over) {
-            setWinner(pendingResult.winner);
+          if (pendingResult.gameOver) {
+            setWinner(pendingResult.gameWinner);
             setGameState('game_over');
-            if (pendingResult.winner === 'player') {
+
+            if (pendingResult.gameWinner === 'player') {
               soundManager.playSfx('victory');
               const baseGold = 60;
-              const flawlessBonus = displayPlayerHp === 3 ? 40 : 0;
+              const flawlessBonus = pendingResult.playerHpAfter === 3 ? 40 : 0;
               const totalAward = baseGold + flawlessBonus;
-              const reason = flawlessBonus > 0 ? '大獲全勝 (無損加成)' : '單局勝利獎勵';
+              const reason = flawlessBonus > 0 ? '完封大捷 (滿血無損)' : '單局交鋒勝利';
               addGold(totalAward, reason);
               setEarnedGold({ amount: totalAward, reason });
               setTimeout(() => soundManager.playSfx('coin'), 700);
-            } else {
+            } else if (pendingResult.gameWinner === 'enemy') {
               soundManager.playSfx('defeat');
               const award = 20;
-              addGold(award, '奮戰慰問金');
-              setEarnedGold({ amount: award, reason: '奮戰慰問金' });
+              addGold(award, '奮戰慰問軍餉');
+              setEarnedGold({ amount: award, reason: '奮戰慰問軍餉' });
               setTimeout(() => soundManager.playSfx('coin'), 700);
+            } else {
+              soundManager.playSfx('click');
+              const award = 30;
+              addGold(award, '平局平分獎金');
+              setEarnedGold({ amount: award, reason: '平局平分獎金' });
             }
           } else {
-            // 自動過渡至下一回合：此時當前交鋒動畫全部播畢，正式套用下一回合的 session 與新戰場環境
+            // 過渡至下一回合
             if (pendingNextSession) {
               setSession(pendingNextSession);
               setHand(pendingNextSession.playerHand);
               setPendingNextSession(null);
-            } else if (pendingResult.next_player_hand) {
-              setHand(pendingResult.next_player_hand);
             }
             setDeployment([null, null, null]);
+            setEnemyRevealedStance(null);
           }
 
           setDealStep(-1);
           setResolveStep(-1);
           setIsResolving(false);
           setPendingResult(null);
-          setBattleLogs([]);
-        }, 1600);
+          setLaneLogs([]);
+        }, 2200);
 
         return () => clearTimeout(nextRoundTimer);
-      }, 600);
+      }, 500);
 
       return () => clearTimeout(endTimer);
     }
@@ -408,61 +401,65 @@ export default function App() {
 
   const deployedCount = deployment.filter(c => c !== null).length;
   const isDeployReady = deployedCount === 3;
-  const currentTerrains = session?.currentTerrains || [];
+  const currentConstraint = session?.currentConstraint;
+
+  // 即時預估己方戰力
+  const projected = session && currentConstraint
+    ? calculateProjectedScore(deployment, currentConstraint)
+    : { total: 0, laneScores: [0, 0, 0], violations: [false, false, false] };
 
   // 專業像素風格無 Emoji 教學頁面
   const TUTORIAL_PAGES = [
     {
-      title: "[ 奇偶博弈與陣營輪替 ]",
-      text: "雙方陣營分為 [ ODD 奇數 ] 與 [ EVEN 偶數 ]，每局自動換邊！\n所有戰場的 (等級差值 × 戰場倍率) 加總為【全場總積分】。\n總積分為奇數則 ODD 攻擊，偶數則 EVEN 攻擊！率先扣光敵方 3 點生命值者勝出。",
-      graphic: (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', background: 'rgba(15,23,42,0.8)', padding: '12px', border: '2px solid #334155', borderRadius: '4px', width: '100%' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#94a3b8' }}>ROUND 1:</span> <span style={{ color: '#00ffcc', fontWeight: 'bold' }}>玩家 [ ODD ]</span> <span>VS</span> <span style={{ color: '#ff4747', fontWeight: 'bold' }}>對手 [ EVEN ]</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#94a3b8' }}>ROUND 2:</span> <span style={{ color: '#ff4747', fontWeight: 'bold' }}>玩家 [ EVEN ]</span> <span>VS</span> <span style={{ color: '#00ffcc', fontWeight: 'bold' }}>對手 [ ODD ]</span>
-          </div>
-        </div>
-      )
-    },
-    {
-      title: "[ 手牌管理：4 抽選 3 佈署 ]",
-      text: "每回合發放 4 位兵力手牌！\n從中精選 3 張佈署至三大戰場，剩餘 1 張作為備用。\n24 種出牌組合，讓您精確計算奇偶總分走向與環境相剋。",
+      title: "[ 三路奇偶博弈規格 ]",
+      text: "每回合存在 3 個戰場：左翼 (×1)、中路核心 (×2 帶禁令)、右翼 (×1)！\n雙方每回合抽取 3 張手牌，必須全數分別指派至三路。\n總積分高者為本回合勝者，可執行宣告之戰術姿態！",
       graphic: (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '12px', width: '100%' }}>
-          <div style={{ padding: '8px 12px', border: '2px solid #fff', borderRadius: '2px', background: '#0f172a' }}>小兵 LV.1</div>
-          <div style={{ padding: '8px 12px', border: '2px solid #fff', borderRadius: '2px', background: '#0f172a' }}>騎士 LV.2</div>
-          <div style={{ padding: '8px 12px', border: '2px solid #fff', borderRadius: '2px', background: '#0f172a' }}>主塔 LV.3</div>
-          <div style={{ padding: '8px 12px', border: '2px dashed #f59e0b', borderRadius: '2px', background: '#1e293b', color: '#f59e0b' }}>國王 LV.6 [備用]</div>
-        </div>
-      )
-    },
-    {
-      title: "[ 角色專屬特性 ]",
-      text: "每顆棋子皆身懷戰術特性：\n【逆襲】小兵：面對 LV.4~6 強敵時直接勝出！\n【堅守】主塔：戰敗時差值強制鎖定為 1，控分止損！\n【破陣】騎士：斬斷敵方氣勢；【威壓】皇后：勝出時氣勢躍升 +2！",
-      graphic: (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px', background: 'rgba(15,23,42,0.8)', padding: '10px', border: '2px solid #334155', borderRadius: '4px', width: '100%' }}>
-          <div style={{ color: '#00ffcc', fontWeight: 'bold' }}>
-            [ 逆襲 REVERSAL ] 小兵 LV.1 vs 皇后 LV.5 -{'>'} 小兵逆襲勝出！
+          <div style={{ flex: 1, padding: '8px 4px', border: '2px solid #64748b', background: '#090d16', textAlign: 'center' }}>
+            左翼<br /><span style={{ color: '#ffcc00' }}>×1</span>
+          </div>
+          <div style={{ flex: 1.2, padding: '8px 4px', border: '2px solid #fbbf24', background: '#18181b', textAlign: 'center' }}>
+            中路核心<br /><span style={{ color: '#fbbf24', fontWeight: 'bold' }}>×2 禁令</span>
+          </div>
+          <div style={{ flex: 1, padding: '8px 4px', border: '2px solid #64748b', background: '#090d16', textAlign: 'center' }}>
+            右翼<br /><span style={{ color: '#ffcc00' }}>×1</span>
           </div>
         </div>
       )
     },
     {
-      title: "[ 動態戰場環境 ]",
-      text: "三大戰場每回合隨機輪換，帶來不同的戰略規則：\n[ 沼澤 ]：泥沼阻滯，氣勢加成無效。\n[ 擂台 ]：勝者氣勢加乘翻倍 (+2)。\n[ 皇宮 ]：高階棋子戰力 +1；[ 鏡像 ]：總分保底偶數！",
+      title: "[ 戰術姿態宣告：ODD 與 EVEN ]",
+      text: "每回合佈署卡牌時，雙方秘密宣告戰術姿態（盲選）：\n[ ODD · 蓄力充能 ]：本回合勝出時，自身 ATK +1（可跨回合無限累積）！\n[ EVEN · 鋒刃突擊 ]：本回合勝出時，對敵方造成等於當前 ATK 的直接傷害！命中後 ATK 重置回 01。",
       graphic: (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', fontSize: '12px', width: '100%' }}>
-          <div style={{ flex: 1, padding: '8px 0', border: '2px dashed #2e7d32', backgroundColor: 'rgba(46,125,50,0.3)', borderRadius: '2px' }}>沼澤<br /><span style={{ color: '#ffcc00' }}>x1</span></div>
-          <div style={{ flex: 1, padding: '8px 0', border: '2px dashed #d32f2f', backgroundColor: 'rgba(211,47,47,0.3)', borderRadius: '2px' }}>擂台<br /><span style={{ color: '#ffcc00' }}>x2</span></div>
-          <div style={{ flex: 1, padding: '8px 0', border: '2px dashed #f57c00', backgroundColor: 'rgba(245,124,0,0.3)', borderRadius: '2px' }}>皇宮<br /><span style={{ color: '#ffcc00' }}>x3</span></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', background: 'rgba(15,23,42,0.8)', padding: '10px', border: '2px solid #334155' }}>
+          <div style={{ color: '#fbbf24', fontWeight: 'bold' }}>[ ODD 姿態 ] 蓄力強化：ATK 1 ➔ 2 ➔ 3... 積蓄毀滅一擊</div>
+          <div style={{ color: '#f87171', fontWeight: 'bold' }}>[ EVEN 姿態 ] 致命出鞘：重創敵軍生命，一擊即歸</div>
+        </div>
+      )
+    },
+    {
+      title: "[ 中路戰場禁令與特性 ]",
+      text: "中路 (Lane 1) 享有 ×2 關鍵倍率，但每回合受專屬禁令限制！\n若放入未符規格之卡牌（如奇數令放入偶數卡），該卡在中路戰力視為 0。\nLV.1~2 棋子身懷戰術特性，LV.3~4 則為正面抗衡之高戰力核心。",
+      graphic: (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#cbd5e1' }}>
+          <div>• 【暗影斥候】(LV.1)：於邊翼 (L0/L2) 戰力 +1</div>
+          <div>• 【核心刺客】(LV.2)：於中路 (L1) 符合禁令時戰力 +1</div>
+          <div>• 【不屈鐵衛】(LV.2)：面對高階強敵時激發不屈 +1</div>
+        </div>
+      )
+    },
+    {
+      title: "[ 勝利條件與同分仲裁 ]",
+      text: "1. 擊殺勝利：任一方生命歸零立即獲勝！\n2. 回合上限：打滿 5 回合生命較高者獲勝。\n3. 平局仲裁：HP 相同比「第 5 回合總積分」；仍相同比「5 回合累積總積分」；全同則 Draw！",
+      graphic: (
+        <div style={{ padding: '8px', border: '1px dashed #fbbf24', background: '#090d16', fontSize: '12px', color: '#fbbf24', textAlign: 'center' }}>
+          [ 5 回合定勝負 · 3 點生命 · 15 張對稱牌庫 ]
         </div>
       )
     }
   ];
 
-  // 若當前處於【奇偶試煉 (刷塔模式)】，渲染專屬窗口
+  // 若當前處於【奇偶試煉 (刷塔模式)】
   if (gameState === 'tower' && towerState) {
     return (
       <TowerView
@@ -479,7 +476,7 @@ export default function App() {
     );
   }
 
-  // 若當前處於【雲端連線對戰】，渲染專屬連線窗口
+  // 若當前處於【雲端連線對戰】
   if (gameState === 'online_match') {
     return (
       <OnlineMatchView
@@ -494,7 +491,7 @@ export default function App() {
 
   return (
     <div className="game-wrapper">
-      {/* ============ 電腦版專屬頂部導覽按鈕 ============ */}
+      {/* 電腦版頂部圖鑑按鈕 */}
       <button
         className="compendium-btn desktop-only"
         onClick={() => {
@@ -505,9 +502,8 @@ export default function App() {
         [ 圖鑑 ]
       </button>
 
-      {/* ============ 電腦版右上角導覽控制區 (Flex 排版，保證清晰街機間距) ============ */}
+      {/* 電腦版右上角導覽控制區 */}
       <div className="desktop-top-right-nav desktop-only">
-        {/* 個人錢包金幣 (點擊亦可快速開啟商城) */}
         <div
           className="gold-badge-chip"
           onClick={() => {
@@ -520,7 +516,6 @@ export default function App() {
           <span>{wallet.gold.toLocaleString()} G</span>
         </div>
 
-        {/* 電腦版設定按鈕 (僅在 idle 首頁右上角顯示，與左上角圖鑑對稱) */}
         {gameState === 'idle' && (
           <button
             className="settings-btn"
@@ -533,7 +528,6 @@ export default function App() {
           </button>
         )}
 
-        {/* 電腦版 Menu 選單按鈕 (僅在 playing 戰鬥中顯示為局內暫停與設定選單) */}
         {gameState === 'playing' && !showTutorial && !showMenu && (
           <button
             className="help-btn"
@@ -550,9 +544,8 @@ export default function App() {
         )}
       </div>
 
-      {/* ============ 手機版專屬頂部導覽與 HUD 狀態列 (Docked Top Header) ============ */}
+      {/* 手機版頂部導覽列 */}
       <header className="mobile-header-bar mobile-only">
-        {/* 第一列：快捷操作與本局登場名冊 (極簡對稱：左上圖鑑、右上設定/選單) */}
         <div className="mobile-nav-row">
           <button
             className="mobile-btn"
@@ -564,7 +557,6 @@ export default function App() {
             [ 圖鑑 ]
           </button>
 
-          {/* 首頁 idle 時中央展示金幣，對局中展示本局登場名冊 */}
           {gameState === 'idle' ? (
             <div
               className="gold-badge-chip"
@@ -585,34 +577,11 @@ export default function App() {
               <span>{wallet.gold.toLocaleString()} G</span>
             </div>
           ) : (
-            <div className="mobile-deck-roster">
-              {groupRosterByTier(session?.roundPool || []).map(group => {
-                if (group.characters.length === 1) {
-                  const char = group.characters[0];
-                  return (
-                    <span key={char.id} className="mobile-roster-item" title={`${char.name} (LV.${char.level})`}>
-                      <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={13} />
-                      <span>{char.name}</span>
-                    </span>
-                  );
-                }
-                return (
-                  <span key={`tier_${group.level}`} className="mobile-roster-item conflict-tier" title={`同階對陣 (LV.${group.level})`}>
-                    <span style={{ color: '#facc15', fontSize: '9px', fontWeight: 'bold' }}>L{group.level}:</span>
-                    {group.characters.map((char, idx) => (
-                      <span key={char.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-                        {idx > 0 && <span style={{ color: '#64748b' }}>/</span>}
-                        <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={12} />
-                        <span style={{ color: '#fef08a' }}>{char.name}</span>
-                      </span>
-                    ))}
-                  </span>
-                );
-              })}
+            <div style={{ fontSize: '11px', color: '#fbbf24', fontFamily: 'monospace', fontWeight: 'bold' }}>
+              [ 回合 {session?.roundNumber || 1} / 5 ]
             </div>
           )}
 
-          {/* 首頁顯示 [ 設定 ]，對局中則顯示 [ 選單 ] */}
           {gameState === 'idle' ? (
             <button
               className="mobile-btn"
@@ -637,745 +606,665 @@ export default function App() {
           )}
         </div>
 
-        {/* 第二列：雙方血量與陣營狀態 (進行中或結算時) */}
+        {/* 手機版 HUD */}
         {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
           <div className="mobile-huds-row">
             <div className="mobile-hud player">
-              <span>[ {session?.playerRole} ] 玩家</span>
-              <div className="hp-bar">{renderHearts(displayPlayerHp, 14)}</div>
+              <span style={{ fontSize: '10px' }}>玩家 [ ⚔ {displayPlayerAtk} ]</span>
+              <div className="hp-bar">{renderHearts(displayPlayerHp, 13)}</div>
             </div>
-            <div className="mobile-hud-vs">VS</div>
+            <div className="mobile-hud-vs" style={{ fontSize: '11px' }}>VS</div>
             <div className="mobile-hud enemy">
-              <span>[ {session?.enemyRole} ] 對手</span>
-              <div className="hp-bar">{renderHearts(displayEnemyHp, 14)}</div>
+              <span style={{ fontSize: '10px' }}>對手 [ ⚔ {displayEnemyAtk} ]</span>
+              <div className="hp-bar">{renderHearts(displayEnemyHp, 13)}</div>
             </div>
           </div>
         )}
       </header>
 
-      {/* Menu 選單彈窗 */}
-      {showMenu && (
-        <div className="tutorial-overlay" style={{ zIndex: 1000 }} onClick={() => setShowMenu(false)}>
-          <div className="tutorial-box" style={{ minHeight: 'auto', width: '300px', padding: '30px' }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ textAlign: 'center', color: '#fff', marginTop: 0, marginBottom: '25px', textShadow: '2px 2px 0 #000' }}>
-              MENU
+      {/* ========================================================================= */}
+      {/* 1. 遊戲開始畫面 (Idle State)                                              */}
+      {/* ========================================================================= */}
+      {gameState === 'idle' && (
+        <div className="start-screen">
+          <h1 className="title">[ 三路奇偶戰術博弈 ]</h1>
+          <div className="subtitle">3-LANE PARITY TACTICAL CARD GAME · 專業像素版</div>
+
+          <div className="mode-selection-grid">
+            <button
+              className="mode-btn mode-tutorial"
+              onClick={() => {
+                soundManager.playSfx('click');
+                setTutorialStep(0);
+                setShowTutorial(true);
+              }}
+            >
+              <span className="mode-btn-title">[ 新手指南 ]</span>
+              <span className="mode-btn-desc">三路規則與姿態博弈教學</span>
+            </button>
+
+            <button
+              className="mode-btn mode-single"
+              onClick={startNewGame}
+            >
+              <span className="mode-btn-title">[ 戰術對決 ]</span>
+              <span className="mode-btn-desc">15張牌庫與智能AI對戰</span>
+            </button>
+
+            <button
+              className="mode-btn mode-online"
+              onClick={() => {
+                soundManager.playSfx('click');
+                setShowOnlineLobby(true);
+              }}
+            >
+              <span className="mode-btn-title">[ 雲端連機 ]</span>
+              <span className="mode-btn-desc">P2P 雙向暗牌端對端交鋒</span>
+            </button>
+
+            <button
+              className="mode-btn mode-tower"
+              onClick={() => {
+                soundManager.playSfx('click');
+                const newTower = createTowerRun();
+                setTowerState(newTower);
+                setGameState('tower');
+              }}
+            >
+              <span className="mode-btn-title">[ 一命通關 ]</span>
+              <span className="mode-btn-desc">五層試煉 · 最高分 {highScore.toLocaleString()}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 2. 主戰鬥畫面 (Playing / Game Over State)                                 */}
+      {/* ========================================================================= */}
+      {(gameState === 'playing' || gameState === 'game_over') && (
+        <div className="battle-layout">
+          {/* 左側面板：玩家 HUD 與戰備手牌 */}
+          <aside className="sidebar player-sidebar">
+            <div className="hud player-hud">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#00ffcc', letterSpacing: '0.5px' }}>
+                  [ 己方陣容 ]
+                </span>
+                <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>
+                  牌庫: {session?.playerDeck.length || 0}張
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                <span style={{ fontSize: '11px', color: '#94a3b8' }}>生命:</span>
+                <div className="hp-bar">{renderHearts(displayPlayerHp, 16)}</div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '11px', color: '#94a3b8' }}>攻勢威力:</span>
+                <span
+                  style={{
+                    fontSize: '12px',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    padding: '2px 6px',
+                    background: displayPlayerAtk > 1 ? '#854d0e' : '#1e293b',
+                    color: displayPlayerAtk > 1 ? '#fef08a' : '#94a3b8',
+                    border: `1px solid ${displayPlayerAtk > 1 ? '#eab308' : '#334155'}`
+                  }}
+                >
+                  [ ⚔ {displayPlayerAtk.toString().padStart(2, '0')} {displayPlayerAtk > 1 ? '蓄力中' : ''} ]
+                </span>
+              </div>
+            </div>
+
+            {/* 戰術姿態選擇器 */}
+            <div
+              style={{
+                background: '#090d16',
+                border: '2px solid #334155',
+                padding: '8px',
+                marginBottom: '10px'
+              }}
+            >
+              <div style={{ fontSize: '11px', color: '#cbd5e1', fontWeight: 'bold', marginBottom: '6px' }}>
+                [ 戰術姿態宣告 (盲選) ]
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <button
+                  type="button"
+                  disabled={isResolving}
+                  onClick={() => {
+                    soundManager.playSfx('click');
+                    setPlayerStance('ODD');
+                  }}
+                  style={{
+                    padding: '6px 8px',
+                    textAlign: 'left',
+                    fontFamily: 'var(--font-pixel)',
+                    fontSize: '11px',
+                    cursor: isResolving ? 'not-allowed' : 'pointer',
+                    background: playerStance === 'ODD' ? '#854d0e' : '#18181b',
+                    color: playerStance === 'ODD' ? '#fef08a' : '#94a3b8',
+                    border: `2px solid ${playerStance === 'ODD' ? '#eab308' : '#27272a'}`
+                  }}
+                >
+                  <div style={{ fontWeight: 'bold' }}>{playerStance === 'ODD' ? '▶ ' : '  '}[ ODD · 蓄力充能 ]</div>
+                  <div style={{ fontSize: '9px', opacity: 0.8, marginTop: '2px' }}>
+                    勝出時 ATK +1 (可達 {displayPlayerAtk + 1})
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isResolving}
+                  onClick={() => {
+                    soundManager.playSfx('click');
+                    setPlayerStance('EVEN');
+                  }}
+                  style={{
+                    padding: '6px 8px',
+                    textAlign: 'left',
+                    fontFamily: 'var(--font-pixel)',
+                    fontSize: '11px',
+                    cursor: isResolving ? 'not-allowed' : 'pointer',
+                    background: playerStance === 'EVEN' ? '#7f1d1d' : '#18181b',
+                    color: playerStance === 'EVEN' ? '#fecaca' : '#94a3b8',
+                    border: `2px solid ${playerStance === 'EVEN' ? '#ef4444' : '#27272a'}`
+                  }}
+                >
+                  <div style={{ fontWeight: 'bold' }}>{playerStance === 'EVEN' ? '▶ ' : '  '}[ EVEN · 鋒刃突擊 ]</div>
+                  <div style={{ fontSize: '9px', opacity: 0.8, marginTop: '2px' }}>
+                    勝出時造成 {displayPlayerAtk} 點打擊 (命中後歸1)
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* 本回合戰備手牌 (固定 3 張，必全出) */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <span style={{ fontSize: '11px', color: '#94a3b8' }}>本回合戰備手牌:</span>
+                <span style={{ fontSize: '10px', color: '#00ffcc', fontFamily: 'monospace' }}>
+                  {hand.length === 0 ? '[ 已全部就位 ]' : `剩餘 ${hand.length} 張`}
+                </span>
+              </div>
+
+              <div className="hand-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                {hand.map((card, idx) => (
+                  <CardView
+                    key={card.id}
+                    character={card}
+                    color="white"
+                    isLiftingOff={liftingHandIndex === idx}
+                    onClick={() => handleHandCardClick(card, idx)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* 即時預估戰力與出征按鈕 */}
+            <div style={{ marginTop: '10px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  background: '#0f172a',
+                  padding: '6px 8px',
+                  border: '1px solid #334155',
+                  marginBottom: '8px',
+                  fontSize: '11px'
+                }}
+              >
+                <span style={{ color: '#94a3b8' }}>預估己方戰力:</span>
+                <span style={{ color: '#fbbf24', fontWeight: 'bold', fontFamily: 'monospace', fontSize: '13px' }}>
+                  {projected.total} PTS
+                </span>
+              </div>
+
+              <button
+                className={`btn deploy-btn ${isDeployReady && !isResolving ? 'ready' : ''}`}
+                disabled={!isDeployReady || isResolving}
+                onClick={submitDeployment}
+                style={{ width: '100%', padding: '10px', fontSize: '13px' }}
+              >
+                {isResolving ? '交鋒演繹中...' : isDeployReady ? '[ 鎖定出征決鬥！ ]' : `請配置剩餘手牌 (${3 - deployedCount})`}
+              </button>
+            </div>
+          </aside>
+
+          {/* 中央主戰場 (三路架構) */}
+          <main className="battleground">
+            {/* 頂部中路禁令戰術情報橫條 */}
+            <div
+              className="terrain-stage-intel-bar"
+              style={{
+                borderColor: currentConstraint ? currentConstraint.color : '#fbbf24',
+                marginBottom: '10px',
+                padding: '6px 12px'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <span style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '11px' }}>
+                  [ 回合 {session?.roundNumber || 1} / 5 ]
+                </span>
+                <span style={{ color: currentConstraint?.color || '#fff', fontWeight: 'bold', fontSize: '12px' }}>
+                  中路禁令：{currentConstraint?.name || '無禁令'}
+                </span>
+                <span style={{ color: '#94a3b8', fontSize: '10px' }}>
+                  中路戰力享受 ×2 倍率
+                </span>
+              </div>
+              <div style={{ fontSize: '10px', color: '#cbd5e1', marginTop: '2px', textAlign: 'center' }}>
+                {currentConstraint?.description}
+              </div>
+            </div>
+
+            {/* 三路戰場卡槽 */}
+            <div className="battlefields-container" style={{ gap: '10px' }}>
+              {[0, 1, 2].map(laneIdx => {
+                const mult = MULTIPLIERS[laneIdx];
+                const pCard = deployment[laneIdx];
+                const laneRecord = laneLogs[laneIdx];
+                const isLaneResolved = resolveStep > laneIdx && laneRecord;
+                const isLaneCurrent = resolveStep === laneIdx;
+                const isViolated = Boolean(pCard && laneIdx === 1 && currentConstraint && !currentConstraint.check(pCard));
+
+                return (
+                  <div
+                    key={laneIdx}
+                    className={`field-slot ${laneIdx === 1 ? 'core-lane' : ''}`}
+                    style={{
+                      border: laneIdx === 1 ? '2px solid #fbbf24' : '1px solid #334155',
+                      background: laneIdx === 1 ? 'rgba(24, 24, 27, 0.7)' : 'rgba(9, 13, 22, 0.7)'
+                    }}
+                  >
+                    {/* 戰場路名與倍率標籤 */}
+                    <TerrainBanner
+                      laneIndex={laneIdx}
+                      multiplier={mult}
+                      constraint={laneIdx === 1 ? currentConstraint : undefined}
+                      isSelected={inspectedLaneIndex === laneIdx}
+                      onSelect={() => setInspectedLaneIndex(laneIdx)}
+                    />
+
+                    {/* 敵方槽位 */}
+                    <div className="slot-card-box enemy-box">
+                      {isResolving && dealStep >= laneIdx ? (
+                        <CardView
+                          character={pendingResult ? pendingResult.lanes[laneIdx].enemyCard : null}
+                          color="black"
+                          isRevealed={isLaneResolved}
+                          isClashing={isLaneCurrent}
+                          isViolatedConstraint={isLaneResolved ? pendingResult?.lanes[laneIdx].isEnemyViolatedConstraint : false}
+                          effectiveLevel={isLaneResolved ? pendingResult?.lanes[laneIdx].enemyEffectiveLevel : undefined}
+                        />
+                      ) : (
+                        <div className="card-placeholder enemy">?</div>
+                      )}
+                    </div>
+
+                    {/* 中央對抗戰力展示 */}
+                    <div className="vs-indicator">
+                      {isLaneResolved ? (
+                        <div style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                          <span style={{ color: '#00ffcc' }}>{laneRecord.playerScore}</span>
+                          <span style={{ color: '#64748b', margin: '0 4px' }}>VS</span>
+                          <span style={{ color: '#ff4747' }}>{laneRecord.enemyScore}</span>
+                        </div>
+                      ) : (
+                        <span style={{ color: '#64748b', fontSize: '11px' }}>VS</span>
+                      )}
+                    </div>
+
+                    {/* 己方槽位 */}
+                    <div
+                      className={`slot-card-box player-box ${animatingSlot === laneIdx ? 'slot-lock-flash' : ''}`}
+                      onClick={() => handleSlotClick(pCard, laneIdx)}
+                    >
+                      {pCard ? (
+                        <CardView
+                          character={pCard}
+                          color="white"
+                          isDropIn={animatingSlot === laneIdx}
+                          isRecalling={recallingSlot === laneIdx}
+                          isViolatedConstraint={isViolated}
+                          effectiveLevel={isLaneResolved ? laneRecord.playerEffectiveLevel : undefined}
+                        />
+                      ) : (
+                        <div className="card-placeholder player">點擊放置</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 即時算式推演與交鋒特報條 */}
+            <div className="clash-result-banner" style={{ marginTop: '12px', minHeight: '60px' }}>
+              {isResolving && pendingResult ? (
+                <div>
+                  <div style={{ fontSize: '12px', color: '#ffcc00', fontWeight: 'bold', marginBottom: '4px' }}>
+                    {resolveStep < 3 ? `[ 第 ${resolveStep + 1} 路交鋒校驗中... ]` : '[ 總戰力對決裁定 ]'}
+                  </div>
+                  {resolveStep >= 3 && (
+                    <div style={{ fontSize: '13px', color: '#fff', letterSpacing: '0.5px' }}>
+                      己方總戰力 <strong style={{ color: '#00ffcc' }}>{pendingResult.playerTotalScore}</strong> PTS  VS  敵軍總戰力 <strong style={{ color: '#ff4747' }}>{pendingResult.enemyTotalScore}</strong> PTS
+                      <div style={{ fontSize: '11px', color: '#facc15', marginTop: '4px' }}>
+                        {pendingResult.winnerActionText}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{ color: '#64748b', fontSize: '11px' }}>
+                  [ 戰備指引 ] 將 3 張手牌指派至對應戰場，確認戰術姿態後點擊「鎖定出征」。
+                </div>
+              )}
+            </div>
+          </main>
+
+          {/* 右側面板：對手 HUD 與戰備狀態 */}
+          <aside className="sidebar enemy-sidebar">
+            <div className="hud enemy-hud">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#ff4747', letterSpacing: '0.5px' }}>
+                  [ 敵軍斥候隊 ]
+                </span>
+                <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>
+                  牌庫: {session?.enemyDeck.length || 0}張
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                <span style={{ fontSize: '11px', color: '#94a3b8' }}>生命:</span>
+                <div className="hp-bar">{renderHearts(displayEnemyHp, 16)}</div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '11px', color: '#94a3b8' }}>攻勢威力:</span>
+                <span
+                  style={{
+                    fontSize: '12px',
+                    fontFamily: 'monospace',
+                    fontWeight: 'bold',
+                    padding: '2px 6px',
+                    background: displayEnemyAtk > 1 ? '#854d0e' : '#1e293b',
+                    color: displayEnemyAtk > 1 ? '#fef08a' : '#94a3b8',
+                    border: `1px solid ${displayEnemyAtk > 1 ? '#eab308' : '#334155'}`
+                  }}
+                >
+                  [ ⚔ {displayEnemyAtk.toString().padStart(2, '0')} {displayEnemyAtk > 1 ? '蓄力中' : ''} ]
+                </span>
+              </div>
+            </div>
+
+            {/* 敵方姿態展示 */}
+            <div
+              style={{
+                background: '#090d16',
+                border: '2px solid #334155',
+                padding: '8px',
+                marginBottom: '10px'
+              }}
+            >
+              <div style={{ fontSize: '11px', color: '#cbd5e1', fontWeight: 'bold', marginBottom: '6px' }}>
+                [ 敵方戰術姿態 ]
+              </div>
+              <div
+                style={{
+                  padding: '8px',
+                  background: '#18181b',
+                  border: '1px solid #27272a',
+                  textAlign: 'center',
+                  fontFamily: 'monospace',
+                  fontSize: '12px'
+                }}
+              >
+                {enemyRevealedStance ? (
+                  <span style={{ color: enemyRevealedStance === 'ODD' ? '#fbbf24' : '#f87171', fontWeight: 'bold' }}>
+                    [ {enemyRevealedStance === 'ODD' ? 'ODD · 蓄力充能' : 'EVEN · 鋒刃突擊'} ]
+                  </span>
+                ) : (
+                  <span style={{ color: '#64748b' }}>[ ？？？ · 隱蔽宣告 ]</span>
+                )}
+              </div>
+            </div>
+
+            {/* 敵方手牌 (背面展示) */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>
+                敵方當前手牌 (3 張):
+              </div>
+              <div className="hand-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="card black-piece"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '16px',
+                      color: '#64748b'
+                    }}
+                  >
+                    ?
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 3. 對局結算彈窗 (Game Over Modal)                                         */}
+      {/* ========================================================================= */}
+      {gameState === 'game_over' && (
+        <div className="tutorial-overlay" style={{ zIndex: 1200 }}>
+          <div
+            className="tutorial-box"
+            style={{
+              width: '90%',
+              maxWidth: '480px',
+              textAlign: 'center',
+              border: `3px solid ${winner === 'player' ? '#fbbf24' : winner === 'draw' ? '#94a3b8' : '#ef4444'}`
+            }}
+          >
+            <h2
+              style={{
+                fontSize: '22px',
+                color: winner === 'player' ? '#fbbf24' : winner === 'draw' ? '#94a3b8' : '#ef4444',
+                margin: '0 0 10px 0',
+                letterSpacing: '1px'
+              }}
+            >
+              {winner === 'player' ? '[ 大捷 · 榮耀凱旋 ]' : winner === 'draw' ? '[ 勢均力敵 · 平局 ]' : '[ 惜敗 · 陣線瓦解 ]'}
             </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+
+            <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.6', marginBottom: '16px' }}>
+              {pendingResult?.winReasonText || (winner === 'player' ? '成功擊潰敵軍大營！' : '部隊防線力竭失守。')}
+            </div>
+
+            {/* 軍餉獎勵 */}
+            {earnedGold && (
+              <div
+                style={{
+                  background: 'rgba(251, 191, 36, 0.1)',
+                  border: '1px solid #fbbf24',
+                  padding: '8px',
+                  marginBottom: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <PixelCoinIcon size={16} />
+                <span style={{ color: '#fbbf24', fontSize: '13px', fontWeight: 'bold' }}>
+                  獲取軍餉: +{earnedGold.amount} G ({earnedGold.reason})
+                </span>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '10px' }}>
               <button
                 className="btn"
-                style={{ background: '#059669' }}
+                style={{ flex: 1, padding: '10px', fontSize: '13px', background: '#0f766e' }}
+                onClick={startNewGame}
+              >
+                [ 再戰一局 ]
+              </button>
+              <button
+                className="btn"
+                style={{ flex: 1, padding: '10px', fontSize: '13px', background: '#334155' }}
+                onClick={() => setGameState('idle')}
+              >
+                [ 返回大廳 ]
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 4. 戰術指南彈窗 (Tutorial Modal)                                          */}
+      {/* ========================================================================= */}
+      {showTutorial && (
+        <div className="tutorial-overlay" style={{ zIndex: 1200 }} onClick={() => setShowTutorial(false)}>
+          <div className="tutorial-box" onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <h2 style={{ color: '#ffcc00', margin: 0, fontSize: '16px' }}>{TUTORIAL_PAGES[tutorialStep].title}</h2>
+              <span style={{ fontSize: '12px', color: '#64748b' }}>{tutorialStep + 1} / {TUTORIAL_PAGES.length}</span>
+            </div>
+            <div style={{ minHeight: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '15px 0' }}>
+              {TUTORIAL_PAGES[tutorialStep].graphic}
+            </div>
+            <div style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: '1.6', whiteSpace: 'pre-line', marginBottom: '20px' }}>
+              {TUTORIAL_PAGES[tutorialStep].text}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <button
+                className="btn"
+                disabled={tutorialStep === 0}
+                onClick={() => setTutorialStep(prev => prev - 1)}
+                style={{ opacity: tutorialStep === 0 ? 0.3 : 1 }}
+              >
+                上一步
+              </button>
+              {tutorialStep < TUTORIAL_PAGES.length - 1 ? (
+                <button className="btn" onClick={() => setTutorialStep(prev => prev + 1)}>
+                  下一步
+                </button>
+              ) : (
+                <button
+                  className="btn"
+                  style={{ background: '#00ffcc', color: '#000', fontWeight: 'bold' }}
+                  onClick={() => setShowTutorial(false)}
+                >
+                  開始戰鬥
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 5. 局內暫停與選單彈窗 (Menu Modal)                                        */}
+      {/* ========================================================================= */}
+      {showMenu && (
+        <div className="tutorial-overlay" style={{ zIndex: 1200 }} onClick={() => setShowMenu(false)}>
+          <div className="tutorial-box" style={{ maxWidth: '340px' }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ color: '#ffcc00', margin: '0 0 16px 0', fontSize: '16px', textAlign: 'center' }}>
+              [ 戰況選單 MENU ]
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                className="btn"
+                style={{ padding: '10px', fontSize: '13px' }}
                 onClick={() => {
                   soundManager.playSfx('click');
                   setShowMenu(false);
                   setShowSettings(true);
                 }}
               >
-                系統與音效設定
+                [ 系統與音訊設定 ]
               </button>
               <button
                 className="btn"
-                onClick={() => {
-                  soundManager.playSfx('click');
-                  setShowMenu(false);
-                  setShowTutorial(true);
-                  setTutorialStep(0);
-                }}
-              >
-                玩法說明
-              </button>
-              <button
-                className="btn"
-                style={{ background: '#0284c7' }}
+                style={{ padding: '10px', fontSize: '13px' }}
                 onClick={() => {
                   soundManager.playSfx('click');
                   setShowMenu(false);
                   setShowCompendium(true);
                 }}
               >
-                角色與戰場圖鑑
+                [ 戰術百科圖鑑 ]
               </button>
               <button
                 className="btn"
-                style={{ background: '#dc2626' }}
+                style={{ padding: '10px', fontSize: '13px', background: '#991b1b' }}
                 onClick={() => {
                   soundManager.playSfx('click');
                   setShowMenu(false);
                   setGameState('idle');
                 }}
               >
-                返回主選單
+                [ 撤出戰場 ]
               </button>
               <button
                 className="btn"
-                style={{ background: '#475569' }}
-                onClick={() => {
-                  soundManager.playSfx('click');
-                  setShowMenu(false);
-                }}
+                style={{ padding: '8px', fontSize: '12px', background: '#334155' }}
+                onClick={() => setShowMenu(false)}
               >
-                繼續遊戲
+                [ 繼續戰鬥 ]
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 系統設定模態彈窗 (兼具軍需商城與陣容軍備列表入口) */}
+      {/* ========================================================================= */}
+      {/* 6. 其他模態彈窗 (圖鑑、設定、商城、軍備、雲端大廳)                           */}
+      {/* ========================================================================= */}
+      {showCompendium && <CompendiumModal onClose={() => setShowCompendium(false)} />}
       {showSettings && (
         <SettingsModal
           onClose={() => setShowSettings(false)}
-          onOpenShop={() => {
-            setShowSettings(false);
-            setShowShop(true);
-          }}
+          onOpenShop={() => setShowShop(true)}
           onOpenDeckBuilder={() => {
-            setShowSettings(false);
-            setAllowCustomUpload(false);
-            setShowDeckBuilder(true);
-          }}
-          onOpenCustomUpload={() => {
-            setShowSettings(false);
             setAllowCustomUpload(true);
             setShowDeckBuilder(true);
           }}
         />
       )}
-
-      {/* 圖鑑百科模態彈窗 */}
-      {showCompendium && <CompendiumModal onClose={() => setShowCompendium(false)} />}
-
-      {/* 軍需商店模態彈窗 */}
-      <ShopModal
-        isOpen={showShop}
-        onClose={() => setShowShop(false)}
-        onOpenDeckBuilder={() => {
-          setShowShop(false);
-          setAllowCustomUpload(false);
-          setShowDeckBuilder(true);
-        }}
-      />
-
-      {/* 軍備庫陣容編排彈窗 */}
-      <DeckBuilderModal
-        isOpen={showDeckBuilder}
-        onClose={() => setShowDeckBuilder(false)}
-        onOpenShop={() => {
-          setShowDeckBuilder(false);
-          setShowShop(true);
-        }}
-        allowCustomUpload={allowCustomUpload}
-      />
-
-      {/* 雲端連機大廳模態彈窗 */}
-      <OnlineLobbyModal
-        isOpen={showOnlineLobby}
-        initialRoomCode={urlRoomCode}
-        onClose={() => setShowOnlineLobby(false)}
-        onStartMatch={(code, isHost) => {
-          setOnlineRoomCode(code);
-          setIsOnlineHost(isHost);
-          setShowOnlineLobby(false);
-          setGameState('online_match');
-        }}
-      />
-
-      {/* 新手玩法教學彈窗 */}
-      {showTutorial && (
-        <div className="tutorial-overlay">
-          <div className="tutorial-box">
-            <div className="tutorial-content" style={{ width: '100%' }}>
-              <h2 style={{ color: '#00ffcc', margin: '0 0 15px 0', fontSize: '18px', letterSpacing: '1px' }}>
-                {TUTORIAL_PAGES[tutorialStep].title}
-              </h2>
-              <div style={{ whiteSpace: 'pre-line', fontSize: '14px', marginBottom: '20px', color: '#cbd5e1' }}>
-                {TUTORIAL_PAGES[tutorialStep].text}
-              </div>
-              {TUTORIAL_PAGES[tutorialStep].graphic}
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
-              <button
-                className="btn"
-                style={{ padding: '8px 15px', fontSize: '14px', background: '#475569' }}
-                onClick={() => (tutorialStep > 0 ? setTutorialStep(prev => prev - 1) : setShowTutorial(false))}
-              >
-                {tutorialStep > 0 ? '← 上一頁' : '關閉'}
-              </button>
-              <button
-                className="btn"
-                style={{ padding: '8px 15px', fontSize: '14px' }}
-                onClick={() => (tutorialStep < 3 ? setTutorialStep(prev => prev + 1) : setShowTutorial(false))}
-              >
-                {tutorialStep < 3 ? '下一頁 →' : '開始決鬥'}
-              </button>
-            </div>
-
-            <div className="tutorial-dots">
-              {[0, 1, 2, 3].map(i => (
-                <div key={i} className={`dot ${tutorialStep === i ? 'active' : ''}`} />
-              ))}
-            </div>
-          </div>
-        </div>
+      {showShop && <ShopModal onClose={() => setShowShop(false)} />}
+      {showDeckBuilder && (
+        <DeckBuilderModal
+          onClose={() => {
+            setShowDeckBuilder(false);
+            setAllowCustomUpload(false);
+          }}
+          allowCustomUpload={allowCustomUpload}
+        />
       )}
-
-      {/* ============ 玩家控制面板 (左側 / 電腦版) ============ */}
-      <div className="side-panel player-panel desktop-only">
-        {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
-          <div className="hud-box player-hud">
-            <div style={{ fontWeight: 'bold', color: '#00ffcc', letterSpacing: '1px' }}>
-              [ {session?.playerRole} ] 玩家
-            </div>
-            <div className="hp-bar">{renderHearts(displayPlayerHp)}</div>
-          </div>
-        )}
-
-        {gameState === 'playing' && (
-          <div className="hand-section">
-            <div style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'center', marginBottom: '2px', fontFamily: 'monospace' }}>
-              {isDeployReady ? '[ 戰備完畢 ] 點擊槽位可撤回更換' : '[ 佈署階段 ] 選擇 3 位棋子進戰場'}
-            </div>
-
-            {/* 4 張手牌展示區 */}
-            <div
-              className="hand-container"
-              style={{
-                opacity: isResolving ? 0.5 : 1,
-                pointerEvents: isResolving ? 'none' : 'auto'
-              }}
-            >
-              {hand.map((card, i) => {
-                const isStandbyCard = isDeployReady;
-                return (
-                  <div key={card.id + i} onClick={() => handleCardClick(card, i)}>
-                    <CardView
-                      character={card}
-                      color="white"
-                      isUnselectedHand={isStandbyCard}
-                      isLiftingOff={liftingHandIndex === i}
-                    />
-                  </div>
-                );
-              })}
-              {hand.length === 0 && (
-                <div style={{ color: '#64748b', fontSize: '12px', display: 'flex', alignItems: 'center' }}>
-                  手牌已全數佈署
-                </div>
-              )}
-            </div>
-
-            <button
-              className={`btn ${isDeployReady && !isResolving ? 'engage' : ''}`}
-              onClick={submitDeployment}
-              disabled={!isDeployReady || isResolving}
-              style={{ width: '100%' }}
-            >
-              {isResolving
-                ? '決鬥交鋒中...'
-                : isDeployReady
-                  ? '出征決鬥！'
-                  : `佈署兵力 (${deployedCount}/3)`}
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* ============ 中央 戰鬥舞台 ============ */}
-      <div className="main-stage">
-        {gameState === 'idle' && (
-          <div style={{ textAlign: 'center', padding: '0 15px' }}>
-            <h1 style={{ fontSize: 'clamp(1.8rem, 5vw, 3.2rem)', textShadow: '4px 4px 0 #000', margin: '0 0 10px 0', letterSpacing: '2px', lineHeight: '1.2' }}>
-              氣勢連鎖<br />
-              <span style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.5rem)', color: '#00ffcc' }}>奇偶戰 · 點陣西洋棋</span>
-            </h1>
-            <div style={{ color: '#94a3b8', fontSize: 'clamp(11px, 2.5vw, 13px)', marginBottom: '25px', letterSpacing: '1px' }}>
-              [ 4選3手牌管理 · 角色專屬特性 · 動態環境戰場 ]
-            </div>
-
-            {/* 4 顆核心模式按鈕 (2x2 對稱排版，統一主題亮色像素邊框與高度) */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(130px, 190px))', gap: '14px', justifyContent: 'center', maxWidth: '420px', margin: '0 auto' }}>
-              <button
-                className="btn"
-                style={{
-                  background: '#0f766e',
-                  border: '2px solid #2dd4bf',
-                  fontSize: 'clamp(13px, 3.2vw, 16px)',
-                  padding: '10px 14px',
-                  minHeight: '52px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-                onClick={() => startGame(true)}
-              >
-                新手指南
-              </button>
-
-              <button
-                className="btn"
-                style={{
-                  background: '#dc2626',
-                  border: '2px solid #f87171',
-                  fontSize: 'clamp(13px, 3.2vw, 16px)',
-                  padding: '10px 14px',
-                  minHeight: '52px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-                onClick={() => startGame(false)}
-              >
-                經典單局
-              </button>
-
-              <button
-                className="btn"
-                style={{
-                  background: '#0284c7',
-                  border: '2px solid #38bdf8',
-                  fontSize: 'clamp(13px, 3.2vw, 16px)',
-                  padding: '10px 14px',
-                  minHeight: '52px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-                onClick={() => {
-                  soundManager.playSfx('click');
-                  setShowOnlineLobby(true);
-                }}
-              >
-                雲端連機
-              </button>
-
-              <button
-                className="btn"
-                style={{
-                  background: '#1e3a8a',
-                  border: '2px solid #60a5fa',
-                  fontSize: 'clamp(13px, 3.2vw, 16px)',
-                  padding: '10px 14px',
-                  minHeight: '52px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '2px',
-                  animation: 'none'
-                }}
-                onClick={startTowerRun}
-              >
-                <span>一命通關</span>
-                {highScore > 0 && (
-                  <span style={{ fontSize: '10px', color: '#ffcc00', fontFamily: 'monospace' }}>
-                    [ 最佳: {highScore.toLocaleString()} PTS ]
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {gameState === 'playing' && (
-          <>
-            {/* 本局登場角色列表 (電腦版專屬) */}
-            <div className="deck-info-box desktop-only">
-              <span className="deck-info-title">[ 對陣名冊 ]</span>
-              {groupRosterByTier(session?.roundPool || []).map(group => {
-                if (group.characters.length === 1) {
-                  const char = group.characters[0];
-                  return (
-                    <span key={char.id} className="roster-item single" title={`${char.name} (LV.${char.level})`}>
-                      <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={15} />
-                      <span className="roster-name">{char.name}</span>
-                    </span>
-                  );
-                }
-                return (
-                  <div key={`tier_${group.level}`} className="roster-tier-chip conflict" title={`同階棋手對陣 (LV.${group.level})`}>
-                    <span className="roster-level-tag">LV.{group.level}:</span>
-                    {group.characters.map((char, idx) => (
-                      <span key={char.id} className="roster-pair-entry">
-                        {idx > 0 && <span className="roster-slash">/</span>}
-                        <PixelPieceIcon type={char.avatar.src || char.id} color="white" size={14} />
-                        <span className="roster-name conflict-name">{char.name}</span>
-                      </span>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* 即時戰場戰術情報橫條 (全寬展開，徹底解決彈窗遮蔽卡牌與邊界截斷問題) */}
-            {inspectedTerrainIndex !== null && (() => {
-              const activeTerrains = (isResolving && pendingResult?.battles)
-                ? pendingResult.battles.map(bt => bt.terrain)
-                : currentTerrains;
-              const targetTerrain = activeTerrains[inspectedTerrainIndex];
-              if (!targetTerrain) return null;
-              return (
-                <div
-                  className="terrain-stage-intel-bar"
-                  onClick={() => setInspectedTerrainIndex(null)}
-                >
-                  <span style={{ color: targetTerrain.color, fontWeight: 'bold' }}>
-                    [ {targetTerrain.name} · 倍率 x{targetTerrain.weight} ]
-                  </span>
-                  <span style={{ color: '#cbd5e1' }}>
-                    {targetTerrain.description}
-                  </span>
-                  <span style={{ marginLeft: 'auto', color: '#64748b', fontSize: '10px' }}>
-                    [ 點擊收起 ]
-                  </span>
-                </div>
-              );
-            })()}
-
-            {/* 三大動態戰場佈署區 */}
-            <div className="battlefield">
-              {deployment.map((playerChar, i) => {
-                const b = battleLogs[i];
-                const isClashing = resolveStep === i;
-                const hasDealt = dealStep > i || resolveStep >= 0;
-                // 優先使用當前交鋒所綁定之真實戰場，保證橫幅、算式與倍率 100% 絕對一致
-                const activeBattle = b || pendingResult?.battles[i];
-                const terrain = (isResolving && activeBattle) ? activeBattle.terrain : (currentTerrains[i] || {
-                  id: 'unknown',
-                  name: `戰場 ${i + 1}`,
-                  weight: i + 1,
-                  icon: 'arena',
-                  color: '#555',
-                  description: ''
-                });
-
-                return (
-                  <div key={i} className="field-slot">
-                    {/* 動態戰場環境橫幅 */}
-                    <TerrainBanner
-                      terrain={terrain}
-                      index={i}
-                      isSelected={inspectedTerrainIndex === i}
-                      onSelect={() => setInspectedTerrainIndex(prev => (prev === i ? null : i))}
-                    />
-
-                    {/* 敵方陣地 */}
-                    <div className="slot-card-box">
-                      {b ? (
-                        <CardView
-                          character={b.enemy_char}
-                          color="black"
-                          isWinner={b.winner === 'enemy'}
-                          isLoser={b.winner === 'player'}
-                          isClashing={isClashing}
-                        />
-                      ) : hasDealt ? (
-                        <div
-                          className="card black-piece fly-in"
-                          style={{ borderColor: '#000', color: '#fff', fontSize: '22px', fontFamily: 'monospace' }}
-                        >
-                          ?
-                        </div>
-                      ) : (
-                        <div className="card empty" style={{ borderColor: 'rgba(255,255,255,0.15)' }} />
-                      )}
-                    </div>
-
-                    {/* 中央算式推演與特性浮動標籤 */}
-                    <div className="clash-center-box">
-                      {!isClashing && (
-                        <div style={{ fontSize: '18px', color: '#ffcc00', textShadow: '2px 2px 0 #000', letterSpacing: '1px' }}>
-                          VS
-                        </div>
-                      )}
-
-                      {/* 翻牌交鋒時的動態算式 Tooltip */}
-                      {b && isClashing && (
-                        <div className={`equation-tooltip slot-${i}`}>
-                          <div className="typewriter type-1">
-                            <span style={{ color: '#00ffcc' }}>玩家 {b.player_char.name} ({b.player_eff})</span>
-                            <span style={{ margin: '0 6px' }}>vs</span>
-                            <span style={{ color: '#ff4747' }}>對手 {b.enemy_char.name} ({b.enemy_eff})</span>
-                          </div>
-                          <div className="typewriter type-2">
-                            差值 {b.diff} × <span style={{ color: '#f59e0b' }}>x{b.weight} ({b.terrain.name})</span> ={' '}
-                            <span style={{ color: '#ff4747', fontSize: '16px', fontWeight: 'bold' }}>
-                              {b.score}
-                            </span>
-                          </div>
-
-                          {/* 特性觸發街機標籤 */}
-                          {b.traits_triggered.length > 0 && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginTop: '3px' }}>
-                              {b.traits_triggered.map((t, idx) => (
-                                <div key={idx} className="trait-popup-badge">
-                                  {t.text}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 我方陣地 */}
-                    <div
-                      className={`slot-card-box${animatingSlot === i ? ' slot-lock-flash' : ''}`}
-                      onClick={() => handleSlotClick(playerChar, i)}
-                    >
-                      <CardView
-                        character={playerChar}
-                        color="white"
-                        isWinner={b?.winner === 'player'}
-                        isLoser={b?.winner === 'enemy'}
-                        isClashing={isClashing}
-                        isDropIn={animatingSlot === i}
-                        isRecalling={recallingSlot === i}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* ============ 對手控制面板 (右側 / 電腦版) ============ */}
-      <div className="side-panel enemy-panel desktop-only">
-        {(gameState === 'playing' || gameState === 'game_over') && !showHistory && (
-          <div className="hud-box enemy-hud">
-            <div style={{ fontWeight: 'bold', color: '#ff4747', letterSpacing: '1px' }}>
-              [ {session?.enemyRole} ] 對手
-            </div>
-            <div className="hp-bar" style={{ justifyContent: 'flex-end' }}>
-              {renderHearts(displayEnemyHp)}
-            </div>
-          </div>
-        )}
-
-        {/* 電腦版顯示的神秘敵方手牌 (4 張) */}
-        {gameState === 'playing' && (
-          <div className="enemy-hand-container">
-            {Array.from({ length: 4 }).map((_, i) => {
-              const hasFlashed = dealStep > i || resolveStep >= 0;
-              return (
-                <div
-                  key={i}
-                  className="card black-piece"
-                  style={{
-                    opacity: hasFlashed ? 0.3 : 1,
-                    transition: 'opacity 0.2s',
-                    borderColor: '#000',
-                    color: '#64748b',
-                    fontSize: '24px',
-                    fontFamily: 'monospace'
-                  }}
-                >
-                  ?
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* ============ 手機版專用底部手牌托盤與出兵按鈕 (Docked Bottom Tray) ============ */}
-      {gameState === 'playing' && (
-        <div className="mobile-bottom-tray mobile-only">
-          <div className="mobile-hand-hint">
-            {isDeployReady ? '[ 戰備完畢 ] 點擊槽位可撤回更換' : '[ 佈署階段 ] 選擇 3 位棋子進戰場'}
-          </div>
-
-          {/* 4 張手牌展示區 */}
-          <div
-            className="mobile-hand-container"
-            style={{
-              opacity: isResolving ? 0.5 : 1,
-              pointerEvents: isResolving ? 'none' : 'auto'
-            }}
-          >
-            {hand.map((card, i) => {
-              const isStandbyCard = isDeployReady;
-              return (
-                <div key={card.id + i} onClick={() => handleCardClick(card, i)}>
-                  <CardView
-                    character={card}
-                    color="white"
-                    isUnselectedHand={isStandbyCard}
-                    isLiftingOff={liftingHandIndex === i}
-                  />
-                </div>
-              );
-            })}
-            {hand.length === 0 && (
-              <div style={{ color: '#64748b', fontSize: '11px', display: 'flex', alignItems: 'center' }}>
-                手牌已全數佈署
-              </div>
-            )}
-          </div>
-
-          <button
-            className={`mobile-deploy-btn btn ${isDeployReady && !isResolving ? 'engage' : ''}`}
-            onClick={submitDeployment}
-            disabled={!isDeployReady || isResolving}
-          >
-            {isResolving
-              ? '決鬥交鋒中...'
-              : isDeployReady
-                ? '出征決鬥！'
-                : `佈署兵力 (${deployedCount}/3)`}
-          </button>
-        </div>
-      )}
-
-      {/* ============ 遊戲結束與戰況歷史覆盤 ============ */}
-      {gameState === 'game_over' && (
-        <div className="overlay">
-          {showHistory ? (
-            <div
-              style={{
-                background: '#0f172a',
-                padding: '20px',
-                border: '4px solid #fff',
-                width: '90%',
-                maxWidth: '520px',
-                maxHeight: '80vh',
-                overflowY: 'auto'
-              }}
-            >
-              <h2 style={{ textAlign: 'center', color: '#ffcc00', marginTop: 0, fontSize: '18px', letterSpacing: '1px' }}>
-                [ 戰況歷史覆盤 HISTORY ]
-              </h2>
-              {history.map((h, i) => {
-                return (
-                  <div key={i} style={{ borderBottom: '1px solid #334155', padding: '14px 0' }}>
-                    <div
-                      style={{
-                        color: '#94a3b8',
-                        marginBottom: '8px',
-                        fontSize: '13px',
-                        borderBottom: '1px dashed #334155',
-                        paddingBottom: '4px',
-                        fontFamily: 'monospace'
-                      }}
-                    >
-                      ROUND {h.round} - 玩家 [ {h.player_role} ] vs 對手 [ {h.enemy_role} ]
-                    </div>
-                    {h.battles.map((b: SingleBattleRecord, j: number) => (
-                      <div
-                        key={j}
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          fontSize: '12px',
-                          marginBottom: '6px',
-                          background: 'rgba(0,0,0,0.3)',
-                          padding: '8px',
-                          borderRadius: '2px'
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ color: b.winner === 'player' ? '#00ffcc' : '#fff', flex: 1 }}>
-                            [{b.terrain.name}] {b.player_char.name} (LV.{b.player_eff})
-                          </span>
-                          <span style={{ color: '#ffcc00', fontSize: '11px', margin: '0 8px' }}>VS</span>
-                          <span
-                            style={{
-                              color: b.winner === 'enemy' ? '#ff4747' : '#fff',
-                              flex: 1,
-                              textAlign: 'right'
-                            }}
-                          >
-                            (LV.{b.enemy_eff}) {b.enemy_char.name}
-                          </span>
-                        </div>
-                        <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '11px', marginTop: '4px' }}>
-                          差值 {b.diff} × x{b.weight} ={' '}
-                          <span style={{ color: '#ff4747', fontWeight: 'bold' }}>{b.score}</span> 分
-                        </div>
-                        {b.traits_triggered.length > 0 && (
-                          <div style={{ fontSize: '11px', color: '#ffcc00', textAlign: 'center', marginTop: '2px' }}>
-                            {b.traits_triggered.map(t => t.text).join(' | ')}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                    <div style={{ textAlign: 'right', marginTop: '8px', fontSize: '13px' }}>
-                      全場總積分: <span style={{ color: '#ffcc00', fontWeight: 'bold', fontSize: '16px' }}>{h.total_score}</span>
-                      <span style={{ color: '#64748b', marginLeft: '5px' }}>
-                        ({h.total_score % 2 !== 0 ? '奇數' : '偶數'})
-                      </span>
-                      <br />
-                      <span
-                        style={{
-                          color: h.damage_to === 'enemy' ? '#00ffcc' : '#ff4747',
-                          fontSize: '13px',
-                          display: 'inline-block',
-                          marginTop: '4px',
-                          fontWeight: 'bold'
-                        }}
-                      >
-                        {h.damage_to === 'enemy' ? '[ 命中 HIT ] 對手受到 1 點傷害' : '[ 受創 DAMAGE ] 玩家受到 1 點傷害'}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-              <button className="btn" style={{ width: '100%', marginTop: '20px' }} onClick={() => setShowHistory(false)}>
-                返回
-              </button>
-            </div>
-          ) : (
-            <>
-              <h1
-                style={{
-                  fontSize: '3.6rem',
-                  color: winner === 'player' ? '#00ffcc' : '#ff4747',
-                  textShadow: '4px 4px 0 #000',
-                  margin: '0 0 10px 0',
-                  letterSpacing: '3px'
-                }}
-              >
-                {winner === 'player' ? 'VICTORY' : 'DEFEAT'}
-              </h1>
-              <div style={{ color: '#94a3b8', marginBottom: '20px', fontSize: '15px' }}>
-                {winner === 'player' ? '奇偶相生，智冠全場！' : '勝敗乃兵家常事，重整旗鼓再決一戰！'}
-              </div>
-
-              {earnedGold && (
-                <div
-                  style={{
-                    margin: '0 auto 24px auto',
-                    padding: '10px 18px',
-                    background: 'rgba(234, 179, 8, 0.15)',
-                    border: '2px solid #eab308',
-                    borderRadius: '4px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '14px',
-                    color: '#fef08a'
-                  }}
-                >
-                  <span>[ 戰後軍餉 ]</span>
-                  <span style={{ fontWeight: 'bold', color: '#ffea79' }}>+{earnedGold.amount} G</span>
-                  <span style={{ color: '#cbd5e1', fontSize: '12px' }}>({earnedGold.reason})</span>
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                <button className="btn engage" onClick={() => startGame(false)}>
-                  再次對決
-                </button>
-                <button className="btn" style={{ background: '#334155' }} onClick={() => setShowHistory(true)}>
-                  戰況歷史
-                </button>
-                <button className="btn" style={{ background: '#1e293b' }} onClick={() => setGameState('idle')}>
-                  主選單
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+      {showOnlineLobby && (
+        <OnlineLobbyModal
+          initialRoomCode={urlRoomCode}
+          onClose={() => {
+            setShowOnlineLobby(false);
+            setUrlRoomCode('');
+          }}
+          onStartMatch={(roomCode, isHost) => {
+            setOnlineRoomCode(roomCode);
+            setIsOnlineHost(isHost);
+            setShowOnlineLobby(false);
+            setGameState('online_match');
+          }}
+        />
       )}
     </div>
   );

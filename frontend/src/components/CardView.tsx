@@ -9,11 +9,13 @@ interface CardViewProps {
   isWinner?: boolean;
   isLoser?: boolean;
   isClashing?: boolean;
-  isUnselectedHand?: boolean; // 4選3中尚未佈署的手牌
+  isUnselectedHand?: boolean; // 尚未佈署的手牌
   isRevealed?: boolean; // 是否翻開揭示 (敵方暗牌/揭曉動畫)
-  isLiftingOff?: boolean; // L4 手牌起跳躍離動畫 (點選手牌跳出)
-  isDropIn?: boolean; // L1 戰場破空砸入彈跳動畫 (落入卡槽)
-  isRecalling?: boolean; // 戰場卡牌撤回躍出動畫 (回到手牌)
+  isLiftingOff?: boolean; // L4 手牌起跳躍離動畫
+  isDropIn?: boolean; // L1 戰場破空砸入彈跳動畫
+  isRecalling?: boolean; // 戰場卡牌撤回躍出動畫
+  isViolatedConstraint?: boolean; // 中路禁令違規 (有效等級視為 0)
+  effectiveLevel?: number; // 經結算或特性加成後的有效等級
   onClick?: () => void;
   showTooltip?: boolean;
 }
@@ -29,6 +31,8 @@ export const CardView: React.FC<CardViewProps> = ({
   isLiftingOff = false,
   isDropIn = false,
   isRecalling = false,
+  isViolatedConstraint = false,
+  effectiveLevel,
   onClick,
   showTooltip = true
 }) => {
@@ -108,13 +112,43 @@ export const CardView: React.FC<CardViewProps> = ({
         <span
           style={{
             fontSize: '10px',
-            color: color === 'white' ? '#475569' : '#94a3b8',
+            color: isViolatedConstraint ? '#ef4444' : color === 'white' ? '#475569' : '#94a3b8',
             fontFamily: 'monospace',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            textDecoration: isViolatedConstraint ? 'line-through' : 'none'
           }}
         >
-          LV.{character.level}
+          LV.{character.base_level || character.level}
         </span>
+        {isViolatedConstraint ? (
+          <span
+            style={{
+              fontSize: '9px',
+              padding: '1px 3px',
+              borderRadius: '0px',
+              background: '#991b1b',
+              color: '#fecaca',
+              fontWeight: 'bold',
+              letterSpacing: '0.5px'
+            }}
+          >
+            [0分]
+          </span>
+        ) : effectiveLevel !== undefined && effectiveLevel !== (character.base_level || character.level) ? (
+          <span
+            style={{
+              fontSize: '9px',
+              padding: '1px 3px',
+              borderRadius: '0px',
+              background: '#1e3a8a',
+              color: '#60a5fa',
+              fontWeight: 'bold',
+              letterSpacing: '0.5px'
+            }}
+          >
+            ▶{effectiveLevel}
+          </span>
+        ) : null}
         {character.trait && (
           <span
             style={{

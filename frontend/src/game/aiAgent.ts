@@ -1,93 +1,111 @@
-import { Character, Terrain } from './types';
-import { resolveRound } from './engine';
-import { getAllCharacters } from './registry/characters';
+import { Card, Stance, LaneConstraint } from './types';
+import { calculateProjectedScore } from './engine';
 
 /**
- * 輔助函數：取得手牌中任選 3 張的所有排列組合 (Permutations)
- * 若手牌為 4 張，P(4, 3) = 4 * 3 * 2 = 24 種出牌可能
+ * 輔助函數：取得 3 張手牌的所有 6 種排列 (Permutations)
  */
-export function getDeploymentsFromHand(hand: Character[], count: number = 3): Character[][] {
-  const results: Character[][] = [];
+export function getThreeCardPermutations(cards: Card[]): Card[][] {
+  if (cards.length !== 3) return [cards];
+  const [a, b, c] = cards;
+  return [
+    [a, b, c],
+    [a, c, b],
+    [b, a, c],
+    [b, c, a],
+    [c, a, b],
+    [c, b, a]
+  ];
+}
 
-  function permute(current: Character[], remaining: Character[]) {
-    if (current.length === count) {
-      results.push(current);
-      return;
-    }
-    for (let i = 0; i < remaining.length; i++) {
-      const next = remaining[i];
-      const rest = [...remaining.slice(0, i), ...remaining.slice(i + 1)];
-      permute([...current, next], rest);
-    }
-  }
-
-  permute([], hand);
-  return results;
+export interface AiDecision {
+  deployment: Card[];
+  stance: Stance;
+  projectedScore: number;
 }
 
 /**
- * 智慧 AI 決策器：
- * 支援 4 選 3、特性感知與動態戰場評估。
- * 遍歷自身的 24 種出牌可能，模擬對手所有可能佈署，找出勝率（能打傷玩家或防扣血）最高的方案！
+ * 智慧 AI 決策器：支援三路限制排位演算與姿態博弈
  */
-export function chooseBestDeployment(
-  aiHand: Character[],
-  terrains: Terrain[],
+export function chooseAiDeploymentAndStance(
+  aiHand: Card[],
+  laneConstraint: LaneConstraint,
   roundNumber: number,
+  aiHp: number = 3,
   playerHp: number = 3,
-  aiHp: number = 3
-): Character[] {
-  // 1. 取得 AI 自身手牌的 24 種出牌排列
-  const aiChoices = getDeploymentsFromHand(aiHand, 3);
-  if (aiChoices.length === 0) return [];
-  if (aiChoices.length === 1) return aiChoices[0];
+  aiAtk: number = 1,
+  playerAtk: number = 1
+): AiDecision {
+  if (aiHand.length === 0) {
+    return {
+      deployment: [],
+      stance: 'ODD',
+      projectedScore: 0
+    };
+  }
 
-  // 2. 構建假想的玩家可能出牌池 (從全角色庫中抽樣排列)
-  const allChars = getAllCharacters();
-  const playerHypotheticalChoices = getDeploymentsFromHand(allChars, 3);
-
-  // 抽樣 30 種常見的玩家出牌情境，兼顧演算速度與統計代表性
-  const samplePlayerDeployments = playerHypotheticalChoices
-    .sort(() => 0.5 - Math.random())
-    .slice(0, 36);
-
-  let bestDeployment = aiChoices[0];
+  // 1. 排列排位演算：尋找在 Lane[0], Lane[1], Lane[2] 預估戰力最高的方案
+  const perms = getThreeCardPermutations(aiHand);
+  let bestPerm = perms[0];
   let highestScore = -Infinity;
 
-  for (const myDep of aiChoices) {
-    let wins = 0;
-    let safeDraws = 0;
+  for (const perm of perms) {
+    const { total, violations } = calculateProjectedScore(perm, laneConstraint);
+    // 扣除違規懲罰權重
+    const penalty = violations[1] ? 4 : 0;
+    const finalScore = total - penalty;
 
-    for (const oppDep of samplePlayerDeployments) {
-      try {
-        // 在模擬中：playerDeployment 是 oppDep，enemyDeployment 是 myDep
-        const result = resolveRound(
-          oppDep,
-          myDep,
-          terrains,
-          roundNumber,
-          playerHp,
-          aiHp
-        );
-
-        // 如果傷害打在玩家身上 (damage_to === 'player')，代表 AI 獲勝
-        if (result.damage_to === 'player') {
-          wins += 2;
-        } else {
-          // AI 受到傷害
-          wins -= 1;
-        }
-      } catch {
-        // 忽略模擬異常
-      }
-    }
-
-    const currentScore = wins + safeDraws;
-    if (currentScore > highestScore) {
-      highestScore = currentScore;
-      bestDeployment = myDep;
+    if (finalScore > highestScore) {
+      highestScore = finalScore;
+      bestPerm = perm;
     }
   }
 
-  return bestDeployment;
+  // 2. 姿態博弈宣告 (Stance Heuristic)
+  let stance: Stance = 'ODD';
+
+  // 策略 A: 斬殺誘惑 (若當前 ATK 足以致命擊殺玩家)
+  if (aiAtk >= playerHp) {
+    // 85% 機率直接宣告 EVEN 嘗試斬殺
+    stance = Math.random() < 0.85 ? 'EVEN' : 'ODD';
+  }
+  // 策略 B: 自身生命危殆 (若玩家有斬殺 AI 的可能)
+  else if (playerAtk >= aiHp) {
+    // 高度警戒，嘗試搶攻或混淆
+    stance = Math.random() < 0.65 ? 'EVEN' : 'ODD';
+  }
+  // 策略 C: 早期回合或 ATK 為 1 時優先蓄力
+  else if (aiAtk === 1) {
+    if (roundNumber <= 2) {
+      // 前期傾向蓄力 75%
+      stance = Math.random() < 0.75 ? 'ODD' : 'EVEN';
+    } else {
+      // 中後期平分秋色
+      stance = Math.random() < 0.5 ? 'ODD' : 'EVEN';
+    }
+  }
+  // 策略 D: 蓄力已達 2 或以上，爆發攻擊慾望提升
+  else if (aiAtk >= 2) {
+    // 70% 機率釋放攻擊
+    stance = Math.random() < 0.7 ? 'EVEN' : 'ODD';
+  }
+
+  const { total } = calculateProjectedScore(bestPerm, laneConstraint);
+
+  return {
+    deployment: bestPerm,
+    stance,
+    projectedScore: total
+  };
+}
+
+// 相容舊介面簽名
+export function chooseBestDeployment(
+  aiHand: Card[],
+  _terrains?: any,
+  _roundNumber: number = 1,
+  _playerHp: number = 3,
+  _aiHp: number = 3
+): Card[] {
+  if (aiHand.length <= 3) return aiHand;
+  return aiHand.slice(0, 3);
 }
