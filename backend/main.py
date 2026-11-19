@@ -1,153 +1,125 @@
-from fastapi import FastAPI, Depends, HTTPException
+"""FastAPI adapter for the 3-lane tactical game."""
+
+import json
+import random
+from typing import Dict
+
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from typing import List, Dict
-import random
-import json
 
 import models
 import schemas
+from ai_agent import choose_ai_decision
 from database import engine, get_db
-from engine import resolve_round, apply_damage, GameState, CARD_POOL, HAND_SIZE
-from ai_agent import choose_best_deployment
+from engine import CARD_CATALOG, LANE_CONSTRAINTS, GameState, resolve_round
 
-# 儲存每局當下的敵方手牌 (Memory Cache)
-active_enemy_hands: Dict[int, List[int]] = {}
-
-# 建立資料庫資料表
 models.Base.metadata.create_all(bind=engine)
-
-app = FastAPI(title="Parity Battle Engine API")
-
-# 設定 CORS (允許前端訪問)
+app = FastAPI(title="3-Lane Parity Tactical Game API")
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], # 開發階段允許所有來源
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    CORSMiddleware, allow_origins=["*"], allow_credentials=True,
+    allow_methods=["*"], allow_headers=["*"],
 )
+
+# In-process session state holds the private, shuffled decks and current hands.
+active_games: Dict[int, GameState] = {}
+
+
+def _deal(state: GameState) -> None:
+    state.player_hand, state.player_deck = state.player_deck[:3], state.player_deck[3:]
+    state.enemy_hand, state.enemy_deck = state.enemy_deck[:3], state.enemy_deck[3:]
+
+
+def _constraint() -> Dict[str, str]:
+    constraint_id = random.choice(list(LANE_CONSTRAINTS))
+    return {"id": constraint_id, "name": LANE_CONSTRAINTS[constraint_id]["name"]}
+
 
 @app.get("/health")
 def health_check():
     return {"status": "awake"}
 
-def draw_hand() -> List[int]:
-    return random.sample(CARD_POOL, HAND_SIZE)
 
 @app.post("/api/game/start", response_model=schemas.StartGameResponse)
 def start_game(db: Session = Depends(get_db)):
-    # 建立新遊戲，初始雙方滿血 3 滴
     game = models.Game()
     db.add(game)
     db.commit()
     db.refresh(game)
-    
-    # 抽取玩家與敵方初始手牌
-    player_hand = draw_hand()
-    enemy_hand = draw_hand()
-    
-    # 紀錄敵方手牌並計算回合可用牌池 (唯一值)
-    active_enemy_hands[game.id] = enemy_hand
-    round_pool = sorted(list(set(player_hand + enemy_hand)))
-    
+    player_deck = random.sample(CARD_CATALOG, len(CARD_CATALOG))
+    enemy_deck = random.sample(CARD_CATALOG, len(CARD_CATALOG))
+    state = GameState(player_deck=player_deck, enemy_deck=enemy_deck)
+    _deal(state)
+    active_games[game.id] = state
+    constraint = _constraint()
+    # Current constraint is cached with the session to keep it stable this round.
+    state.constraint_id = constraint["id"]
     return {
-        "game_id": game.id,
-        "player_hp": game.player_hp,
-        "enemy_hp": game.enemy_hp,
-        "player_hand": player_hand,
-        "round_pool": round_pool,
-        "player_role": "ODD",
-        "enemy_role": "EVEN"
+        "game_id": game.id, "player_hp": state.player_hp, "enemy_hp": state.enemy_hp,
+        "player_atk": state.player_atk, "enemy_atk": state.enemy_atk,
+        "player_hand": state.player_hand, "lane_constraint": constraint,
     }
+
 
 @app.post("/api/game/resolve", response_model=schemas.ResolveRoundResponse)
 def resolve_game_round(req: schemas.ResolveRoundRequest, db: Session = Depends(get_db)):
     game = db.query(models.Game).filter(models.Game.id == req.game_id).first()
-    if not game:
+    if game is None:
         raise HTTPException(status_code=404, detail="Game not found")
-        
-    if game.status != "ongoing":
-        raise HTTPException(status_code=400, detail=f"Game is already over. Status: {game.status}")
-        
-    round_count = db.query(models.Round).filter(models.Round.game_id == game.id).count()
-    round_number = round_count + 1
-    
-    # 取得本回合已抽好的敵方手牌
-    enemy_hand = active_enemy_hands.get(game.id)
-    if not enemy_hand:
-        # Fallback (防錯)
-        enemy_hand = draw_hand()
-        
-    enemy_deployment = choose_best_deployment(enemy_hand, round_number=round_number)
-    
-    # 核心引擎結算此局戰鬥
+    state = active_games.get(game.id)
+    if state is None:
+        raise HTTPException(status_code=409, detail="Game session expired; start a new game.")
+    if state.status != "ongoing":
+        raise HTTPException(status_code=400, detail="Game is already over.")
     try:
-        result = resolve_round(req.player_deployment, enemy_deployment, round_number=round_number)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-        
-    # 套用傷害並更新資料庫
-    state = GameState()
-    state.player_hp = game.player_hp
-    state.enemy_hp = game.enemy_hp
-    apply_damage(state, result["damage_to"])
-    
-    game.player_hp = state.player_hp
-    game.enemy_hp = state.enemy_hp
-    
-    # 判斷勝負條件
-    game_over = False
-    winner = None
-    if game.player_hp <= 0:
-        game.status = "enemy_win"
-        game_over = True
-        winner = "enemy"
-    elif game.enemy_hp <= 0:
-        game.status = "player_win"
-        game_over = True
-        winner = "player"
-        
-    # 儲存此局的詳細對戰紀錄到資料庫 (Round 表)
-    round_record = models.Round(
+        enemy_deployment, enemy_stance = choose_ai_decision(
+            state.enemy_hand, state.constraint_id, state.round_number,
+            state.enemy_hp, state.player_hp, state.enemy_atk, state.player_atk,
+        )
+        result = resolve_round(
+            req.player_deployment, enemy_deployment, state.player_hand, state.enemy_hand,
+            req.player_stance, enemy_stance, state.constraint_id, state,
+        )
+    except (ValueError, KeyError, StopIteration) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    record = models.Round(
         game_id=game.id,
-        player_hand=json.dumps(req.player_hand),
-        enemy_hand=json.dumps(enemy_hand),
+        player_hand=json.dumps([card["id"] for card in state.player_hand]),
+        enemy_hand=json.dumps([card["id"] for card in state.enemy_hand]),
         player_deployment=json.dumps(req.player_deployment),
         enemy_deployment=json.dumps(enemy_deployment),
-        total_score=result["total_score"],
-        damage_to=result["damage_to"],
-        battle_log=json.dumps(result["battles"])
+        total_score=result["player_total_score"] - result["enemy_total_score"],
+        damage_to=(
+            "enemy" if result["winner"] == "player" and req.player_stance == "EVEN"
+            else "player" if result["winner"] == "enemy" and enemy_stance == "EVEN"
+            else None
+        ),
+        battle_log=json.dumps(result, ensure_ascii=False),
     )
-    db.add(round_record)
+    game.player_hp, game.enemy_hp = state.player_hp, state.enemy_hp
+    game.status = state.status
+    db.add(record)
     db.commit()
-    
-    # 若遊戲尚未結束，為玩家與對手抽出下一回合手牌
-    if not game_over:
-        next_player_hand = draw_hand()
-        next_enemy_hand = draw_hand()
-        active_enemy_hands[game.id] = next_enemy_hand
-        next_round_pool = sorted(list(set(next_player_hand + next_enemy_hand)))
+
+    next_hand, next_constraint = [], None
+    next_round_number = None
+    if not result["game_over"]:
+        state.round_number += 1
+        _deal(state)
+        next_hand = state.player_hand
+        constraint = _constraint()
+        state.constraint_id = constraint["id"]
+        next_constraint = constraint
+        next_round_number = state.round_number
     else:
-        next_player_hand = []
-        next_round_pool = []
-        active_enemy_hands.pop(game.id, None)
-    
-    next_round_number = round_number + 1
-    next_player_is_odd = (next_round_number % 2 != 0)
-    
+        active_games.pop(game.id, None)
     return {
-        "game_id": game.id,
-        "enemy_deployment": enemy_deployment,
-        "battles": result["battles"],
-        "total_score": result["total_score"],
-        "damage_to": result["damage_to"],
-        "player_role": "ODD" if next_player_is_odd else "EVEN",
-        "enemy_role": "EVEN" if next_player_is_odd else "ODD",
-        "player_hp": game.player_hp,
-        "enemy_hp": game.enemy_hp,
-        "game_over": game_over,
-        "winner": winner,
-        "next_player_hand": next_player_hand,
-        "next_round_pool": next_round_pool
+        "game_id": game.id, "round_result": result,
+        "enemy_deployment": enemy_deployment, "enemy_stance": enemy_stance,
+        "player_hp": state.player_hp, "enemy_hp": state.enemy_hp,
+        "player_atk": state.player_atk, "enemy_atk": state.enemy_atk,
+        "game_over": result["game_over"], "winner": result["game_winner"],
+        "next_round_number": next_round_number,
+        "next_player_hand": next_hand, "next_lane_constraint": next_constraint,
     }
