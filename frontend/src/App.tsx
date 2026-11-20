@@ -640,7 +640,7 @@ export default function App() {
               }}
             >
               <span className="mode-btn-title">[ 新手指南 ]</span>
-              <span className="mode-btn-desc">三路規則與姿態博弈教學</span>
+              <span className="mode-btn-desc">三路規則與博弈教學</span>
             </button>
 
             <button
@@ -648,7 +648,7 @@ export default function App() {
               onClick={startNewGame}
             >
               <span className="mode-btn-title">[ 戰術對決 ]</span>
-              <span className="mode-btn-desc">15張牌庫與智能AI對戰</span>
+              <span className="mode-btn-desc">編輯牌組進行對戰</span>
             </button>
 
             <button
@@ -659,7 +659,7 @@ export default function App() {
               }}
             >
               <span className="mode-btn-title">[ 雲端連機 ]</span>
-              <span className="mode-btn-desc">P2P 雙向暗牌端對端交鋒</span>
+              <span className="mode-btn-desc">P2P 真人及時交鋒</span>
             </button>
 
             <button
@@ -672,7 +672,7 @@ export default function App() {
               }}
             >
               <span className="mode-btn-title">[ 一命通關 ]</span>
-              <span className="mode-btn-desc">五層試煉 · 最高分 {highScore.toLocaleString()}</span>
+              <span className="mode-btn-desc">五層試煉 · 體驗冒險 {highScore.toLocaleString()}</span>
             </button>
           </div>
         </div>
