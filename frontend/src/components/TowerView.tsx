@@ -477,7 +477,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
                 R{floorRounds}
               </div>
               <div className="mobile-hud enemy" style={{ display: 'flex', alignItems: 'center', gap: '4px', flexDirection: 'row-reverse' }}>
-                <span style={{ fontSize: '10px' }}>[ 敵軍 ]</span>
+                <span style={{ fontSize: '10px' }}>[ 敵軍 ⚔{state.currentSession?.enemyAtk ?? 1} ]</span>
                 <div className="hp-bar" style={{ display: 'flex' }}>
                   {renderHearts(displayEnemyHp, currentFloorConfig.enemyHp, 11)}
                 </div>
@@ -743,6 +743,16 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
                 <div className="hp-bar" style={{ display: 'flex' }}>
                   {renderHearts(displayEnemyHp, currentFloorConfig.enemyHp, 15)}
                 </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', borderTop: '1px solid #334155', paddingTop: '6px', fontSize: '11px' }}>
+                <span style={{ color: state.currentSession.enemyAtk > 1 ? '#facc15' : '#94a3b8' }}>
+                  敵方 ATK：{state.currentSession.enemyAtk}{state.currentSession.enemyAtk > 1 ? '（蓄力中）' : ''}
+                </span>
+                <span style={{ color: pendingResult?.enemyStance === 'ODD' ? '#facc15' : pendingResult?.enemyStance === 'EVEN' ? '#f87171' : '#64748b' }}>
+                  {pendingResult?.enemyStance
+                    ? `本回合 ${pendingResult.enemyStance === 'ODD' ? 'ODD 蓄力' : 'EVEN 攻擊'}`
+                    : '姿態：隱蔽宣告'}
+                </span>
               </div>
 
               {/* 下列：頭銜稱號 */}
