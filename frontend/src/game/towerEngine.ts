@@ -3,11 +3,8 @@
  * 獨立於單局對決的 Roguelite 刷塔持久化進程
  */
 
-import { Character, Terrain } from './types';
-import { getAllCharacters, getActivePlayerDeck, INITIAL_CHARACTERS } from './registry/characters';
-import { TERRAIN_POOL, drawRandomTerrains } from './registry/terrains';
-import { GameSession, drawHand, HAND_DRAW_SIZE } from './gameService';
-import { drawRandomLaneConstraint } from './registry/laneConstraints';
+import { Character } from './types';
+import { GameSession, initGameSession } from './gameService';
 
 export interface TowerFloorConfig {
   floor: number;
@@ -19,7 +16,6 @@ export interface TowerFloorConfig {
   isBoss?: boolean;
   isElite?: boolean;
   hasCampfireAfter?: boolean;
-  fixedTerrains?: (string | null)[]; // terrain ids to fix in slot 0, 1, 2
 }
 
 export const TOWER_FLOORS: TowerFloorConfig[] = [
@@ -29,7 +25,7 @@ export const TOWER_FLOORS: TowerFloorConfig[] = [
     enemyName: '哨站斥候',
     enemyTitle: 'LV.2 鐵衛巡邏',
     enemyHp: 3,
-    modifierDesc: '[ 基礎交鋒 ] 常規戰場輪替，盡可能保持滿血無傷通關。'
+    modifierDesc: '[ 標準交鋒 ] 使用三路倍率、中路禁令與五回合裁決規則。'
   },
   {
     floor: 2,
@@ -37,8 +33,7 @@ export const TOWER_FLOORS: TowerFloorConfig[] = [
     enemyName: '泥沼異端',
     enemyTitle: 'LV.3 泥沼行者',
     enemyHp: 3,
-    modifierDesc: '[ 泥沼封鎖 ] 第一戰場固定為沼澤荒原，氣勢連鎖失效，純拼卡牌裸點數！',
-    fixedTerrains: ['swamp', null, null]
+    modifierDesc: '[ 沼澤異端 ] 沿用標準三路交鋒規則，敵方生命值 3 點。'
   },
   {
     floor: 3,
@@ -47,8 +42,7 @@ export const TOWER_FLOORS: TowerFloorConfig[] = [
     enemyTitle: 'LV.4 斷崖巨石 [精英]',
     enemyHp: 4,
     isElite: true,
-    modifierDesc: '[ 狂雷爆轟 ] 第三戰場固定為雷霆斷崖，差值大於等於 2 額外計入 +2 分！',
-    fixedTerrains: [null, null, 'storm_cliff']
+    modifierDesc: '[ 精英首領 ] 沿用標準三路交鋒規則，敵方生命值 4 點。'
   },
   {
     floor: 4,
@@ -57,8 +51,7 @@ export const TOWER_FLOORS: TowerFloorConfig[] = [
     enemyTitle: 'LV.5 偏轉秘術 [試煉]',
     enemyHp: 4,
     hasCampfireAfter: true,
-    modifierDesc: '[ 偶數領域 ] 第二戰場固定為鏡像之殿，結算總分保底為偶數！戰勝後可抵達休息營地。',
-    fixedTerrains: [null, 'mirror_hall', null]
+    modifierDesc: '[ 中繼營地 ] 沿用標準三路交鋒規則，敵方生命值 4 點；勝利後可選擇休整。'
   },
   {
     floor: 5,
@@ -67,7 +60,7 @@ export const TOWER_FLOORS: TowerFloorConfig[] = [
     enemyTitle: 'LV.6 奇偶至尊 [BOSS]',
     enemyHp: 5,
     isBoss: true,
-    modifierDesc: '[ 王座決戰 ] 棋王坐鎮要衝！全戰場加權提升，率先扣除 5 點生命者勝出！'
+    modifierDesc: '[ 王座決戰 ] 沿用標準三路交鋒規則，永劫棋王生命值 5 點。'
   }
 ];
 
@@ -108,35 +101,6 @@ export interface TowerLeaderboardEntry {
 const LEADERBOARD_KEY = 'parity_tower_leaderboard_v1';
 
 /**
- * 根據種子生成戰場配置
- */
-export function generateFloorTerrains(config: TowerFloorConfig): Terrain[] {
-  const allTerrains = [...TERRAIN_POOL];
-  const result: Terrain[] = [];
-
-  const randoms = drawRandomTerrains();
-
-  for (let i = 0; i < 3; i++) {
-    const fixedId = config.fixedTerrains ? config.fixedTerrains[i] : null;
-    if (fixedId) {
-      const fixed = allTerrains.find(t => t.id === fixedId);
-      result.push(fixed ? { ...fixed } : randoms[i]);
-    } else {
-      result.push(randoms[i]);
-    }
-  }
-
-  // BOSS 關卡倍率加權
-  if (config.isBoss) {
-    result[0].weight = Math.max(result[0].weight, 2);
-    result[1].weight = Math.max(result[1].weight, 3);
-    result[2].weight = Math.max(result[2].weight, 3);
-  }
-
-  return result;
-}
-
-/**
  * 建立全新爬塔 Run
  */
 export function createTowerRun(customSeed?: string): TowerRunState {
@@ -164,34 +128,12 @@ export function createTowerRun(customSeed?: string): TowerRunState {
  */
 export function startFloorBattle(state: TowerRunState): TowerRunState {
   const config = TOWER_FLOORS[state.currentFloor - 1];
-  const allPool = getAllCharacters();
-  const playerPool = getActivePlayerDeck();
-  const enemyPool = [...INITIAL_CHARACTERS];
-  const playerHand = drawHand(HAND_DRAW_SIZE, playerPool);
-  const enemyHand = drawHand(HAND_DRAW_SIZE, enemyPool);
-  const currentTerrains = generateFloorTerrains(config);
-
-  const poolIds = new Set([...playerHand.map(c => c.id), ...enemyHand.map(c => c.id)]);
-  const roundPool = allPool.filter(c => poolIds.has(c.id)).sort((a, b) => (a.base_level ?? a.level ?? 0) - (b.base_level ?? b.level ?? 0));
-
   const session: GameSession = {
-    gameId: `${state.runId}_f${state.currentFloor}`,
-    roundNumber: 1,
-    playerHp: state.playerHp,
-    enemyHp: config.enemyHp,
-    playerAtk: 1,
-    enemyAtk: 1,
-    playerDeck: [],
-    enemyDeck: [],
-    currentConstraint: drawRandomLaneConstraint(),
-    roundHistory: [],
-    playerRole: 'ODD',
-    enemyRole: 'EVEN',
-    playerHand,
-    enemyHand,
-    currentTerrains,
-    roundPool
+    ...initGameSession(state.playerHp, config.enemyHp),
+    gameId: `${state.runId}_f${state.currentFloor}`
   };
+  session.roundPool = [...session.playerHand, ...session.enemyHand]
+    .sort((a, b) => (a.base_level ?? a.level ?? 0) - (b.base_level ?? b.level ?? 0));
 
   return {
     ...state,

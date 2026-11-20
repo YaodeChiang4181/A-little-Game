@@ -1,4 +1,4 @@
-import { Character, Terrain, RoundResolutionResult } from '../types';
+import { Character, Stance, Terrain, RoundResolutionResult } from '../types';
 
 export type OnlineRole = 'HOST' | 'GUEST';
 
@@ -44,13 +44,14 @@ export interface WelcomeMessage extends BaseNetworkMessage {
 export interface RoundStartMessage extends BaseNetworkMessage {
   type: 'ROUND_START';
   roundNumber: number;
+  laneConstraintId: string;
   terrains: Terrain[];
   guestHand: Character[];
   roundPool: Character[];
   hostHp: number;
   guestHp: number;
-  hostRole: 'ODD' | 'EVEN';
-  guestRole: 'EVEN' | 'ODD';
+  hostAtk: number;
+  guestAtk: number;
 }
 
 export interface DeployReadyMessage extends BaseNetworkMessage {
@@ -61,6 +62,7 @@ export interface DeployReadyMessage extends BaseNetworkMessage {
 export interface SubmitDeployMessage extends BaseNetworkMessage {
   type: 'SUBMIT_DEPLOY';
   deployment: Character[];
+  stance: Stance;
 }
 
 export interface RoundResolvedMessage extends BaseNetworkMessage {
@@ -106,16 +108,19 @@ export type NetworkMessage =
 export interface OnlineMatchState {
   roomCode: string;
   role: OnlineRole;
-  myRole: 'ODD' | 'EVEN';
-  opponentRole: 'EVEN' | 'ODD';
+  myStance: Stance;
+  opponentStance: Stance | null;
   roundNumber: number;
   myHp: number;
   opponentHp: number;
+  myAtk: number;
+  opponentAtk: number;
   myHand: Character[];
   myDeployment: (Character | null)[];
   opponentReady: boolean;
   myReady: boolean;
   currentTerrains: Terrain[];
+  laneConstraintId: string;
   roundPool: Character[];
   isResolving: boolean;
   gameStatus: 'lobby' | 'playing' | 'game_over';

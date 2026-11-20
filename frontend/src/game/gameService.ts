@@ -39,7 +39,7 @@ export interface GameSession {
  * 啟動新對局 (三路奇偶戰術博弈規格)
  * 雙方各自配置 15 張牌庫，每回合發 3 張牌（必全出）
  */
-export function initGameSession(): GameSession {
+export function initGameSession(playerHp: number = 3, enemyHp: number = 3): GameSession {
   const fullPlayerDeck = createStandardDeck('player');
   const fullEnemyDeck = createStandardDeck('enemy');
 
@@ -54,8 +54,8 @@ export function initGameSession(): GameSession {
   return {
     gameId: `game_${Date.now()}`,
     roundNumber: 1,
-    playerHp: 3,
-    enemyHp: 3,
+    playerHp,
+    enemyHp,
     playerAtk: 1,
     enemyAtk: 1,
     playerDeck,

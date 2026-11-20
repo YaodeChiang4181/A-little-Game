@@ -6,7 +6,6 @@ import {
   RoundResolutionResult,
   TraitContext
 } from './types';
-import { DEFAULT_CONSTRAINT } from './registry/laneConstraints';
 
 export const MAX_HP = 3;
 export const INITIAL_ATK = 1;
@@ -50,8 +49,8 @@ export function calculateProjectedScore(
     // 基礎預估 (若有特性則進行基礎加成推算)
     let eff = card.base_level;
     if (card.trait && card.trait.trigger === 'ON_REVEAL') {
-      if (card.id === 'scout_rogue' && (i === 0 || i === 2)) eff += 1;
-      if (card.id === 'duelist_assassin' && i === 1) eff += 1;
+      if (card.trait.id === 'scout_flank' && (i === 0 || i === 2)) eff += 1;
+      if (card.trait.id === 'assassin_core' && i === 1) eff += 1;
     }
 
     laneScores[i] = eff * multiplier;
@@ -67,47 +66,16 @@ export function calculateProjectedScore(
 export function resolveRound(
   playerDeployment: Card[],
   enemyDeployment: Card[],
-  p3: Stance | any[],
-  p4?: Stance | number,
-  p5?: LaneConstraint | number,
-  p6?: number,
-  p7?: number,
-  p8?: number,
-  p9?: number,
-  p10?: number,
-  p11?: RoundHistoryEntry[]
+  playerStance: Stance,
+  enemyStance: Stance,
+  laneConstraint: LaneConstraint,
+  roundNumber: number = 1,
+  playerHp: number = 3,
+  enemyHp: number = 3,
+  playerAtk: number = 1,
+  enemyAtk: number = 1,
+  previousRoundsHistory: RoundHistoryEntry[] = []
 ): RoundResolutionResult {
-  // 檢測是否為舊版簽名呼叫: resolveRound(pDeploy, eDeploy, terrains, roundNumber, pHp, eHp)
-  let playerStance: Stance = 'ODD';
-  let enemyStance: Stance = 'EVEN';
-  let laneConstraint: LaneConstraint = DEFAULT_CONSTRAINT;
-  let roundNumber = 1;
-  let playerHp = 3;
-  let enemyHp = 3;
-  let playerAtk = 1;
-  let enemyAtk = 1;
-  let previousRoundsHistory: RoundHistoryEntry[] = [];
-
-  if (Array.isArray(p3)) {
-    // 舊版簽名適配
-    roundNumber = typeof p4 === 'number' ? p4 : 1;
-    playerHp = typeof p5 === 'number' ? p5 : 3;
-    enemyHp = typeof p6 === 'number' ? p6 : 3;
-    playerStance = roundNumber % 2 !== 0 ? 'ODD' : 'EVEN';
-    enemyStance = roundNumber % 2 !== 0 ? 'EVEN' : 'ODD';
-  } else {
-    // 新版簽名
-    playerStance = p3;
-    enemyStance = (p4 as Stance) || 'EVEN';
-    laneConstraint = (p5 as LaneConstraint) || DEFAULT_CONSTRAINT;
-    roundNumber = p6 || 1;
-    playerHp = p7 ?? 3;
-    enemyHp = p8 ?? 3;
-    playerAtk = p9 ?? 1;
-    enemyAtk = p10 ?? 1;
-    previousRoundsHistory = p11 || [];
-  }
-
   if (playerDeployment.length !== 3 || enemyDeployment.length !== 3) {
     throw new Error('雙方佈署卡牌數量必須剛好為 3 張。');
   }
@@ -372,6 +340,8 @@ export function resolveRound(
     },
     player_card: l.playerRawLevel,
     enemy_card: l.enemyRawLevel,
+    player_score: l.playerScore,
+    enemy_score: l.enemyScore,
     player_char: l.playerCard,
     enemy_char: l.enemyCard,
     player_eff: l.playerEffectiveLevel,
@@ -411,7 +381,9 @@ export function resolveRound(
     winReasonText,
     // 相容性屬性
     battles,
-    damage_to: roundWinner === 'player' ? 'enemy' : 'player',
+    damage_to: roundWinner === 'tie' ? undefined : roundWinner === 'player'
+      ? (playerStance === 'EVEN' ? 'enemy' : undefined)
+      : (enemyStance === 'EVEN' ? 'player' : undefined),
     player_role: playerStance,
     enemy_role: enemyStance,
     total_score: playerTotalScore,

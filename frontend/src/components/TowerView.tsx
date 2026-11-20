@@ -11,10 +11,9 @@ import {
   resolveFloorDefeat,
   applyCampfireRest,
   applyCampfireTactics,
-  generateFloorTerrains
 } from '../game/towerEngine';
 import { resolveTurn, GameSession } from '../game/gameService';
-import { Character, SingleBattleRecord, RoundResolutionResult } from '../game/types';
+import { Character, SingleBattleRecord, RoundResolutionResult, Stance } from '../game/types';
 import { TowerResultModal } from './TowerResultModal';
 import { addGold } from '../game/economy/wallet';
 
@@ -30,6 +29,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
   // 當前戰場 3 槽位佈署
   const [deployment, setDeployment] = useState<(Character | null)[]>([null, null, null]);
   const [hand, setHand] = useState<Character[]>([]);
+  const [playerStance, setPlayerStance] = useState<Stance>('ODD');
 
   // 連貫動效狀態 (L4 ➔ L1 ➔ L2)
   const [liftingHandIndex, setLiftingHandIndex] = useState<number | null>(null);
@@ -109,18 +109,18 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
     } else if (resolveStep === 3 && pendingResult && state.currentSession) {
       // 3 個戰場全部結算完畢，結算總傷害與更新血量
       const endTimer = setTimeout(() => {
-        soundManager.playSfx('hitDamage');
-
-        // 計算玩家承受的傷害
-        const damageToPlayer = pendingResult.damage_to === 'player' ? 1 : 0;
-        const newPlayerHp = Math.max(0, state.playerHp - damageToPlayer);
+        const newPlayerHp = pendingResult.playerHpAfter;
+        const newEnemyHp = pendingResult.enemyHpAfter;
+        const damageToPlayer = Math.max(0, state.playerHp - newPlayerHp);
+        if (damageToPlayer > 0) soundManager.playSfx('hitDamage');
         const newFloorDamage = state.floorDamageTaken + damageToPlayer;
 
-        setDisplayEnemyHp(pendingResult.enemy_hp ?? 0);
+        setDisplayEnemyHp(newEnemyHp);
 
         const nextRoundTimer = setTimeout(() => {
-          // 檢查是否敵方陣亡 (通關本層)
-          if ((pendingResult.enemy_hp ?? 0) <= 0) {
+          const wonFloor = pendingResult.gameOver && pendingResult.gameWinner === 'player';
+          const lostFloor = pendingResult.gameOver && pendingResult.gameWinner !== 'player';
+          if (wonFloor) {
             soundManager.playSfx('victory');
             const updatedState: TowerRunState = {
               ...state,
@@ -138,7 +138,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
               addGold(100, '一命通關 登頂通關賞金');
             }
             setTimeout(() => soundManager.playSfx('coin'), 600);
-          } else if (newPlayerHp <= 0) {
+          } else if (lostFloor || newPlayerHp <= 0) {
             // 玩家陣亡 (挑戰失敗)
             soundManager.playSfx('defeat');
             const defeatState = resolveFloorDefeat({
@@ -263,17 +263,13 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
     const { result, nextSession } = resolveTurn(
       state.currentSession,
       deployment as Character[],
-      'ODD'
+      playerStance
     );
 
     setPendingResult(result);
     setBattleLogs([]);
 
     if (nextSession) {
-      const currentFloorConfig = TOWER_FLOORS[state.currentFloor - 1];
-      if (currentFloorConfig.fixedTerrains || currentFloorConfig.isBoss) {
-        nextSession.currentTerrains = generateFloorTerrains(currentFloorConfig);
-      }
       setPendingNextSession(nextSession);
     } else {
       setPendingNextSession(null);
@@ -298,7 +294,38 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
 
   const deployedCount = deployment.filter(c => c !== null).length;
   const isDeployReady = deployedCount === 3;
-  const currentTerrains = state.currentSession?.currentTerrains || [];
+  const currentTerrains = [0, 1, 2].map(index => ({
+    id: `lane-${index}`,
+    name: index === 0 ? '左翼陣線' : index === 1 ? `中路核心 · ${state.currentSession?.currentConstraint.name || '禁令'}` : '右翼陣線',
+    weight: index === 1 ? 2 : 1,
+    icon: index === 1 ? 'arena' : 'town',
+    color: index === 1 ? (state.currentSession?.currentConstraint.color || '#fbbf24') : '#64748b',
+    description: index === 1
+      ? (state.currentSession?.currentConstraint.description || '中路核心，倍率 ×2。')
+      : '常規陣線，倍率 ×1。'
+  }));
+
+  const renderStanceControls = () => (
+    <div style={{ display: 'flex', gap: '6px', margin: '8px 0', padding: '6px', border: '1px solid #334155', background: '#090d16' }}>
+      {(['ODD', 'EVEN'] as Stance[]).map(stance => (
+        <button
+          key={stance}
+          type="button"
+          disabled={isResolving}
+          onClick={() => setPlayerStance(stance)}
+          style={{
+            flex: 1, padding: '7px 4px', cursor: isResolving ? 'not-allowed' : 'pointer',
+            background: playerStance === stance ? (stance === 'ODD' ? '#854d0e' : '#7f1d1d') : '#18181b',
+            color: playerStance === stance ? '#fff' : '#94a3b8',
+            border: `2px solid ${playerStance === stance ? (stance === 'ODD' ? '#eab308' : '#ef4444') : '#27272a'}`,
+            fontFamily: 'var(--font-pixel)', fontSize: '10px'
+          }}
+        >
+          {stance === 'ODD' ? '[ ODD · 蓄力 ]' : '[ EVEN · 攻擊 ]'}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <div className="game-wrapper">
@@ -441,7 +468,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
             {/* 第二行：對局 HUD 資訊列 (不擠壓、空間獨立) */}
             <div className="mobile-huds-row">
               <div className="mobile-hud player" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ fontSize: '10px' }}>[ {state.currentSession.playerRole} ]</span>
+                <span style={{ fontSize: '10px' }}>[ 試煉者 ]</span>
                 <div className="hp-bar" style={{ display: 'flex' }}>
                   {renderHearts(state.playerHp, state.playerMaxHp, 11)}
                 </div>
@@ -450,7 +477,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
                 R{floorRounds}
               </div>
               <div className="mobile-hud enemy" style={{ display: 'flex', alignItems: 'center', gap: '4px', flexDirection: 'row-reverse' }}>
-                <span style={{ fontSize: '10px' }}>[ {state.currentSession.enemyRole} ]</span>
+                <span style={{ fontSize: '10px' }}>[ 敵軍 ]</span>
                 <div className="hp-bar" style={{ display: 'flex' }}>
                   {renderHearts(displayEnemyHp, currentFloorConfig.enemyHp, 11)}
                 </div>
@@ -477,7 +504,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
               {/* 上列：身分與血量 */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontWeight: 'bold', color: '#00ffcc', letterSpacing: '1px', fontSize: '13px', whiteSpace: 'nowrap' }}>
-                  [ {state.currentSession.playerRole} ] 試煉者
+                  [ {playerStance} 姿態 ] 試煉者
                 </span>
                 <div className="hp-bar" style={{ display: 'flex' }}>
                   {renderHearts(state.playerHp, state.playerMaxHp, 15)}
@@ -495,10 +522,12 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
               </div>
             </div>
 
-            {/* 電腦版顯示的手牌區 (4 張) */}
+            {renderStanceControls()}
+
+            {/* 電腦版顯示的手牌區 (3 張) */}
             <div className="hand-section">
               <div className="deck-tag" style={{ color: '#00ffcc', whiteSpace: 'nowrap', fontSize: '11px' }}>
-                [ 戰備手牌 · 4 抽選 3 佈署 ]
+                [ 本回合手牌 · 3 張全數佈署 ]
               </div>
               <div
                 className="hand-container"
@@ -637,10 +666,11 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
                             <span style={{ color: '#ff4747' }}>對手 {b.enemy_char.name} ({b.enemy_eff})</span>
                           </div>
                           <div className="typewriter type-2">
-                            差值 {b.diff} × <span style={{ color: '#f59e0b' }}>x{b.weight} ({b.terrain.name})</span> ={' '}
-                            <span style={{ color: '#ff4747', fontSize: '16px', fontWeight: 'bold' }}>
-                              {b.score}
-                            </span>
+                            我方 {b.player_eff} × x{b.weight} = <span style={{ color: '#00ffcc', fontWeight: 'bold' }}>{b.player_score}</span>
+                            {' · '}敵方 {b.enemy_eff} × x{b.weight} = <span style={{ color: '#ff4747', fontWeight: 'bold' }}>{b.enemy_score}</span>
+                            <div style={{ fontSize: '10px', color: '#fbbf24' }}>
+                              {b.terrain.name} · 路線分差 {Math.abs(b.player_score - b.enemy_score)}
+                            </div>
                           </div>
 
                           {b.traits_triggered.length > 0 && (
@@ -708,7 +738,7 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
               {/* 上列：首領名稱與血量 */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontWeight: 'bold', color: currentFloorConfig.isBoss ? '#ff4747' : currentFloorConfig.isElite ? '#ffcc00' : '#f87171', letterSpacing: '1px', fontSize: '13px', whiteSpace: 'nowrap' }}>
-                  [ {state.currentSession.enemyRole} ] {currentFloorConfig.enemyName}
+                  [ 敵軍 ] {currentFloorConfig.enemyName}
                 </span>
                 <div className="hp-bar" style={{ display: 'flex' }}>
                   {renderHearts(displayEnemyHp, currentFloorConfig.enemyHp, 15)}
@@ -721,13 +751,13 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
               </div>
             </div>
 
-            {/* 電腦版顯示的神秘敵方手牌 (4 張) */}
+            {/* 電腦版顯示的神秘敵方手牌 (3 張) */}
             <div className="hand-section">
               <div className="deck-tag" style={{ color: '#ff4747', textAlign: 'right', whiteSpace: 'nowrap', fontSize: '11px' }}>
-                [ 敵方戰備手牌 (4) ]
+                [ 敵方戰備手牌 (3) ]
               </div>
               <div className="enemy-hand-container">
-                {Array.from({ length: 4 }).map((_, i) => {
+                {Array.from({ length: 3 }).map((_, i) => {
                   const hasFlashed = dealStep > i || resolveStep >= 0;
                   return (
                     <div
@@ -755,6 +785,8 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
             <div className="mobile-hand-hint">
               {isDeployReady ? '[ 戰備完畢 ] 點擊槽位可撤回更換' : `[ 佈署階段 ] 選擇 3 位棋子進戰場 (${deployedCount}/3)`}
             </div>
+
+            {renderStanceControls()}
 
             <div
               className="mobile-hand-container"

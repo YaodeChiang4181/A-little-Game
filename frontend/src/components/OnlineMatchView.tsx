@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Character, Terrain, SingleBattleRecord, RoundResolutionResult } from '../game/types';
-import { drawHand, HAND_DRAW_SIZE, groupRosterByTier } from '../game/gameService';
-import { getActivePlayerDeck } from '../game/registry/characters';
-import { drawRandomTerrains } from '../game/registry/terrains';
+import { Character, LaneConstraint, Stance, Terrain, SingleBattleRecord, RoundResolutionResult } from '../game/types';
+import { groupRosterByTier } from '../game/gameService';
+import { createStandardDeck } from '../game/registry/characters';
+import { LANE_CONSTRAINTS, drawRandomLaneConstraint, getLaneConstraint } from '../game/registry/laneConstraints';
 import { addGold } from '../game/economy/wallet';
 import { resolveRound } from '../game/engine';
 import { networkManager } from '../game/online/networkManager';
@@ -24,17 +24,22 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
   onExit
 }) => {
   const [roundNumber, setRoundNumber] = useState<number>(1);
-  const [myRole, setMyRole] = useState<'ODD' | 'EVEN'>(isHost ? 'ODD' : 'EVEN');
-  const [opponentRole, setOpponentRole] = useState<'EVEN' | 'ODD'>(isHost ? 'EVEN' : 'ODD');
+  const [myStance, setMyStance] = useState<Stance>('ODD');
+  const [opponentStance, setOpponentStance] = useState<Stance | null>(null);
+  const myStanceRef = useRef<Stance>('ODD');
+  myStanceRef.current = myStance;
 
   const [myHp, setMyHp] = useState<number>(3);
   const [opponentHp, setOpponentHp] = useState<number>(3);
+  const [myAtk, setMyAtk] = useState<number>(1);
+  const [opponentAtk, setOpponentAtk] = useState<number>(1);
 
   const [myHand, setMyHand] = useState<Character[]>([]);
   const [myDeployment, setMyDeployment] = useState<(Character | null)[]>([null, null, null]);
   const [opponentDeployment, setOpponentDeployment] = useState<Character[] | null>(null);
 
   const [currentTerrains, setCurrentTerrains] = useState<Terrain[]>([]);
+  const [currentConstraint, setCurrentConstraint] = useState<LaneConstraint>(LANE_CONSTRAINTS[0]);
   const [roundPool, setRoundPool] = useState<Character[]>([]);
 
   const [myReady, setMyReady] = useState<boolean>(false);
@@ -58,7 +63,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
 
   // 狀態與歷史
   const [gameOver, setGameOver] = useState<boolean>(false);
-  const [winner, setWinner] = useState<'me' | 'opponent' | null>(null);
+  const [winner, setWinner] = useState<'me' | 'opponent' | 'draw' | null>(null);
   const [earnedReward, setEarnedReward] = useState<{ amount: number; text: string } | null>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState<boolean>(false);
@@ -73,40 +78,60 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
   // 房主暫存挑戰者出牌
   const guestDeploymentRef = useRef<Character[] | null>(null);
   const hostDeploymentRef = useRef<Character[] | null>(null);
-  const currentTerrainsRef = useRef<Terrain[]>([]);
+  const guestStanceRef = useRef<Stance>('ODD');
   const roundNumberRef = useRef<number>(1);
-  const myHpRef = useRef<number>(3);
-  const opponentHpRef = useRef<number>(3);
+  const hostDeckRef = useRef<Character[]>([]);
+  const guestDeckRef = useRef<Character[]>([]);
+  const hostAtkRef = useRef<number>(1);
+  const guestAtkRef = useRef<number>(1);
+  const hostHpRef = useRef<number>(3);
+  const guestHpRef = useRef<number>(3);
+  const roundHistoryRef = useRef<{ round: number; playerTotalScore: number; enemyTotalScore: number }[]>([]);
+  const currentConstraintRef = useRef<LaneConstraint>(LANE_CONSTRAINTS[0]);
+  currentConstraintRef.current = currentConstraint;
 
   // 保持 ref 同步
   useEffect(() => {
-    currentTerrainsRef.current = currentTerrains;
     roundNumberRef.current = roundNumber;
-    myHpRef.current = myHp;
-    opponentHpRef.current = opponentHp;
-  }, [currentTerrains, roundNumber, myHp, opponentHp]);
+  }, [roundNumber]);
 
   /**
    * 房主啟動指定回合 (deal new round)
    */
-  const hostStartRound = (targetRound: number, currentHostHp: number, currentGuestHp: number) => {
-    const allPool = getActivePlayerDeck();
-    const hostHand = drawHand(HAND_DRAW_SIZE, allPool);
-    const guestHand = drawHand(HAND_DRAW_SIZE, allPool);
-    const terrains = drawRandomTerrains();
-
-    const poolIds = new Set([...hostHand.map(c => c.id), ...guestHand.map(c => c.id)]);
-    const pool = allPool.filter(c => poolIds.has(c.id)).sort((a, b) => (a.base_level ?? a.level ?? 0) - (b.base_level ?? b.level ?? 0));
-
-    const hostIsOdd = targetRound % 2 !== 0;
-    const hRole: 'ODD' | 'EVEN' = hostIsOdd ? 'ODD' : 'EVEN';
-    const gRole: 'EVEN' | 'ODD' = hostIsOdd ? 'EVEN' : 'ODD';
+  const hostStartRound = (
+    targetRound: number, currentHostHp: number, currentGuestHp: number,
+    currentHostAtk: number = 1, currentGuestAtk: number = 1
+  ) => {
+    if (targetRound === 1) {
+      hostDeckRef.current = createStandardDeck('player');
+      guestDeckRef.current = createStandardDeck('enemy');
+      roundHistoryRef.current = [];
+    }
+    const hostHand = hostDeckRef.current.slice(0, 3);
+    const guestHand = guestDeckRef.current.slice(0, 3);
+    hostDeckRef.current = hostDeckRef.current.slice(3);
+    guestDeckRef.current = guestDeckRef.current.slice(3);
+    const constraint = drawRandomLaneConstraint();
+    const terrains: Terrain[] = [
+      { id: 'left_lane', name: '左翼陣線', weight: 1, icon: 'town', color: '#64748b', description: '常規陣線，倍率 ×1。' },
+      { id: 'middle_lane', name: `中路核心 · ${constraint.name}`, weight: 2, icon: 'arena', color: constraint.color, description: constraint.description },
+      { id: 'right_lane', name: '右翼陣線', weight: 1, icon: 'town', color: '#64748b', description: '常規陣線，倍率 ×1。' }
+    ];
+    const pool = [...hostHand, ...guestHand].sort((a, b) => (a.base_level ?? a.level ?? 0) - (b.base_level ?? b.level ?? 0));
 
     setRoundNumber(targetRound);
-    setMyRole(hRole);
-    setOpponentRole(gRole);
+    setMyStance('ODD');
+    setOpponentStance(null);
     setMyHp(currentHostHp);
     setOpponentHp(currentGuestHp);
+    setMyAtk(currentHostAtk);
+    setOpponentAtk(currentGuestAtk);
+    hostAtkRef.current = currentHostAtk;
+    guestAtkRef.current = currentGuestAtk;
+    hostHpRef.current = currentHostHp;
+    guestHpRef.current = currentGuestHp;
+    currentConstraintRef.current = constraint;
+    setCurrentConstraint(constraint);
     setMyHand(hostHand);
     setMyDeployment([null, null, null]);
     setOpponentDeployment(null);
@@ -130,12 +155,13 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
       sender: 'HOST',
       roundNumber: targetRound,
       terrains,
+      laneConstraintId: constraint.id,
       guestHand,
       roundPool: pool,
       hostHp: currentHostHp,
       guestHp: currentGuestHp,
-      hostRole: hRole,
-      guestRole: gRole,
+      hostAtk: currentHostAtk,
+      guestAtk: currentGuestAtk,
       timestamp: Date.now()
     });
   };
@@ -182,14 +208,21 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
       case 'ROUND_START': {
         // 挑戰者接收回合開始
         setRoundNumber(msg.roundNumber);
-        setMyRole(msg.guestRole);
-        setOpponentRole(msg.hostRole);
+        setMyStance('ODD');
+        setOpponentStance(null);
         setMyHp(msg.guestHp);
         setOpponentHp(msg.hostHp);
+        setMyAtk(msg.guestAtk);
+        setOpponentAtk(msg.hostAtk);
+        guestAtkRef.current = msg.guestAtk;
+        hostAtkRef.current = msg.hostAtk;
+        guestHpRef.current = msg.guestHp;
+        hostHpRef.current = msg.hostHp;
         setMyHand(msg.guestHand);
         setMyDeployment([null, null, null]);
         setOpponentDeployment(null);
         setCurrentTerrains(msg.terrains);
+        setCurrentConstraint(getLaneConstraint(msg.laneConstraintId));
         setRoundPool([...msg.roundPool].sort((a, b) => (a.base_level ?? a.level ?? 0) - (b.base_level ?? b.level ?? 0)));
         setMyReady(false);
         setOpponentReady(false);
@@ -210,11 +243,12 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
       case 'SUBMIT_DEPLOY': {
         // 房主收到挑戰者的佈署
         guestDeploymentRef.current = msg.deployment;
+        guestStanceRef.current = msg.stance;
         setOpponentReady(true);
 
         // 若房主自己也已經點擊出征，則立即結算！
         if (hostDeploymentRef.current) {
-          hostResolveTurn(hostDeploymentRef.current, msg.deployment);
+          hostResolveTurn(hostDeploymentRef.current, msg.deployment, msg.stance);
         }
         break;
       }
@@ -224,6 +258,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
         const enemyCards = msg.hostDeployment;
 
         setOpponentDeployment(enemyCards);
+        setOpponentStance(msg.result.playerStance);
         setPendingResult(msg.result);
         setBattleLogs([]);
         setIsResolving(true);
@@ -258,14 +293,22 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
   /**
    * 房主執行核心結算並廣播
    */
-  const hostResolveTurn = (hDeploy: Character[], gDeploy: Character[]) => {
-    const terrains = currentTerrainsRef.current;
+  const hostResolveTurn = (hDeploy: Character[], gDeploy: Character[], gStance: Stance) => {
     const roundNum = roundNumberRef.current;
-    const hHp = myHpRef.current;
-    const gHp = opponentHpRef.current;
-
-    // 核心引擎結算 (Host 為 Player, Guest 為 Enemy)
-    const result = resolveRound(hDeploy, gDeploy, terrains, roundNum, hHp, gHp);
+    const result = resolveRound(
+      hDeploy, gDeploy, myStanceRef.current, gStance, currentConstraintRef.current,
+      roundNum, hostHpRef.current, guestHpRef.current, hostAtkRef.current, guestAtkRef.current, roundHistoryRef.current
+    );
+    roundHistoryRef.current = [...roundHistoryRef.current, {
+      round: roundNum,
+      playerTotalScore: result.playerTotalScore,
+      enemyTotalScore: result.enemyTotalScore
+    }];
+    hostHpRef.current = result.playerHpAfter;
+    guestHpRef.current = result.enemyHpAfter;
+    hostAtkRef.current = result.playerAtkAfter;
+    guestAtkRef.current = result.enemyAtkAfter;
+    setOpponentStance(gStance);
 
     setOpponentDeployment(gDeploy);
     setPendingResult(result);
@@ -381,7 +424,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
       hostDeploymentRef.current = deployed;
       // 若挑戰者已先送達出牌，直接結算
       if (guestDeploymentRef.current) {
-        hostResolveTurn(deployed, guestDeploymentRef.current);
+          hostResolveTurn(deployed, guestDeploymentRef.current, guestStanceRef.current);
       }
     } else {
       // 挑戰者將手牌發送給房主
@@ -389,6 +432,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
         type: 'SUBMIT_DEPLOY',
         sender: 'GUEST',
         deployment: deployed,
+        stance: myStance,
         timestamp: Date.now()
       });
     }
@@ -434,18 +478,21 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
     } else if (resolveStep === 3 && pendingResult) {
       // 3 個戰場結算完畢，扣除血量
       const endTimer = setTimeout(() => {
-        soundManager.playSfx('hitDamage');
-
-        // 在 Host 視角：player_hp 是房主，enemy_hp 是挑戰者
-        // 在 Guest 視角：enemy_hp 是挑戰者，player_hp 是房主
-        const newHostHp = pendingResult.player_hp ?? 0;
-        const newGuestHp = pendingResult.enemy_hp ?? 0;
+        const newHostHp = pendingResult.playerHpAfter;
+        const newGuestHp = pendingResult.enemyHpAfter;
+        const newHostAtk = pendingResult.playerAtkAfter;
+        const newGuestAtk = pendingResult.enemyAtkAfter;
 
         const myNewHp = isHost ? newHostHp : newGuestHp;
         const opNewHp = isHost ? newGuestHp : newHostHp;
+        const myNewAtk = isHost ? newHostAtk : newGuestAtk;
+        const opNewAtk = isHost ? newGuestAtk : newHostAtk;
 
         setMyHp(myNewHp);
         setOpponentHp(opNewHp);
+        setMyAtk(myNewAtk);
+        setOpponentAtk(opNewAtk);
+        if (myNewHp < myHp || opNewHp < opponentHp) soundManager.playSfx('hitDamage');
 
         // 存入戰況歷史
         setHistory(prev => [
@@ -455,18 +502,21 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
             battles: pendingResult.battles,
             total_score: pendingResult.total_score,
             damage_to: pendingResult.damage_to,
-            host_role: isHost ? myRole : opponentRole,
-            guest_role: isHost ? opponentRole : myRole
+            host_stance: isHost ? pendingResult.playerStance : pendingResult.enemyStance,
+            guest_stance: isHost ? pendingResult.enemyStance : pendingResult.playerStance
           }
         ]);
 
         const nextRoundTimer = setTimeout(() => {
           if (pendingResult.game_over) {
             setGameOver(true);
-            const hostWon = pendingResult.winner === 'player';
-            const iWon = isHost ? hostWon : !hostWon;
-            setWinner(iWon ? 'me' : 'opponent');
-            if (iWon) {
+            const hostWon = pendingResult.gameWinner === 'player';
+            const iWon = pendingResult.gameWinner === 'draw' ? false : isHost ? hostWon : !hostWon;
+            setWinner(pendingResult.gameWinner === 'draw' ? 'draw' : iWon ? 'me' : 'opponent');
+            if (pendingResult.gameWinner === 'draw') {
+              addGold(30, '雲端對戰 平局獎勵');
+              setEarnedReward({ amount: 30, text: '雲端對決 平局獎勵' });
+            } else if (iWon) {
               soundManager.playSfx('victory');
               addGold(80, '雲端對戰 獲勝獎勵');
               setEarnedReward({ amount: 80, text: '雲端對決 獲勝軍餉' });
@@ -480,7 +530,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
           } else {
             // 若為房主，過渡至下一回合
             if (isHost) {
-              hostStartRound(roundNumber + 1, newHostHp, newGuestHp);
+              hostStartRound(roundNumber + 1, newHostHp, newGuestHp, newHostAtk, newGuestAtk);
             }
           }
 
@@ -537,6 +587,27 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
 
   const deployedCount = myDeployment.filter(c => c !== null).length;
   const isDeployReady = deployedCount === 3;
+  const renderStanceControls = () => (
+    <div style={{ display: 'flex', gap: '6px', margin: '8px 0', padding: '6px', border: '1px solid #334155', background: '#090d16' }}>
+      {(['ODD', 'EVEN'] as Stance[]).map(stance => (
+        <button
+          key={stance}
+          type="button"
+          disabled={isResolving || myReady}
+          onClick={() => setMyStance(stance)}
+          style={{
+            flex: 1, padding: '7px 4px', cursor: isResolving || myReady ? 'not-allowed' : 'pointer',
+            background: myStance === stance ? (stance === 'ODD' ? '#854d0e' : '#7f1d1d') : '#18181b',
+            color: myStance === stance ? '#fff' : '#94a3b8',
+            border: `2px solid ${myStance === stance ? (stance === 'ODD' ? '#eab308' : '#ef4444') : '#27272a'}`,
+            fontFamily: 'var(--font-pixel)', fontSize: '10px'
+          }}
+        >
+          {stance === 'ODD' ? '[ ODD · 蓄力 ]' : '[ EVEN · 攻擊 ]'}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <div className="game-wrapper">
@@ -597,16 +668,23 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
       <div className="side-panel player-panel desktop-only" style={{ marginTop: '36px' }}>
         <div className="hud-box player-hud">
           <div style={{ fontWeight: 'bold', color: '#00ffcc', letterSpacing: '1px' }}>
-            [ {myRole} ] 我方 ({isHost ? '房主' : '挑戰者'})
+            [ {myStance} 姿態 ] 我方 ({isHost ? '房主' : '挑戰者'})
           </div>
           <div className="hp-bar">{renderHearts(myHp)}</div>
+          <div style={{ fontSize: '11px', color: '#fbbf24' }}>ATK: {myAtk}</div>
         </div>
+
+        <div style={{ marginTop: '8px', padding: '8px', border: '1px solid #334155', color: '#cbd5e1', fontSize: '11px' }}>
+          <strong style={{ color: currentConstraint.color }}>中路禁令：{currentConstraint.name}</strong>
+          <div style={{ marginTop: '4px' }}>{currentConstraint.description}</div>
+        </div>
+        {renderStanceControls()}
 
         <div style={{ color: '#94a3b8', fontSize: '12px', margin: '10px 0 5px 0' }}>
-          {isDeployReady ? '戰備完畢 · 點擊槽位撤回' : '4 抽選 3 · 佈署進戰場'}
+          {isDeployReady ? '戰備完畢 · 點擊槽位撤回' : '本回合 3 張全數佈署'}
         </div>
 
-        {/* 4 張戰備手牌 */}
+        {/* 本回合三張手牌 */}
         <div
           className="hand-container"
           style={{
@@ -794,10 +872,11 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
                         <span style={{ color: '#ff4747' }}>對手 {opBattleChar.name} ({opEff})</span>
                       </div>
                       <div className="typewriter type-2">
-                        差值 {b.diff} × <span style={{ color: '#f59e0b' }}>x{b.weight} ({b.terrain.name})</span> ={' '}
-                        <span style={{ color: '#ff4747', fontSize: '16px', fontWeight: 'bold' }}>
-                          {b.score}
-                        </span>
+                        我方 {b.player_eff} × x{b.weight} = <span style={{ color: '#00ffcc', fontWeight: 'bold' }}>{b.player_score}</span>
+                        {' · '}對手 {b.enemy_eff} × x{b.weight} = <span style={{ color: '#ff4747', fontWeight: 'bold' }}>{b.enemy_score}</span>
+                        <div style={{ fontSize: '10px', color: '#fbbf24' }}>
+                          {b.terrain.name} · 路線分差 {Math.abs(b.player_score - b.enemy_score)}
+                        </div>
                       </div>
 
                       {b.traits_triggered.length > 0 && (
@@ -838,16 +917,17 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
       <div className="side-panel enemy-panel desktop-only" style={{ marginTop: '36px' }}>
         <div className="hud-box enemy-hud">
           <div style={{ fontWeight: 'bold', color: '#ff4747', letterSpacing: '1px' }}>
-            [ {opponentRole} ] 對手 ({isHost ? '挑戰者' : '房主'})
+            [ {opponentStance || '姿態未揭'} ] 對手 ({isHost ? '挑戰者' : '房主'})
           </div>
           <div className="hp-bar" style={{ justifyContent: 'flex-end' }}>
             {renderHearts(opponentHp)}
           </div>
+          <div style={{ textAlign: 'right', fontSize: '11px', color: '#fbbf24' }}>ATK: {opponentAtk}</div>
         </div>
 
         {/* 神秘敵方手牌 */}
         <div className="enemy-hand-container">
-          {Array.from({ length: 4 }).map((_, i) => {
+          {Array.from({ length: 3 }).map((_, i) => {
             const hasFlashed = dealStep > i || resolveStep >= 0;
             return (
               <div
@@ -874,6 +954,8 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
           {opponentReady ? '對手已就緒！' : '對手策劃中...'} |{' '}
           {isDeployReady ? '戰備完畢 點擊槽位撤回' : `佈署兵力 (${deployedCount}/3)`}
         </div>
+
+        {renderStanceControls()}
 
         <div
           className="mobile-hand-container"
@@ -915,7 +997,7 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
           <div
             style={{
               background: '#0b0f19',
-              border: `4px solid ${winner === 'me' ? '#00ffcc' : '#ff4747'}`,
+              border: `4px solid ${winner === 'me' ? '#00ffcc' : winner === 'draw' ? '#fbbf24' : '#ff4747'}`,
               boxShadow: '8px 8px 0 #000',
               padding: '30px 20px',
               textAlign: 'center',
@@ -926,16 +1008,16 @@ export const OnlineMatchView: React.FC<OnlineMatchViewProps> = ({
             <h1
               style={{
                 fontSize: 'clamp(2.5rem, 8vw, 3.6rem)',
-                color: winner === 'me' ? '#00ffcc' : '#ff4747',
+                color: winner === 'me' ? '#00ffcc' : winner === 'draw' ? '#fbbf24' : '#ff4747',
                 textShadow: '4px 4px 0 #000',
                 margin: '0 0 10px 0',
                 letterSpacing: '3px'
               }}
             >
-              {winner === 'me' ? 'VICTORY' : 'DEFEAT'}
+              {winner === 'me' ? 'VICTORY' : winner === 'draw' ? 'DRAW' : 'DEFEAT'}
             </h1>
             <div style={{ color: '#94a3b8', marginBottom: '20px', fontSize: '14px' }}>
-              {winner === 'me' ? '雲端博弈，棋開得勝！' : '旗鼓相當，再戰一局見分曉！'}
+              {winner === 'me' ? '雲端博弈，棋開得勝！' : winner === 'draw' ? '五回合戰平，再戰一局見分曉！' : '旗鼓相當，再戰一局見分曉！'}
             </div>
 
             {earnedReward && (

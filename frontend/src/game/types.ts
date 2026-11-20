@@ -167,6 +167,8 @@ export type SingleBattleRecord = {
   enemy_eff: number;
   winner: 'player' | 'enemy' | 'tie';
   diff: number;
+  player_score: number;
+  enemy_score: number;
   score: number;
   weight: number;
   traits_triggered: { side: 'player' | 'enemy' | 'terrain'; text: string; traitName: string }[];
