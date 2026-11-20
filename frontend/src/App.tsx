@@ -691,7 +691,7 @@ export default function App() {
                   [ 己方陣容 ]
                 </span>
                 <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>
-                  牌庫: {session?.playerDeck.length || 0}張
+                  待抽牌: {session?.playerDeck.length || 0}張
                 </span>
               </div>
 
@@ -786,7 +786,7 @@ export default function App() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <span style={{ fontSize: '11px', color: '#94a3b8' }}>本回合戰備手牌:</span>
                 <span style={{ fontSize: '10px', color: '#00ffcc', fontFamily: 'monospace' }}>
-                  {hand.length === 0 ? '[ 已全部就位 ]' : `剩餘 ${hand.length} 張`}
+                  {hand.length === 0 ? '[ 已全部就位 ]' : `手牌剩餘 ${hand.length} 張`}
                 </span>
               </div>
 
@@ -973,7 +973,7 @@ export default function App() {
                   [ 敵軍斥候隊 ]
                 </span>
                 <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>
-                  牌庫: {session?.enemyDeck.length || 0}張
+                  待抽牌: {session?.enemyDeck.length || 0}張
                 </span>
               </div>
 

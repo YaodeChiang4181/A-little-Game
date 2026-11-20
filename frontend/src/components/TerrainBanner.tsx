@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Terrain, LaneConstraint } from '../game/types';
+import { MULTIPLIERS } from '../game/engine';
 import { PixelTerrainSigil } from './PixelIcons';
 
 export interface TerrainBannerProps {
@@ -14,12 +15,16 @@ export interface TerrainBannerProps {
 
 export const TerrainBanner: React.FC<TerrainBannerProps> = ({
   terrain,
-  laneIndex = 1,
-  multiplier = laneIndex === 1 ? 2 : 1,
+  laneIndex,
+  multiplier,
   constraint,
   isSelected = false,
+  index,
   onSelect
 }) => {
+  // Tower and Online pass `index`; resolve it so every display uses the correct lane.
+  const resolvedLaneIndex = index ?? laneIndex ?? 1;
+  const resolvedMultiplier = multiplier ?? terrain?.weight ?? MULTIPLIERS[resolvedLaneIndex] ?? 1;
   const [showTip, setShowTip] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -46,15 +51,15 @@ export const TerrainBanner: React.FC<TerrainBannerProps> = ({
 
   // 若為新三路結構
   const laneNames = ['左翼陣線', '中路核心', '右翼陣線'];
-  const displayName = constraint && laneIndex === 1
+  const displayName = constraint && resolvedLaneIndex === 1
     ? `中路 · ${constraint.badge}`
-    : terrain ? terrain.name : laneNames[laneIndex] || `戰場 ${laneIndex + 1}`;
+    : terrain ? terrain.name : laneNames[resolvedLaneIndex] || `戰場 ${resolvedLaneIndex + 1}`;
 
-  const themeColor = laneIndex === 1
+  const themeColor = resolvedLaneIndex === 1
     ? (constraint ? constraint.color : '#fbbf24')
     : (terrain ? terrain.color : '#64748b');
 
-  const descText = laneIndex === 1 && constraint
+  const descText = resolvedLaneIndex === 1 && constraint
     ? constraint.description
     : terrain ? terrain.description : '常規推進陣線，乘數倍率 ×1，無特殊限制。';
 
@@ -64,7 +69,7 @@ export const TerrainBanner: React.FC<TerrainBannerProps> = ({
       className={`terrain-banner ${isSelected ? 'selected' : ''}`}
       style={{
         borderColor: isSelected ? '#ffcc00' : themeColor,
-        background: laneIndex === 1 ? '#18181b' : '#090d16',
+        background: resolvedLaneIndex === 1 ? '#18181b' : '#090d16',
         zIndex: isSelected || showTip ? 150 : 5
       }}
       onMouseEnter={() => {
@@ -77,7 +82,7 @@ export const TerrainBanner: React.FC<TerrainBannerProps> = ({
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
         <PixelTerrainSigil
-          terrainId={laneIndex === 1 ? 'arena' : 'town'}
+          terrainId={resolvedLaneIndex === 1 ? 'arena' : 'town'}
           color={themeColor}
           size={14}
         />
@@ -95,14 +100,14 @@ export const TerrainBanner: React.FC<TerrainBannerProps> = ({
             fontFamily: 'monospace'
           }}
         >
-          ×{multiplier}
+          ×{resolvedMultiplier}
         </span>
       </div>
 
       {!onSelect && showTip && (
-        <div className={`terrain-tooltip slot-${laneIndex}`} onClick={e => e.stopPropagation()}>
+        <div className={`terrain-tooltip slot-${resolvedLaneIndex}`} onClick={e => e.stopPropagation()}>
           <div style={{ color: '#ffcc00', fontWeight: 'bold', marginBottom: '4px', fontSize: '12px' }}>
-            [ {displayName} · 倍率 ×{multiplier} ]
+            [ {displayName} · 倍率 ×{resolvedMultiplier} ]
           </div>
           <div style={{ fontSize: '11px', color: '#cbd5e1', lineHeight: '1.6' }}>
             {descText}
