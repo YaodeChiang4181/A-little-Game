@@ -627,8 +627,8 @@ export default function App() {
       {/* ========================================================================= */}
       {gameState === 'idle' && (
         <div className="start-screen">
-          <h1 className="title">[ 三路奇偶戰術博弈 ]</h1>
-          <div className="subtitle">3-LANE PARITY TACTICAL CARD GAME · 專業像素版</div>
+          <h1 className="title">[ Build Your Future ]</h1>
+          <div className="subtitle">3-LANE CARD GAME</div>
 
           <div className="mode-selection-grid">
             <button
