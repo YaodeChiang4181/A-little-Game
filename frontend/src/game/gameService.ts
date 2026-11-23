@@ -36,7 +36,7 @@ export interface GameSession {
 }
 
 /**
- * 啟動新對局 (三路奇偶戰術博弈規格)
+ * 啟動新對局 (Best Strategy博弈規格)
  * 雙方各自配置 15 張牌庫，每回合發 3 張牌（必全出）
  */
 export function initGameSession(playerHp: number = 3, enemyHp: number = 3): GameSession {

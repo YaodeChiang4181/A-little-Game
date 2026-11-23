@@ -78,6 +78,15 @@ export default function App() {
   // 模態彈窗控制
   const [showTutorial, setShowTutorial] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
+  const handleTutorialStartBattle = () => {
+    // 清理新手教學狀態
+    setShowTutorial(false);
+    setTutorialStep(0);
+    //觸發原本「戰術對決」的進入邏輯
+    //如果點「戰術對決」是先開牌組編輯器（對應圖中的 showDeckBuilder）[cite: 9]
+    setShowDeckBuilder(true);
+    setAllowCustomUpload(true); // 若戰術對決有開啟自訂上傳則一併設定，無則免
+  };
   const [showMenu, setShowMenu] = useState(false);
   const [showCompendium, setShowCompendium] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -155,7 +164,7 @@ export default function App() {
   const [winner, setWinner] = useState<'player' | 'enemy' | 'draw' | null>(null);
 
   /**
-   * 啟動全新對局 (三路奇偶戰術博弈)
+   * 啟動全新對局 (Best Strategy博弈)
    */
   const startNewGame = () => {
     soundManager.ensureContext();
@@ -627,7 +636,7 @@ export default function App() {
       {/* ========================================================================= */}
       {gameState === 'idle' && (
         <div className="start-screen">
-          <h1 className="title">[ Build Your Future ]</h1>
+          <h1 className="title">[ Best Strategy ]</h1>
           <div className="subtitle">3-LANE CARD GAME</div>
 
           <div className="mode-selection-grid">

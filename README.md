@@ -1,4 +1,4 @@
-# 三路奇偶戰術博弈 (3-Lane Parity Tactical Card Game) ⚔️
+# Best Strategy博弈 (3-Lane Parity Tactical Card Game) ⚔️
 
 這是一款結合了「三路陣線博弈」、「戰術姿態盲選宣告」、「15張精準牌庫」、「中路倍率禁令」與「專業復古像素美學」的雙人策略卡牌對戰遊戲。
 雙方各自配置 15 張由 1~4 級組成的對稱牌池，在 5 回合內進行高密度的排位賽局心理戰。
@@ -143,7 +143,7 @@ npm run dev
     * 新增後端規則與 AI 單元測試，驗證牌組數量、禁令倍率、特性與姿態、終局裁決及 AI 佈陣。
 
 * **2026-11-18**：
-  * **三路奇偶戰術博弈核心重構與規格全面升級 (3-Lane Parity Tactical Card Game)**：
+  * **Best Strategy博弈核心重構與規格全面升級 (3-Lane Parity Tactical Card Game)**：
     * **15 張對稱牌庫與手牌管理**：改為雙方各持 15 張卡牌（LV.1~4），每回合固定發 3 張牌（必全出，5 回合剛好抽完），消除重複抽牌，決策核心聚焦於「三路排位」與「姿態博弈」。
     * **戰術姿態盲選宣告 (Stance Declaration)**：
       * 奇偶機制昇華為主動戰術宣告：`[ ODD · 蓄力充能 ]`（本回合勝出時 ATK+1，可跨回合累積） vs `[ EVEN · 鋒刃突擊 ]`（本回合勝出時造成當前 ATK 點傷害，命中後重置為 1）。
@@ -261,7 +261,7 @@ npm run dev
     * **Vercel TypeScript 嚴格編譯與 Vite 打包深度適配**：於 `tsconfig.json` 補齊 `allowSyntheticDefaultImports` 與 `esModuleInterop`，建立獨立宣告檔 `src/types/peerjs.d.ts`，並於 `vite.config.ts` 注入 `global: 'window'` 瀏覽器相容宣告；同時於 `networkManager.ts` 為 `peer.on` 回呼函式之 `id: string` 與 `conn: DataConnection` 參數補齊明確型別標註，根治 Vercel 嚴格模式 `TS7006: Parameter implicitly has an 'any' type` 與 `@types/peerjs` 廢棄存根警告。
 
 * **2026-11-18**：
-  * **三路奇偶戰術博弈重構與 Vercel 嚴格 TypeScript 編譯修復 (Strict Type Fixes)**：
+  * **Best Strategy博弈重構與 Vercel 嚴格 TypeScript 編譯修復 (Strict Type Fixes)**：
     * **全盤修復 Vercel CI/CD 建置錯誤**：針對 `tsc && vite build` 嚴格模式 (`strict: true`) 下的所有型別缺失進行修補。
     * **App.tsx / OnlineLobbyModal**：修補 `OnlineLobbyModal` 缺失的 `isOpen` 屬性；修正 `isViolatedConstraint` 屬性布林值容錯與邊界判定。
     * **DeckBuilderModal**：修復候選卡與槽位選擇中 `level` 可能為 `undefined` 的型別安全判定，全面採用 `base_level ?? level ?? 1`。
