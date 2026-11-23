@@ -1358,12 +1358,22 @@ body {
   transform: translateX(-50%);
 }
 
-.hand-grid .card:first-child .card-trait-tooltip {
+/* 第 1 張手牌：貼齊左緣往右展開 */
+.hand-grid .card:nth-child(1) .card-trait-tooltip {
   left: 0;
+  right: auto;
   transform: none;
 }
 
-.hand-grid .card:nth-child(n+2) .card-trait-tooltip {
+/* 第 2 張手牌（中間）：以自身中心點水平置中展開 */
+.hand-grid .card:nth-child(2) .card-trait-tooltip {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
+
+/* 第 3 張手牌：貼齊右緣往左展開 */
+.hand-grid .card:nth-child(3) .card-trait-tooltip {
   left: auto;
   right: 0;
   transform: none;
