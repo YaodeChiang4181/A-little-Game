@@ -443,7 +443,7 @@ body {
     padding: 76px 14px 12px;
   }
 
-  .battle-layout > .sidebar {
+  .battle-layout>.sidebar {
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -471,7 +471,7 @@ body {
     gap: 5px !important;
   }
 
-  .battle-layout .hand-grid > .card {
+  .battle-layout .hand-grid>.card {
     width: 100%;
     min-width: 0;
     height: auto;
@@ -517,7 +517,7 @@ body {
     padding: 8px 8px 16px;
   }
 
-  .battle-layout > .sidebar {
+  .battle-layout>.sidebar {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -561,7 +561,7 @@ body {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .battle-layout .hand-grid > .card {
+  .battle-layout .hand-grid>.card {
     width: 100%;
     min-width: 0;
     height: auto;
@@ -2311,6 +2311,10 @@ body {
   letter-spacing: 2px;
   color: var(--accent-color, #f8fafc);
   text-shadow: 2px 2px 0 #000;
+  clip-path: polygon(0px 3px, 3px 3px, 3px 0px,
+      calc(100% - 4px) 0px, calc(100% - 4px) 4px, 100% 4px,
+      100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%,
+      4px 100%, 4px calc(100% - 4px), 0px calc(100% - 4px));
 }
 
 .mode-btn-desc {
