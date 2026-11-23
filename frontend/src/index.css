@@ -1354,6 +1354,19 @@ body {
   line-height: 1.5;
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.hand-grid .card:first-child .card-trait-tooltip {
+  left: 0;
+  transform: none;
+}
+
+.hand-grid .card:nth-child(n+2) .card-trait-tooltip {
+  left: auto;
+  right: 0;
+  transform: none;
 }
 
 .card-trait-lore {

@@ -438,7 +438,7 @@ export default function App() {
     },
     {
       title: "[ 戰術姿態宣告：ODD 與 EVEN ]",
-      text: "每回合佈署卡牌時，雙方秘密宣告戰術姿態（盲選）：\n[ ODD · 蓄力充能 ]：本回合勝出時，自身 ATK +1（可跨回合無限累積）！\n[ EVEN · 鋒刃突擊 ]：本回合勝出時，對敵方造成等於當前 ATK 的直接傷害！命中後 ATK 重置回 01。",
+      text: "每回合佈署卡牌時，雙方秘密宣告戰術姿態（盲選）：\n[ 蓄力攻擊 ]：本回合勝出時，自身 ATK +1（可跨回合無限累積）！\n[ EVEN · 鋒刃突擊 ]：本回合勝出時，對敵方造成等於當前 ATK 的直接傷害！命中後 ATK 重置回 01。",
       graphic: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', background: 'rgba(15,23,42,0.8)', padding: '10px', border: '2px solid #334155' }}>
           <div style={{ color: '#fbbf24', fontWeight: 'bold' }}>[ ODD 姿態 ] 蓄力強化：ATK 1 ➔ 2 ➔ 3... 積蓄毀滅一擊</div>
@@ -758,7 +758,7 @@ export default function App() {
                     border: `2px solid ${playerStance === 'ODD' ? '#eab308' : '#27272a'}`
                   }}
                 >
-                  <div style={{ fontWeight: 'bold' }}>{playerStance === 'ODD' ? '▶ ' : '  '}[ ODD · 蓄力充能 ]</div>
+                  <div style={{ fontWeight: 'bold' }}>{playerStance === 'ODD' ? '▶ ' : '  '}[ 蓄力攻擊 ]</div>
                   <div style={{ fontSize: '9px', opacity: 0.8, marginTop: '2px' }}>
                     勝出時 ATK +1 (可達 {displayPlayerAtk + 1})
                   </div>
@@ -849,7 +849,7 @@ export default function App() {
             <div
               className="terrain-stage-intel-bar"
               style={{
-                borderColor: currentConstraint ? currentConstraint.color : '#fbbf24',
+                borderColor: currentConstraint ? currentConstraint.color : '#ffffff',
                 marginBottom: '10px',
                 padding: '6px 12px'
               }}
@@ -1033,7 +1033,7 @@ export default function App() {
               >
                 {enemyRevealedStance ? (
                   <span style={{ color: enemyRevealedStance === 'ODD' ? '#fbbf24' : '#f87171', fontWeight: 'bold' }}>
-                    [ {enemyRevealedStance === 'ODD' ? 'ODD · 蓄力充能' : 'EVEN · 鋒刃突擊'} ]
+                    [ {enemyRevealedStance === 'ODD' ? '蓄力攻擊' : 'EVEN · 鋒刃突擊'} ]
                   </span>
                 ) : (
                   <span style={{ color: '#64748b' }}>[ ？？？ · 隱蔽宣告 ]</span>
