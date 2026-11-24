@@ -681,7 +681,7 @@ export default function App() {
               }}
             >
               <span className="mode-btn-title">[ 一命通關 ]</span>
-              <span className="mode-btn-desc">五層試煉 · 體驗冒險 {highScore.toLocaleString()}</span>
+              <span className="mode-btn-desc">五層試煉 · 體驗冒險 {highScore > 0 ? ` (最高分: ${highScore.toLocaleString()})` : ''}</span>
             </button>
           </div>
         </div>
@@ -851,7 +851,8 @@ export default function App() {
               style={{
                 borderColor: currentConstraint ? currentConstraint.color : '#ffffff',
                 marginBottom: '10px',
-                padding: '6px 12px'
+                padding: '6px 12px',
+                outlineColor: currentConstraint ? currentConstraint.color : '#ffffff', // 補上這行覆蓋原本的固定黃色
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
