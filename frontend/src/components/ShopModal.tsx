@@ -29,7 +29,9 @@ export const ShopModal: React.FC<ShopModalProps> = ({
   }, []);
 
   // 1. 取得所有你目前尚未解鎖的角色（請將 ALL_CHARACTERS 換成你上方 import 的全角色常數名稱）
-  const shopCharacters = getShopCharacters();
+  const shopCharacters = getShopCharacters().filter(
+    char => !wallet.unlockedCharacterIds.includes(char.id)
+  );;
 
   // 依照角色等級計算預設價格（例如 LV.1 = 100G, LV.2 = 150G）
   const getCharPrice = (char: Character) => char.price ?? ((char.level || char.base_level || 1) * 50 + 50);
