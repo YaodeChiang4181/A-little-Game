@@ -5,6 +5,7 @@ import { Character } from '../game/types';
 import { getWallet, subscribeWallet, unlockCharacter } from '../game/economy/wallet';
 import { soundManager } from '../game/soundManager';
 import { PixelCoinIcon } from './PixelIcons';
+import { ALL_CHARACTERS } from '../game/registry/characters';
 
 interface ShopModalProps {
   isOpen?: boolean;
@@ -27,18 +28,23 @@ export const ShopModal: React.FC<ShopModalProps> = ({
     });
   }, []);
 
+  // 1. 取得所有你目前尚未解鎖的角色（請將 ALL_CHARACTERS 換成你上方 import 的全角色常數名稱）
   const shopCharacters = getShopCharacters();
 
+  // 依照角色等級計算預設價格（例如 LV.1 = 100G, LV.2 = 150G）
+  const getCharPrice = (char: Character) => char.price ?? ((char.level || char.base_level || 1) * 50 + 50);
+
   const handlePurchase = (char: Character) => {
-    if (!char.price) return;
+    const price = getCharPrice(char);
     soundManager.ensureContext();
 
-    if (wallet.gold < char.price) {
+    if (wallet.gold < price) {
       soundManager.playSfx('click');
       return;
     }
 
-    const ok = unlockCharacter(char.id, char.price);
+    const ok = unlockCharacter(char.id, price);
+
     if (ok) {
       soundManager.playSfx('coin');
       setSuccessNotice(`成功徵召【${char.name}】！已加入軍備庫，可立即配置出征。`);

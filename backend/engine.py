@@ -17,7 +17,7 @@ CARD_CATALOG = [
     {"id": "trapper_hunter", "name": "游擊陷阱兵", "level": 1, "trait": "snare"},
     {"id": "pawn_infantry_a", "name": "先鋒步兵", "level": 1, "trait": None},
     {"id": "pawn_infantry_b", "name": "列陣衛兵", "level": 1, "trait": None},
-    {"id": "knight_guardian", "name": "重裝鐵衛", "level": 2, "trait": "wall"},
+    {"id": "knight_guardian", "name": "重裝鐵士", "level": 2, "trait": "wall"},
     {"id": "duelist_assassin", "name": "核心刺客", "level": 2, "trait": "assassin"},
     {"id": "cavalry_rider_a", "name": "巡防遊騎", "level": 2, "trait": None},
     {"id": "cavalry_rider_b", "name": "輕裝飆騎", "level": 2, "trait": None},
