@@ -586,7 +586,7 @@ export default function App() {
               <span>{wallet.gold.toLocaleString()} G</span>
             </div>
           ) : (
-            <div style={{ fontSize: '11px', color: '#fbbf24', fontFamily: 'monospace', fontWeight: 'bold' }}>
+            <div style={{ fontSize: '11px', color: currentConstraint?.color || '#fbbf24', fontFamily: 'monospace', fontWeight: 'bold' }}>
               [ 回合 {session?.roundNumber || 1} / 5 ]
             </div>
           )}
@@ -856,7 +856,7 @@ export default function App() {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                <span style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '11px' }}>
+                <span style={{ color: currentConstraint?.color || '#fbbf24', fontWeight: 'bold', fontSize: '11px' }}>
                   [ 回合 {session?.roundNumber || 1} / 5 ]
                 </span>
                 <span style={{ color: currentConstraint?.color || '#fff', fontWeight: 'bold', fontSize: '12px' }}>
