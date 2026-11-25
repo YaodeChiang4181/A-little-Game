@@ -104,7 +104,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </span>
             </div>
             <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '12px' }}>
-              招募獨具異能的特職西洋棋手，自由裝備 1~6 階出征卡組
+              招募獨具異能的角色們，自由裝備 1~4 階出征卡組
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>

@@ -97,12 +97,12 @@ export const STANDARD_CARDS: Card[] = [
     base_level: 2,
     level: 2,
     has_trait: true,
-    avatar: { type: 'unicode', src: 'knight' },
+    avatar: { type: 'image', src: '/avatars/knight.gif' },
     themeColor: '#42a5f5',
     lore: '身披厚甲的堅盾防線，在陷入逆境時激發不屈意志。',
     trait: {
-      id: 'guardian_wall',
-      name: '不屈壁壘',
+      id: 'Dark knight',
+      name: '堅毅防線',
       badge: '不屈',
       trigger: 'PASSIVE',
       description: '若此路對手卡牌基礎戰力高於自身，有效戰力額外 +1。',
@@ -111,7 +111,7 @@ export const STANDARD_CARDS: Card[] = [
         if (oppCard && oppCard.base_level > 2) {
           return {
             bonusEffectiveLevel: 1,
-            popupText: '[ 不屈 WALL ] 逆境激發戰力 +1！'
+            popupText: '[ 不屈 Spirit of knight ] 逆境激發戰力 +1！'
           };
         }
         return null;
@@ -180,13 +180,13 @@ export const STANDARD_CARDS: Card[] = [
   },
   {
     id: 'catapult_siege',
-    name: '攻城投石車',
+    name: '歐克族人',
     base_level: 3,
     level: 3,
     has_trait: false,
-    avatar: { type: 'unicode', src: 'catapult' },
-    themeColor: '#b45309',
-    lore: '具備遠程毀滅性破壞力的重型拋石器。'
+    avatar: { type: 'unicode', src: '/avatars/Ork.gif' },
+    themeColor: '#2f940dff',
+    lore: '具備巨大化技能的重型戰士，雖然看起來很粗魯，但每次問他問題只會說「呵呵」。'
   },
   {
     id: 'bishop_inquisitor',
