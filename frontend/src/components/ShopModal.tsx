@@ -5,7 +5,6 @@ import { Character } from '../game/types';
 import { getWallet, subscribeWallet, unlockCharacter } from '../game/economy/wallet';
 import { soundManager } from '../game/soundManager';
 import { PixelCoinIcon } from './PixelIcons';
-import { ALL_CHARACTERS } from '../game/registry/characters';
 
 interface ShopModalProps {
   isOpen?: boolean;
@@ -35,7 +34,6 @@ export const ShopModal: React.FC<ShopModalProps> = ({
 
   // 依照角色等級計算預設價格（例如 LV.1 = 100G, LV.2 = 150G）
   const getCharPrice = (char: Character) => char.price ?? ((char.level || char.base_level || 1) * 50 + 50);
-
   const handlePurchase = (char: Character) => {
     const price = getCharPrice(char);
     soundManager.ensureContext();
