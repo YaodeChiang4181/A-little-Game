@@ -93,11 +93,11 @@ export const STANDARD_CARDS: Card[] = [
   // -----------------------------------------------------------------------
   {
     id: 'knight_guardian',
-    name: '重裝鐵衛',
+    name: '重裝鐵士',
     base_level: 2,
     level: 2,
     has_trait: true,
-    avatar: { type: 'image', src: '/avatars/knight.gif' },
+    avatar: { type: 'image', src: '/avatars/Knight.gif' },
     themeColor: '#42a5f5',
     lore: '身披厚甲的堅盾防線，在陷入逆境時激發不屈意志。',
     trait: {
