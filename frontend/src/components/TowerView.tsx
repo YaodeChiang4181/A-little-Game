@@ -587,6 +587,9 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
                 <div
                   className="terrain-stage-intel-bar"
                   onClick={() => setInspectedTerrainIndex(null)}
+                  style={{
+                    '--intel-color': targetTerrain.color
+                  } as React.CSSProperties}
                 >
                   <span style={{ color: targetTerrain.color, fontWeight: 'bold' }}>
                     [ {targetTerrain.name} · 倍率 x{targetTerrain.weight} ]
@@ -619,7 +622,14 @@ export const TowerView: React.FC<TowerViewProps> = ({ initialState, onExit, onRe
                 });
 
                 return (
-                  <div key={i} className="field-slot">
+                  <div key={i} className="field-slot  {i === 1 ? 'core-lane' : ''}"
+                    style={{
+                      borderColor: i === 1 ? terrain.color : undefined,
+                      boxShadow: i === 1 ? `0 0 12px ${terrain.color}33` : undefined,
+                      '--lane-color': terrain.color,
+                    } as React.CSSProperties}
+                  >
+
                     {/* 動態戰場環境橫幅 */}
                     <TerrainBanner
                       terrain={terrain}

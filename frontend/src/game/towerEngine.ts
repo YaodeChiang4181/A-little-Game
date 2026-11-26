@@ -1,5 +1,5 @@
 /**
- * 氣勢連鎖奇偶戰 - 奇偶試煉 (Tower of Parity) 核心引擎
+ * 氣勢連鎖奇偶戰 - 一命通關 (Tower of Parity) 核心引擎
  * 獨立於單局對決的 Roguelite 刷塔持久化進程
  */
 

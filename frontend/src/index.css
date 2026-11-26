@@ -1302,7 +1302,7 @@ body {
   max-width: 800px;
   background: rgba(10, 15, 30, 0.98);
   border: 2px solid #000;
-  outline: 2px solid var(--color-gold);
+  outline: 2px solid var(--intel-color, var(--color-gold));
   box-shadow: 4px 4px 0px #000;
   padding: 6px 12px;
   margin: 0 auto 8px auto;
@@ -2216,7 +2216,7 @@ body {
    三路戰術博弈核心戰場與姿態晶片樣式 (純直角、無模糊、專業像素)
    ========================================================================= */
 .field-slot.core-lane {
-  border: 2px solid #fbbf24 !important;
+  border: 2px solid var(--lane-color, #fbbf24) !important;
   box-shadow: 0 0 0 1px #000, 3px 3px 0px #000 !important;
   position: relative;
 }
@@ -2226,13 +2226,13 @@ body {
   position: absolute;
   top: -10px;
   right: 6px;
-  background: #fbbf24;
+  background: var(--lane-color, #fbbf24);
+  border: 1px solid var(--lane-color, #fbbf24);
   color: #000;
   font-size: 8px;
   font-weight: bold;
   font-family: monospace;
   padding: 1px 4px;
-  border: 1px solid #000;
   z-index: 10;
 }
 

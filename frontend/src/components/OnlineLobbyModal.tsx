@@ -298,7 +298,7 @@ export const OnlineLobbyModal: React.FC<OnlineLobbyModalProps> = ({
             </div>
 
             <div style={{ fontSize: '11px', color: '#64748b' }}>
-              提示：房主為初始 [ ODD 奇數 ] 陣營，挑戰者為初始 [ EVEN 偶數 ] 陣營。每局結束自動輪換！
+              提示：
             </div>
           </div>
         )}

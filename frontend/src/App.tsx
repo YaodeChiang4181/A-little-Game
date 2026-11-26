@@ -468,7 +468,7 @@ export default function App() {
     }
   ];
 
-  // 若當前處於【奇偶試煉 (刷塔模式)】
+  // 若當前處於【一命通關 (刷塔模式)】
   if (gameState === 'tower' && towerState) {
     return (
       <TowerView
