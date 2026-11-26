@@ -73,9 +73,9 @@ export const STANDARD_CARDS: Card[] = [
     base_level: 1,
     level: 1,
     has_trait: false,
-    avatar: { type: 'unicode', src: 'pawn' },
-    themeColor: '#64748b',
-    lore: '恪盡職守的常規陣線步兵，提供穩定的點數試探。'
+    avatar: { type: 'image', src: '/avatars/Solider.gif' },
+    themeColor: '#dc9f55ff',
+    lore: '恪盡職守的常規陣線步兵，站在那裏似乎就很可靠。'
   },
   {
     id: 'pawn_infantry_b',
