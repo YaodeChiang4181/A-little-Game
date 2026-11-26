@@ -174,9 +174,9 @@ export const STANDARD_CARDS: Card[] = [
     base_level: 3,
     level: 3,
     has_trait: false,
-    avatar: { type: 'unicode', src: 'rook' },
-    themeColor: '#ab47bc',
-    lore: '巍峨屹立的要塞高塔，提供極為強悍的中堅戰力支撐。'
+    avatar: { type: 'image', src: '/avatars/Tower.gif' },
+    themeColor: '#bf83caff',
+    lore: '巍峨屹立的要塞，裡面有點陰冷潮濕，但總在那裏提供讓人安心的保護。'
   },
   {
     id: 'catapult_siege',
