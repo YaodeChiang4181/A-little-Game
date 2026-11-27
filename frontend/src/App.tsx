@@ -1251,8 +1251,12 @@ export default function App() {
           }}
         />
       )}
-      {showShop && <ShopModal onClose={() => setShowShop(false)} />}
-      {showDeckBuilder && (
+      {showShop && (
+        <ShopModal
+          onClose={() => setShowShop(false)}
+          onOpenDeckBuilder={() => setShowDeckBuilder(true)}
+        />
+      )}      {showDeckBuilder && (
         <DeckBuilderModal
           onClose={() => {
             setShowDeckBuilder(false);
