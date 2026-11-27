@@ -51,25 +51,28 @@ function notifyListeners(state: WalletState): void {
  * 讀取當前錢包與軍備庫狀態
  */
 export function getWallet(): WalletState {
+  const buildinIds = getAllCharacters().map(c => c.id);
+
   try {
     const raw = localStorage.getItem(WALLET_STORAGE_KEY);
     if (!raw) {
-      saveWallet(DEFAULT_WALLET_STATE);
-      return { ...DEFAULT_WALLET_STATE };
+      const initialState = { ...DEFAULT_WALLET_STATE, unlockedCharacterIds: buildinIds };
+      saveWallet(initialState);
+      return initialState;
     }
     const parsed: WalletState = JSON.parse(raw);
     return {
       gold: typeof parsed.gold === 'number' ? parsed.gold : DEFAULT_WALLET_STATE.gold,
       unlockedCharacterIds: Array.isArray(parsed.unlockedCharacterIds)
-        ? parsed.unlockedCharacterIds
-        : [...DEFAULT_WALLET_STATE.unlockedCharacterIds],
+        ? Array.from(new Set([...parsed.unlockedCharacterIds, ...buildinIds]))
+        : [...buildinIds],
       activeDeck: parsed.activeDeck || { ...DEFAULT_ACTIVE_DECK },
       customAvatars: parsed.customAvatars || {},
       history: Array.isArray(parsed.history) ? parsed.history : []
     };
   } catch (e) {
     console.error('Failed to load wallet state, falling back to default', e);
-    return { ...DEFAULT_WALLET_STATE };
+    return { ...DEFAULT_WALLET_STATE, unlockedCharacterIds: buildinIds };
   }
 }
 

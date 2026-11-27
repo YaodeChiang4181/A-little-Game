@@ -1256,13 +1256,14 @@ export default function App() {
           onClose={() => setShowShop(false)}
           onOpenDeckBuilder={() => setShowDeckBuilder(true)}
         />
-      )}      {showDeckBuilder && (
+      )}        {showDeckBuilder && (
         <DeckBuilderModal
           onClose={() => {
             setShowDeckBuilder(false);
             setAllowCustomUpload(false);
           }}
           allowCustomUpload={allowCustomUpload}
+          onOpenShop={() => setShowShop(true)}
         />
       )}
       {showOnlineLobby && (
