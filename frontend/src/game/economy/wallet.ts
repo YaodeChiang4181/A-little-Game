@@ -94,6 +94,9 @@ export function getWallet(): WalletState {
       return initialState;
     }
     const parsed: WalletState = JSON.parse(raw);
+    const deckValues = Object.values(parsed.activeDeck || {});
+    const isValid15Deck = deckValues.length === 15 && new Set(deckValues).size === 15;
+
     return {
       gold: typeof parsed.gold === 'number' ? parsed.gold : DEFAULT_WALLET_STATE.gold,
       unlockedCharacterIds: Array.isArray(parsed.unlockedCharacterIds)
