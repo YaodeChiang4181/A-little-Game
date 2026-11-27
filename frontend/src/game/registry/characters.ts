@@ -124,9 +124,9 @@ export const STANDARD_CARDS: Card[] = [
     base_level: 2,
     level: 2,
     has_trait: true,
-    avatar: { type: 'unicode', src: 'catapult' },
+    avatar: { type: 'image', src: '/avatars/Assassin.gif' },
     themeColor: '#e11d48',
-    lore: '鎖定敵軍大本營的中路突破專家，專精於要塞斬首。',
+    lore: '看起來不起眼的樣子讓他在各個戰場自由遊走，只在關鍵時刻做決定性的攻擊',
     trait: {
       id: 'assassin_core',
       name: '中路刺殺',
@@ -204,9 +204,9 @@ export const STANDARD_CARDS: Card[] = [
     base_level: 3,
     level: 3,
     has_trait: false,
-    avatar: { type: 'unicode', src: 'alchemist' },
+    avatar: { type: 'image', src: '/avatars/Alchemist.gif' },
     themeColor: '#9333ea',
-    lore: '調配毀滅奧術試劑的鍊金學者，威力不容小覷。'
+    lore: '每次見到他都謙虛地說自己只是喜歡做實驗，但有誰每次實驗都搞得周遭爆炸不斷？'
   },
 
   // -----------------------------------------------------------------------
@@ -228,9 +228,9 @@ export const STANDARD_CARDS: Card[] = [
     base_level: 4,
     level: 4,
     has_trait: false,
-    avatar: { type: 'unicode', src: 'queen' },
+    avatar: { type: 'image', src: '/avatars/Queen.gif' },
     themeColor: '#ec407a',
-    lore: '軍功赫赫的戰場總指揮，單體戰力冠絕全軍。'
+    lore: '軍功赫赫的戰場總指揮，擁有高深莫測的統治力，性情也是陰晴不定。'
   },
   {
     id: 'king_emperor',
@@ -238,9 +238,9 @@ export const STANDARD_CARDS: Card[] = [
     base_level: 4,
     level: 4,
     has_trait: false,
-    avatar: { type: 'unicode', src: 'king' },
+    avatar: { type: 'image', src: '/avatars/Obsidian Emperor.gif' },
     themeColor: '#ffa726',
-    lore: '王國最高統率君主，4 級無匹戰力，鎮守核心戰線。'
+    lore: '王國最高統率君主，從沒有人見過脫下王袍的樣子，傳聞是他一人打下王國八成的領地。'
   }
 ];
 
