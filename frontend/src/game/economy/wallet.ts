@@ -16,28 +16,48 @@ export type PlayerWallet = WalletState;
 
 const WALLET_STORAGE_KEY = 'parity_wallet_v1';
 
+// 依照「一等4張、兩等4張、三等4張、四等3張」自動建立預設 15 張不重複標準卡組
+function buildDefault15Deck(): Record<number, string> {
+  const allChars = getAllCharacters();
+  const byLevel = (lv: number) =>
+    allChars.filter(c => (c.base_level ?? c.level ?? 1) === lv);
+
+  const orderedChars = [
+    ...byLevel(1).slice(0, 4), // 槽位 1~4：LV.1（4張）
+    ...byLevel(2).slice(0, 4), // 槽位 5~8：LV.2（4張）
+    ...byLevel(3).slice(0, 4), // 槽位 9~12：LV.3（4張）
+    ...byLevel(4).slice(0, 3), // 槽位 13~15：LV.4（3張）
+  ];
+
+  const deck: Record<number, string> = {};
+  orderedChars.forEach((char, idx) => {
+    deck[idx + 1] = char.id;
+  });
+  return deck;
+}
+
+//  LV.1 槽位（例如 4 張）
+// 1: 'pawn_infantry_b',  列陣步兵
+// 3: 'scout_rogue',    暗影斥候
+// 4: 'trapper_hunter',    // 游擊陷阱兵
+// 5: 'pawn_infantry_a', // 先鋒步兵
+// LV.2 槽位（例如 4 張）
+// 6: 'cavalry_rider_a', // 巡防遊騎
+// 7: 'knight_guardian',   // 重裝鐵士
+// 8: 'duelist_assassin',  // 核心刺客
+// 9: 'cavalry_rider_b', // 輕飄遊騎
+// LV.3 槽位（例如 4 張）
+// 10: 'rook_bastion', //堅石主塔
+// 11: 'alchemist_transmute', // 煉金術士
+// 12: 'bishop_inquisitor', // 審判聖官
+// 13: 'catapult_siege', // 歐克族人
+// LV.4 槽位（例如 3 張）
+// 14: 'bishop_archon', // 光輝大主教
+// 15: 'queen_command', // 王國女統領
+// 16: 'king_emperor', // 黑曜帝王
+
 // 預設經典 15 角色配置
-const DEFAULT_ACTIVE_DECK: Record<number, string> = {
-  // LV.1 槽位（例如 4 張）
-  1: 'pawn_infantry_b', // 列陣步兵
-  3: 'scout_rogue',   // 暗影斥候
-  4: 'trapper_hunter',    // 游擊陷阱兵
-  5: 'pawn_infantry_a', // 先鋒步兵
-  // LV.2 槽位（例如 4 張）
-  6: 'cavalry_rider_a', // 巡防遊騎
-  7: 'knight_guardian',   // 重裝鐵士
-  8: 'duelist_assassin',  // 核心刺客
-  9: 'cavalry_rider_b', // 輕飄遊騎
-  // LV.3 槽位（例如 4 張）
-  10: 'rook_bastion', //堅石主塔
-  11: 'alchemist_transmute', // 煉金術士
-  12: 'bishop_inquisitor', // 審判聖官
-  13: 'catapult_siege', // 歐克族人
-  // LV.4 槽位（例如 3 張）
-  14: 'bishop_archon', // 光輝大主教
-  15: 'queen_command', // 王國女統領
-  16: 'king_emperor', // 黑曜帝王
-};
+const DEFAULT_ACTIVE_DECK: Record<number, string> = buildDefault15Deck();
 
 const DEFAULT_WALLET_STATE: WalletState = {
   gold: 300, // 新進試煉者初始啟動金

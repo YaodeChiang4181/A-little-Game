@@ -205,6 +205,9 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
               {availableCandidates.map(candidate => {
                 const isUnlocked = wallet.unlockedCharacterIds.includes(candidate.id);
                 const candLevel = candidate.base_level ?? candidate.level ?? 1;
+                const isUsedInOtherSlot = Object.entries(wallet.activeDeck).some(
+                  ([slotKey, charId]) => Number(slotKey) !== selectedSlot && charId === candidate.id
+                );
                 const isEquipped = wallet.activeDeck[selectedSlot] === candidate.id;
                 const hasCustomAvatar = Boolean(getCustomCharacterAvatar(candidate.id));
 
@@ -290,9 +293,16 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
                             <button
                               className="btn"
                               style={{ padding: '6px 0', fontSize: '12px', background: '#0284c7' }}
+                              disabled={!isUnlocked || isEquipped || isUsedInOtherSlot}
                               onClick={() => handleEquip(candidate)}
                             >
-                              [ 裝備出征 ]
+                              {!isUnlocked
+                                ? '[ 尚未於商城解鎖 ]'
+                                : isEquipped
+                                  ? '[ 當前出征中 ]'
+                                  : isUsedInOtherSlot
+                                    ? '[ 牌組中已配置 ]'
+                                    : '[ 裝備出征 ]'}
                             </button>
                           )}
 
