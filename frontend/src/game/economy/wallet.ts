@@ -1,7 +1,8 @@
 /**
- * 氣勢連鎖奇偶戰 - 永久錢包、軍備庫庫存與自訂立繪持久化模組
+ * Best strategy - 永久錢包、軍備庫庫存與自訂立繪持久化模組
  * 純前端免伺服器架構，基於 localStorage 安全儲存
  */
+import { getAllCharacters } from '../registry/characters';
 
 export interface WalletState {
   gold: number;
@@ -27,7 +28,7 @@ const DEFAULT_ACTIVE_DECK: Record<number, string> = {
 
 const DEFAULT_WALLET_STATE: WalletState = {
   gold: 300, // 新進試煉者初始啟動金
-  unlockedCharacterIds: ['pawn', 'knight', 'rook', 'bishop', 'queen', 'king'],
+  unlockedCharacterIds: getAllCharacters().map(c => c.id),
   activeDeck: { ...DEFAULT_ACTIVE_DECK },
   customAvatars: {},
   history: [{ date: new Date().toISOString(), amount: 300, reason: '初始招募物資' }]
