@@ -38,7 +38,7 @@ function buildDefault15Deck(): Record<number, string> {
 
 //  LV.1 槽位（例如 4 張）
 // 1: 'pawn_infantry_b',  列陣步兵
-// 3: 'scout_rogue',    暗影斥候
+// 3: 'scout_rogue',    暗影盜賊
 // 4: 'trapper_hunter',    // 游擊陷阱兵
 // 5: 'pawn_infantry_a', // 先鋒步兵
 // LV.2 槽位（例如 4 張）
@@ -49,7 +49,7 @@ function buildDefault15Deck(): Record<number, string> {
 // LV.3 槽位（例如 4 張）
 // 10: 'rook_bastion', //堅石主塔
 // 11: 'alchemist_transmute', // 煉金術士
-// 12: 'bishop_inquisitor', // 審判聖官
+// 12: 'bishop_inquisitor', // 聖輝秘僧
 // 13: 'catapult_siege', // 歐克族人
 // LV.4 槽位（例如 3 張）
 // 14: 'bishop_archon', // 光輝大主教

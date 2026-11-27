@@ -451,7 +451,7 @@ export default function App() {
       text: "中路 (Lane 1) 享有 ×2 關鍵倍率，但每回合受專屬禁令限制！\n若放入未符規格之卡牌（如奇數令放入偶數卡），該卡在中路戰力視為 0。\nLV.1~2 棋子身懷戰術特性，LV.3~4 則為正面抗衡之高戰力核心。",
       graphic: (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#cbd5e1' }}>
-          <div>• 【暗影斥候】(LV.1)：於邊翼 (L0/L2) 戰力 +1</div>
+          <div>• 【暗影盜賊】(LV.1)：於邊翼 (L0/L2) 戰力 +1</div>
           <div>• 【核心刺客】(LV.2)：於中路 (L1) 符合禁令時戰力 +1</div>
           <div>• 【不屈鐵衛】(LV.2)：面對高階強敵時激發不屈 +1</div>
         </div>

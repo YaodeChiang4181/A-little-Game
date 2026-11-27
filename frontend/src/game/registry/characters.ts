@@ -16,13 +16,13 @@ export const STANDARD_CARDS: Card[] = [
   // -----------------------------------------------------------------------
   {
     id: 'scout_rogue',
-    name: '暗影斥候',
+    name: '暗影盜賊',
     base_level: 1,
     level: 1,
     has_trait: true,
     avatar: { type: 'image', src: '/avatars/rogue.gif' },
     themeColor: '#10b981',
-    lore: '游弋於戰場兩翼的刺探斥候，善於藉助側翼地形發動奇襲。',
+    lore: '游弋於戰場兩翼的盜賊，善於藉助側翼地形發動奇襲',
     trait: {
       id: 'scout_flank',
       name: '側翼突襲',
@@ -48,7 +48,7 @@ export const STANDARD_CARDS: Card[] = [
     has_trait: true,
     avatar: { type: 'unicode', src: 'hunter' },
     themeColor: '#0284c7',
-    lore: '於行軍路線設伏的伏擊手，戰敗或交鋒時能有效削弱對位敵軍。',
+    lore: '於行軍路線設伏的伏擊手，戰敗或交鋒時能有效削弱對位敵軍',
     trait: {
       id: 'trapper_snare',
       name: '牽制泥沼',
@@ -85,7 +85,7 @@ export const STANDARD_CARDS: Card[] = [
     has_trait: false,
     avatar: { type: 'image', src: '/avatars/Solider-a.gif' },
     themeColor: '#78909c',
-    lore: '受過嚴格軍陣操練的近衛步兵，堅實無華。'
+    lore: '受過嚴格軍陣操練的獨眼衛兵，非常熱愛訓練，啞鈴彷彿已經成為生活的一部分'
   },
 
   // -----------------------------------------------------------------------
@@ -98,8 +98,8 @@ export const STANDARD_CARDS: Card[] = [
     level: 2,
     has_trait: true,
     avatar: { type: 'image', src: '/avatars/Knight.gif' },
-    themeColor: '#42a5f5',
-    lore: '身披厚甲的堅盾防線，在陷入逆境時激發不屈意志。',
+    themeColor: '#1675c2ff',
+    lore: '身披厚甲的堅盾防線，在陷入逆境時不輕言認輸，有時能給敵人出奇不意的奇襲',
     trait: {
       id: 'Dark knight',
       name: '堅毅防線',
@@ -125,7 +125,7 @@ export const STANDARD_CARDS: Card[] = [
     level: 2,
     has_trait: true,
     avatar: { type: 'image', src: '/avatars/Assassin.gif' },
-    themeColor: '#e11d48',
+    themeColor: '#8f5d07ff',
     lore: '看起來不起眼的樣子讓他在各個戰場自由遊走，只在關鍵時刻做決定性的攻擊',
     trait: {
       id: 'assassin_core',
@@ -151,7 +151,7 @@ export const STANDARD_CARDS: Card[] = [
     level: 2,
     has_trait: false,
     avatar: { type: 'unicode', src: 'knight' },
-    themeColor: '#0ea5e9',
+    themeColor: '#1eac76ff',
     lore: '速度飛快的巡弋騎兵，戰術機動性優秀。'
   },
   {
@@ -162,7 +162,7 @@ export const STANDARD_CARDS: Card[] = [
     has_trait: false,
     avatar: { type: 'image', src: '/avatars/Light-weight solider.gif' },
     themeColor: '#38bdf8',
-    lore: '擅長高速切入戰線的正規騎兵部隊。'
+    lore: '步兵在經歷了幾場小戰役後，開始戴上自製的裝備，雖然看起來很簡陋，但至少是個老手了嘛'
   },
 
   // -----------------------------------------------------------------------
@@ -175,8 +175,8 @@ export const STANDARD_CARDS: Card[] = [
     level: 3,
     has_trait: false,
     avatar: { type: 'image', src: '/avatars/Tower.gif' },
-    themeColor: '#bf83caff',
-    lore: '巍峨屹立的要塞，裡面有點陰冷潮濕，但總在那裏提供讓人安心的保護。'
+    themeColor: '#949095ff',
+    lore: '巍峨屹立的要塞，裡面有點陰冷潮濕，但總在那裏提供讓人安心的保護'
   },
   {
     id: 'catapult_siege',
@@ -185,18 +185,18 @@ export const STANDARD_CARDS: Card[] = [
     level: 3,
     has_trait: false,
     avatar: { type: 'unicode', src: '/avatars/Ork.gif' },
-    themeColor: '#2f940dff',
+    themeColor: '#2b7b10ff',
     lore: '具備巨大化技能的重型戰士，雖然看起來很粗魯，但每次問他問題只會說「呵呵」。'
   },
   {
     id: 'bishop_inquisitor',
-    name: '審判聖官',
+    name: '聖輝秘僧',
     base_level: 3,
     level: 3,
     has_trait: false,
     avatar: { type: 'image', src: '/avatars/Monk.gif' },
-    themeColor: '#8b5cf6',
-    lore: '執掌肅清戒律的高位神官，正面作戰威儀奪目。'
+    themeColor: '#f88f52ff',
+    lore: '執掌肅清戒律的得道高僧，就連走路都會不經意地顯露深厚功力'
   },
   {
     id: 'alchemist_transmute',
@@ -220,7 +220,7 @@ export const STANDARD_CARDS: Card[] = [
     has_trait: false,
     avatar: { type: 'image', src: '/avatars/bishop.gif' },
     themeColor: '#26a69a',
-    lore: '執掌教廷最高聖光的神權代表，頂級 4 級戰力壓迫。'
+    lore: '執掌教廷最高聖光的神權代表，喜歡在公園裡看小朋友們的嘻笑奔跑'
   },
   {
     id: 'queen_command',

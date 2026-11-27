@@ -13,7 +13,7 @@ LANE_MULTIPLIERS = (1, 2, 1)
 
 # The standard registry mirrors frontend/src/game/registry/characters.ts.
 CARD_CATALOG = [
-    {"id": "scout_rogue", "name": "暗影斥候", "level": 1, "trait": "flank"},
+    {"id": "scout_rogue", "name": "暗影盜賊", "level": 1, "trait": "flank"},
     {"id": "trapper_hunter", "name": "游擊陷阱兵", "level": 1, "trait": "snare"},
     {"id": "pawn_infantry_a", "name": "先鋒步兵", "level": 1, "trait": None},
     {"id": "pawn_infantry_b", "name": "列陣衛兵", "level": 1, "trait": None},
@@ -23,7 +23,7 @@ CARD_CATALOG = [
     {"id": "cavalry_rider_b", "name": "輕裝戰士", "level": 2, "trait": None},
     {"id": "rook_bastion", "name": "堅石主塔", "level": 3, "trait": None},
     {"id": "catapult_siege", "name": "攻城投石車", "level": 3, "trait": None},
-    {"id": "bishop_inquisitor", "name": "審判聖官", "level": 3, "trait": None},
+    {"id": "bishop_inquisitor", "name": "聖輝秘僧", "level": 3, "trait": None},
     {"id": "alchemist_transmute", "name": "鍊金術士", "level": 3, "trait": None},
     {"id": "bishop_archon", "name": "光輝大主教", "level": 4, "trait": None},
     {"id": "queen_command", "name": "王國女統領", "level": 4, "trait": None},

@@ -43,7 +43,7 @@ export interface CardTrait {
 // 卡牌實體
 export interface Card {
   id: string;
-  name: string;             // 顯示名稱，如「暗影斥候」
+  name: string;             // 顯示名稱，如「暗影盜賊」
   base_level: 1 | 2 | 3 | 4; // 基礎等級 (1~4)
   has_trait: boolean;       // 是否有特性
   trait?: CardTrait;        // 專屬特性
@@ -108,7 +108,7 @@ export interface RoundResolutionResult {
   playerTotalScore: number;
   enemyTotalScore: number;
   winner: 'player' | 'enemy' | 'tie';
-  
+
   // 數值前後變化
   playerAtkBefore: number;
   enemyAtkBefore: number;
@@ -118,10 +118,10 @@ export interface RoundResolutionResult {
   enemyHpBefore: number;
   playerHpAfter: number;
   enemyHpAfter: number;
-  
+
   // 執行的姿態行為文字摘要
   winnerActionText: string;
-  
+
   // 終局判定
   gameOver: boolean;
   gameWinner: 'player' | 'enemy' | 'draw' | null;
