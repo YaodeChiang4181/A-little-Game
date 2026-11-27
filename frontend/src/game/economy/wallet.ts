@@ -16,14 +16,27 @@ export type PlayerWallet = WalletState;
 
 const WALLET_STORAGE_KEY = 'parity_wallet_v1';
 
-// 預設經典 6 棋子配置
+// 預設經典 15 角色配置
 const DEFAULT_ACTIVE_DECK: Record<number, string> = {
-  1: 'pawn',
-  2: 'knight',
-  3: 'rook',
-  4: 'bishop',
-  5: 'queen',
-  6: 'king'
+  // LV.1 槽位（例如 4 張）
+  1: 'pawn_infantry_b', // 列陣步兵
+  3: 'scout_rogue',   // 暗影斥候
+  4: 'trapper_hunter',    // 游擊陷阱兵
+  5: 'pawn_infantry_a', // 先鋒步兵
+  // LV.2 槽位（例如 4 張）
+  6: 'cavalry_rider_a', // 巡防遊騎
+  7: 'knight_guardian',   // 重裝鐵士
+  8: 'duelist_assassin',  // 核心刺客
+  9: 'cavalry_rider_b', // 輕飄遊騎
+  // LV.3 槽位（例如 4 張）
+  10: 'rook_bastion', //堅石主塔
+  11: 'alchemist_transmute', // 煉金術士
+  12: 'bishop_inquisitor', // 審判聖官
+  13: 'catapult_siege', // 歐克族人
+  // LV.4 槽位（例如 3 張）
+  14: 'bishop_archon', // 光輝大主教
+  15: 'queen_command', // 王國女統領
+  16: 'king_emperor', // 黑曜帝王
 };
 
 const DEFAULT_WALLET_STATE: WalletState = {
@@ -66,8 +79,7 @@ export function getWallet(): WalletState {
       unlockedCharacterIds: Array.isArray(parsed.unlockedCharacterIds)
         ? Array.from(new Set([...parsed.unlockedCharacterIds, ...buildinIds]))
         : [...buildinIds],
-      activeDeck: parsed.activeDeck || { ...DEFAULT_ACTIVE_DECK },
-      customAvatars: parsed.customAvatars || {},
+      activeDeck: { ...DEFAULT_ACTIVE_DECK, ...(parsed.activeDeck || {}) }, customAvatars: parsed.customAvatars || {},
       history: Array.isArray(parsed.history) ? parsed.history : []
     };
   } catch (e) {
@@ -167,7 +179,7 @@ export function setActiveDeckSlot(level: number, characterId: string): void {
 }
 
 /**
- * 重設出征陣容為經典 6 西洋棋
+ * 重設出征陣容為經典 15 角色
  */
 export function resetActiveDeckToDefault(): void {
   const current = getWallet();

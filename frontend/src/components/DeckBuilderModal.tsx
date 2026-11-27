@@ -43,18 +43,21 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
 
   // 當前等級的所有候選角色
   const availableCandidates = getCharactersByLevel(selectedLevel);
+  const [selectedSlot, setSelectedSlot] = useState<number>(1);
+  const slotNumbers = Array.from({ length: 15 }, (_, i) => i + 1);
 
-  // 取得目前出征陣容的 6 顆棋子
-  const activeDeckChars: Character[] = [1, 2, 3, 4, 5, 6].map(lv => {
-    const charId = wallet.activeDeck[lv];
+  // 取得目前出征陣容的 15 個角色
+  const activeDeckSlots = slotNumbers.map(slot => {
+    const charId = wallet.activeDeck[slot];
     const found = ALL_CHARACTERS.find(c => c.id === charId);
-    return found || ALL_CHARACTERS.find(c => (c.base_level || c.level) === lv) || ALL_CHARACTERS[0];
+    const char = found || ALL_CHARACTERS[0];
+    return { slot, char };
   });
 
   const handleEquip = (char: Character) => {
     soundManager.ensureContext();
     soundManager.playSfx('cardDeploy');
-    setActiveDeckSlot((char.base_level || char.level || 1), char.id);
+    setActiveDeckSlot(selectedSlot, char.id);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,7 +111,7 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
               [ 軍備庫 · 出征陣容編成 ]
             </h2>
             <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px' }}>
-              為 Lv.1 至 Lv.6 槽位挑選出戰棋子，同階特職自由替換，配置個人專屬出征卡組
+              為 Lv.1 至 Lv.4 槽位挑選出戰棋子，同階特職自由替換，配置個人專屬出征卡組
             </div>
           </div>
 
@@ -131,24 +134,26 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
           </button>
         </div>
 
-        {/* 核心區：左側 6 槽位預覽 + 右側階級候選選擇 */}
+        {/* 核心區：左側 15 槽位預覽 + 右側階級候選選擇 */}
         <div className="deck-builder-body">
-          {/* 左側 / 行動版頂部：當前出征陣容 (6 牌固定梯隊) */}
+          {/* 左側 / 行動版頂部：當前出征陣容 (15 牌固定梯隊) */}
           <div className="deck-builder-left-roster">
             <div style={{ fontSize: '12px', color: '#ffcc00', fontWeight: 'bold', marginBottom: '2px' }}>
-              [ 當前出征軍備 (6 牌) ]
+              [ 當前出征軍備 (15 牌) ]
             </div>
 
             <div className="deck-roster-grid">
-              {activeDeckChars.map(char => {
-                const isSelected = selectedLevel === char.level;
+              {activeDeckSlots.map(({ slot, char }) => {
+                const isSelected = selectedSlot === slot;
+                const cardLevel = char.base_level || char.level || 1;
+
                 return (
                   <div
-                    key={char.id}
+                    key={slot}
                     onClick={() => {
                       soundManager.playSfx('click');
-                      const lvl = char.base_level ?? char.level ?? 1;
-                      setSelectedLevel(lvl);
+                      setSelectedSlot(slot);
+                      setSelectedLevel(cardLevel);
                     }}
                     className={`deck-slot-item ${isSelected ? 'selected' : ''}`}
                   >
@@ -178,9 +183,10 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
               onClick={() => {
                 soundManager.playSfx('click');
                 resetActiveDeckToDefault();
+                setSelectedSlot(1);
               }}
             >
-              [ 重設為經典 6 西洋棋 ]
+              [ 重設為 15 經典角色 ]
             </button>
           </div>
 
@@ -199,7 +205,7 @@ export const DeckBuilderModal: React.FC<DeckBuilderModalProps> = ({
               {availableCandidates.map(candidate => {
                 const isUnlocked = wallet.unlockedCharacterIds.includes(candidate.id);
                 const candLevel = candidate.base_level ?? candidate.level ?? 1;
-                const isEquipped = wallet.activeDeck[candLevel] === candidate.id;
+                const isEquipped = wallet.activeDeck[selectedSlot] === candidate.id;
                 const hasCustomAvatar = Boolean(getCustomCharacterAvatar(candidate.id));
 
                 return (
