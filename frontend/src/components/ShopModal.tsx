@@ -278,6 +278,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({
               );
             })}
           </div>
+        )}
 
         {/* 底部導覽按鈕列 */}
         <div
