@@ -89,7 +89,11 @@ export function getWallet(): WalletState {
   try {
     const raw = localStorage.getItem(WALLET_STORAGE_KEY);
     if (!raw) {
-      const initialState = { ...DEFAULT_WALLET_STATE, unlockedCharacterIds: buildinIds };
+      const initialState = {
+        ...DEFAULT_WALLET_STATE,
+        unlockedCharacterIds: buildinIds,
+        activeDeck: { ...DEFAULT_ACTIVE_DECK },
+      };
       saveWallet(initialState);
       return initialState;
     }
