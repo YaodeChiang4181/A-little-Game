@@ -83,7 +83,7 @@ export const STANDARD_CARDS: Card[] = [
     base_level: 1,
     level: 1,
     has_trait: false,
-    avatar: { type: 'unicode', src: 'pawn' },
+    avatar: { type: 'image', src: '/avatars/Solider-a.gif' },
     themeColor: '#78909c',
     lore: '受過嚴格軍陣操練的近衛步兵，堅實無華。'
   },
@@ -156,11 +156,11 @@ export const STANDARD_CARDS: Card[] = [
   },
   {
     id: 'cavalry_rider_b',
-    name: '輕裝飆騎',
+    name: '輕裝戰士',
     base_level: 2,
     level: 2,
     has_trait: false,
-    avatar: { type: 'unicode', src: 'knight' },
+    avatar: { type: 'image', src: '/avatars/Light-weight solider.gif' },
     themeColor: '#38bdf8',
     lore: '擅長高速切入戰線的正規騎兵部隊。'
   },
@@ -194,7 +194,7 @@ export const STANDARD_CARDS: Card[] = [
     base_level: 3,
     level: 3,
     has_trait: false,
-    avatar: { type: 'unicode', src: 'bishop' },
+    avatar: { type: 'image', src: '/avatars/Monk.gif' },
     themeColor: '#8b5cf6',
     lore: '執掌肅清戒律的高位神官，正面作戰威儀奪目。'
   },

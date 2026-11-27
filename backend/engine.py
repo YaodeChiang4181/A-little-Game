@@ -20,7 +20,7 @@ CARD_CATALOG = [
     {"id": "knight_guardian", "name": "重裝鐵士", "level": 2, "trait": "wall"},
     {"id": "duelist_assassin", "name": "核心刺客", "level": 2, "trait": "assassin"},
     {"id": "cavalry_rider_a", "name": "巡防遊騎", "level": 2, "trait": None},
-    {"id": "cavalry_rider_b", "name": "輕裝飆騎", "level": 2, "trait": None},
+    {"id": "cavalry_rider_b", "name": "輕裝戰士", "level": 2, "trait": None},
     {"id": "rook_bastion", "name": "堅石主塔", "level": 3, "trait": None},
     {"id": "catapult_siege", "name": "攻城投石車", "level": 3, "trait": None},
     {"id": "bishop_inquisitor", "name": "審判聖官", "level": 3, "trait": None},
