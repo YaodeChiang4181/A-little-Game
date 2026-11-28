@@ -37,15 +37,15 @@ function buildDefault15Deck(): Record<number, string> {
 }
 
 //  LV.1 槽位（例如 4 張）
-// 1: 'pawn_infantry_b',  列陣步兵
+// 1: 'cyclops_a',  列陣步兵
 // 3: 'scout_rogue',    暗影盜賊
 // 4: 'trapper_hunter',    // 游擊陷阱兵
-// 5: 'pawn_infantry_a', // 先鋒步兵
+// 5: 'infantry_a', // 先鋒步兵
 // LV.2 槽位（例如 4 張）
-// 6: 'cavalry_rider_a', // 巡防遊騎
+// 6: 'rapper_music_b', // 饒舌小子
 // 7: 'knight_guardian',   // 重裝鐵士
 // 8: 'duelist_assassin',  // 核心刺客
-// 9: 'cavalry_rider_b', // 輕飄遊騎
+// 9: 'infantry_b', // 輕飄遊騎
 // LV.3 槽位（例如 4 張）
 // 10: 'rook_bastion', //堅石主塔
 // 11: 'alchemist_transmute', // 煉金術士

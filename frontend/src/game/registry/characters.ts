@@ -68,7 +68,7 @@ export const STANDARD_CARDS: Card[] = [
     }
   },
   {
-    id: 'pawn_infantry_a',
+    id: 'infantry_a',
     name: '先鋒步兵',
     base_level: 1,
     level: 1,
@@ -78,8 +78,8 @@ export const STANDARD_CARDS: Card[] = [
     lore: '恪盡職守的常規陣線步兵，站在那裏似乎就很可靠。'
   },
   {
-    id: 'pawn_infantry_b',
-    name: '列陣衛兵',
+    id: 'pawn_infantry_c',
+    name: '獨眼衛兵',
     base_level: 1,
     level: 1,
     has_trait: false,
@@ -145,24 +145,24 @@ export const STANDARD_CARDS: Card[] = [
     }
   },
   {
-    id: 'cavalry_rider_a',
-    name: '巡防遊騎',
+    id: 'rapper_music_b',
+    name: '饒舌小子',
     base_level: 2,
     level: 2,
     has_trait: false,
-    avatar: { type: 'unicode', src: 'knight' },
-    themeColor: '#1eac76ff',
-    lore: '速度飛快的巡弋騎兵，戰術機動性優秀。'
+    avatar: { type: 'image', src: '/avatars/Rapper.gif' },
+    themeColor: '#d96caeff',
+    lore: '因為有著明星夢所以找了網上的免費伴奏，天天用手機錄音練習。'
   },
   {
-    id: 'cavalry_rider_b',
+    id: 'infantry_b',
     name: '輕裝戰士',
     base_level: 2,
     level: 2,
     has_trait: false,
     avatar: { type: 'image', src: '/avatars/Light-weight solider.gif' },
     themeColor: '#38bdf8',
-    lore: '步兵在經歷了幾場小戰役後，開始戴上自製的裝備，雖然看起來很簡陋，但至少是個老手了嘛'
+    lore: '步兵在經歷了幾場小戰役後，開始戴上自製的裝備。雖然看起來很簡陋，但他堅持有用'
   },
 
   // -----------------------------------------------------------------------
@@ -206,7 +206,7 @@ export const STANDARD_CARDS: Card[] = [
     has_trait: false,
     avatar: { type: 'image', src: '/avatars/Alchemist.gif' },
     themeColor: '#9333ea',
-    lore: '每次見到他都謙虛地說自己只是喜歡做實驗，但有誰每次實驗都搞得周遭爆炸不斷？'
+    lore: '每次見到他都謙虛地說自己只是喜歡做實驗，但有誰會每次實驗都搞得周遭爆炸不斷'
   },
 
   // -----------------------------------------------------------------------
